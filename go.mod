@@ -6,6 +6,7 @@ replace github.com/Trousseau-io/trousseau-tsh => ./
 
 require (
 	github.com/hashicorp/vault/api v1.1.1
+	github.com/imdario/mergo v0.3.5
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
@@ -43,7 +44,6 @@ require (
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/vault/sdk v0.2.1 // indirect
-	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect

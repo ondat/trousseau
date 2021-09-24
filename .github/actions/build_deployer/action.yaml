@@ -1,0 +1,31 @@
+name: Build deployer
+inputs:
+  artifact:
+    description: "artifact name"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.x
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          %LocalAppData%\go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Build deployer
+      shell: bash
+      run:  |
+        go build -o ./bin/deployer cmd/deployer/main.go
+    - name: Archive deployer binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{inputs.artifact}}
+        path: ./bin/deployer

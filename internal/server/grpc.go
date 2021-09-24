@@ -5,10 +5,10 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/Trousseau-io/trousseau-tsh/pkg/config"
-	"github.com/Trousseau-io/trousseau-tsh/pkg/encrypt"
-	"github.com/Trousseau-io/trousseau-tsh/pkg/metrics"
-	"github.com/Trousseau-io/trousseau-tsh/pkg/version"
+	"github.com/Trousseau-io/trousseau-tsh/internal/config"
+	"github.com/Trousseau-io/trousseau-tsh/internal/encrypt"
+	"github.com/Trousseau-io/trousseau-tsh/internal/metrics"
+	"github.com/Trousseau-io/trousseau-tsh/internal/version"
 	"k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	"k8s.io/klog/v2"
 )

@@ -6,8 +6,8 @@ package encrypt_test
 import (
 	"testing"
 
-	"github.com/Trousseau-io/trousseau-tsh/pkg/config"
-	"github.com/Trousseau-io/trousseau-tsh/pkg/encrypt"
+	"github.com/Trousseau-io/trousseau-tsh/internal/config"
+	"github.com/Trousseau-io/trousseau-tsh/internal/encrypt"
 	"github.com/stretchr/testify/assert"
 )
 

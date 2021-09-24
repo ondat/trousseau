@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Trousseau-io/trousseau-tsh/pkg/config"
+	"github.com/Trousseau-io/trousseau-tsh/internal/config"
 	vaultapi "github.com/hashicorp/vault/api"
 	"k8s.io/klog/v2"
 )

@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Trousseau-io/trousseau-tsh/pkg/version"
+	"github.com/Trousseau-io/trousseau-tsh/internal/version"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	"k8s.io/klog/v2"

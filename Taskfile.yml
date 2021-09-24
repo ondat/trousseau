@@ -49,11 +49,18 @@ tasks:
     status:
       - test -f bin/vault
   fetch:kubectl:
+    deps:
+      - bin-dir:init
     desc: install kubectl
     cmds:
       - curl -Lo ./bin/kubectl  https://storage.googleapis.com/kubernetes-release/release/v{{.KUBECTL_VERSION}}/bin/{{OS}}/{{ARCH}}/kubectl  && chmod +x ./bin/kubectl
     status:
       - test -f ./bin/kubectl
+  fetch:all:
+    desc: fetch all tools
+    cmds:
+      - task: fetch:kubectl
+      - task: fetch:kind
   cluster:create:
     deps:
       - task: generate:manifests
