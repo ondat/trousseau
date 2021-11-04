@@ -61,6 +61,7 @@ func main() {
 	if err != nil {
 		klog.Fatalf("failed to listen: %v", err)
 	}
+	defer listener.Close()
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(utils.UnaryServerInterceptor),
 	}
