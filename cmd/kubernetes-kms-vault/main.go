@@ -41,15 +41,13 @@ func main() {
 	if *logFormatJSON {
 		klog.SetLogger(json.JSONLogger)
 	}
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
-
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := withShutdownSignal(context.Background())
 
 	// initialize metrics exporter
 	err := metrics.InitMetricsExporter(*metricsBackend, *metricsAddress)
 	if err != nil {
-		klog.Fatalf("failed to initialize metrics exporter, error: %+v", err)
+		klog.Errorln(err)
+		os.Exit(1)
 	}
 	klog.InfoS("Starting VaultEncryptionServiceServer service", "version", version.BuildVersion, "buildDate", version.BuildDate)
 	cfg, err := config.New(configFilePath)
@@ -64,9 +62,9 @@ func main() {
 	}
 	listener, err := net.Listen(proto, addr)
 	if err != nil {
-		klog.Fatalf("failed to listen: %v", err)
+		klog.Errorln(err)
+		os.Exit(1)
 	}
-	defer listener.Close()
 
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(utils.UnaryServerInterceptor),
@@ -81,7 +79,8 @@ func main() {
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
 	go func() {
 		err := s.Serve(listener)
-		klog.Fatalf("failed to listen: %v", err)
+		klog.Errorln(err)
+		os.Exit(1)
 	}()
 	healthz := &server.HealthZ{
 		Service: kmsServer,
@@ -93,16 +92,10 @@ func main() {
 		RPCTimeout:     *healthzTimeout,
 	}
 	go healthz.Serve()
-	go func() {
-		<-signalChan
-		defer listener.Close()
-		//os.Remove(addr)
-		klog.Info("received shutdown signal")
-		cancel()
-	}()
 	<-ctx.Done()
 	// gracefully stop the grpc server
 	klog.Infof("terminating the server")
+	s.GracefulStop()
 	klog.Flush()
 	// using os.Exit skips running deferred functions
 	os.Exit(0)
