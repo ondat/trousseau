@@ -31,6 +31,7 @@ var (
 	healthzTimeout = flag.Duration("healthz-timeout", 20*time.Second, "RPC timeout for health check")
 	metricsBackend = flag.String("metrics-backend", "prometheus", "Backend used for metrics")
 	metricsAddress = flag.String("metrics-addr", "8095", "The address the metric endpoint binds to")
+	addr           string
 )
 
 func main() {
@@ -40,7 +41,11 @@ func main() {
 	if *logFormatJSON {
 		klog.SetLogger(json.JSONLogger)
 	}
-	ctx := withShutdownSignal(context.Background())
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
 	// initialize metrics exporter
 	err := metrics.InitMetricsExporter(*metricsBackend, *metricsAddress)
 	if err != nil {
@@ -62,6 +67,7 @@ func main() {
 		klog.Fatalf("failed to listen: %v", err)
 	}
 	defer listener.Close()
+
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(utils.UnaryServerInterceptor),
 	}
@@ -87,6 +93,13 @@ func main() {
 		RPCTimeout:     *healthzTimeout,
 	}
 	go healthz.Serve()
+	go func() {
+		<-signalChan
+		defer listener.Close()
+		//os.Remove(addr)
+		klog.Info("received shutdown signal")
+		cancel()
+	}()
 	<-ctx.Done()
 	// gracefully stop the grpc server
 	klog.Infof("terminating the server")
@@ -105,6 +118,7 @@ func withShutdownSignal(ctx context.Context) context.Context {
 	nctx, cancel := context.WithCancel(ctx)
 
 	go func() {
+
 		<-signalChan
 		klog.Info("received shutdown signal")
 		cancel()
