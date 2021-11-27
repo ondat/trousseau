@@ -17,7 +17,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: check out repo
@@ -43,6 +42,6 @@ jobs:
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/trousseau:latest
           
       - name: image digest
-        run: echo ${{ stesp.docker_build.outputs.digests }} 
+        run: echo ${{ steps.docker_build.outputs.digests }} 
   
   
