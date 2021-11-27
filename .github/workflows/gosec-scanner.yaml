@@ -1,4 +1,4 @@
-name: run gosec scanner
+name: run gosec scanner on pull_request
 
 on:
   pull_request:
