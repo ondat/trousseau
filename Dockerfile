@@ -10,9 +10,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o hello-world cmd/h
 
 
 FROM gcr.io/distroless/static:nonroot-amd64
-LABEL org.opencontainers.image.source https://github.com/trousseau-io/trousseau 
-    name="Trousseau Kubernetes Key Management Service provider plugin"
-    vendor="Trousseau-io"
+LABEL org.opencontainers.image.source https://github.com/trousseau-io/trousseau \
+    name="Trousseau Kubernetes Key Management Service provider plugin" \
+    vendor="Trousseau-io" \
     url="https://trousseau.io"
 
 COPY --from=build /work/hello-world /bin/
