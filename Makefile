@@ -1,4 +1,4 @@
-IMAGE ?= ghcr.io/Trousseau-io/trousseau:dev
+IMAGE ?= ghcr.io/trousseau-io/trousseau:dev
 GO_BUILD_CMD = go build -v 
 GO_ENV = CGO_ENABLED=0
 
