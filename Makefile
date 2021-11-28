@@ -9,7 +9,7 @@ all: build
 
 build: 
         @echo "Building trousseau binaries"
-        $(GO_ENV) $(GO_BUILD_CMD) -o ./build/trousseau ./cmd/hello-world/main.go 
+        $(GO_ENV) $(GO_BUILD_CMD) -o ./build/kubernetes-kms-vault cmd/kubernetes-kms-vault/main.go 
 
 docker-build:
         docker build --no-cache . -f Dockerfile -t $(IMAGE)
