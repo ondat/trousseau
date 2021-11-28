@@ -3,8 +3,8 @@ package cmd
 import (
 	"log"
 
-	"github.com/Trousseau-io/trousseau-tsh/internal/config"
-	"github.com/Trousseau-io/trousseau-tsh/internal/utils"
+	"github.com/Trousseau-io/trousseau/internal/config"
+	"github.com/Trousseau-io/trousseau/internal/utils"
 	"github.com/spf13/cobra"
 )
 

@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/Trousseau-io/trousseau-tsh/internal/config"
-	"github.com/Trousseau-io/trousseau-tsh/internal/utils"
+	"github.com/Trousseau-io/trousseau/internal/config"
+	"github.com/Trousseau-io/trousseau/internal/utils"
 	"github.com/hashicorp/vault/api"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v1"

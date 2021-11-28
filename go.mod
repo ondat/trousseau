@@ -1,8 +1,8 @@
-module github.com/Trousseau-io/trousseau-tsh
+module github.com/Trousseau-io/trousseau
 
 go 1.17
 
-replace github.com/Trousseau-io/trousseau-tsh => ./
+replace github.com/Trousseau-io/trousseau => ./
 
 require (
 	github.com/hashicorp/vault/api v1.1.1

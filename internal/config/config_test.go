@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	cfg "github.com/Trousseau-io/trousseau-tsh/internal/config"
+	cfg "github.com/Trousseau-io/trousseau/internal/config"
 	"github.com/stretchr/testify/assert"
 )
 
