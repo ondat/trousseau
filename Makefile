@@ -8,14 +8,14 @@ all: build
 .PHONY: build
 
 build: 
-        @echo "Building trousseau binaries"
-        $(GO_ENV) $(GO_BUILD_CMD) -o ./build/kubernetes-kms-vault cmd/kubernetes-kms-vault/main.go 
+    @echo "Building trousseau binaries"
+    $(GO_ENV) $(GO_BUILD_CMD) -o ./build/kubernetes-kms-vault cmd/kubernetes-kms-vault/main.go 
 
 docker-build:
-        docker build --no-cache . -f Dockerfile -t $(IMAGE)
+    docker build --no-cache . -f Dockerfile -t $(IMAGE)
 
 docker-push:
-        docker push $(IMAGE)
+    docker push $(IMAGE)
 
 clean:
-        rm -rf ./build 
+    rm -rf ./build 
