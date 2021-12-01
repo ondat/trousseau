@@ -1,0 +1,36 @@
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+nodeStatusUpdateFrequency: "10s"
+failSwapOn: True
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: True
+  x509:
+    clientCAFile: /etc/kubernetes/ssl/ca.crt
+authorization:
+  mode: Webhook
+staticPodPath: /etc/kubernetes/manifests          # Add this line
+cgroupDriver: systemd
+containerLogMaxFiles: 5
+containerLogMaxSize: 10Mi
+maxPods: 110
+address: 10.0.10.4
+readOnlyPort: 0
+healthzPort: 10248
+healthzBindAddress: 127.0.0.1
+kubeletCgroups: /systemd/system.slice
+clusterDomain: cluster.local
+protectKernelDefaults: true
+rotateCertificates: true
+clusterDNS:
+- 169.254.25.10
+kubeReserved:
+  cpu: 200m
+  memory: 512Mi
+resolvConf: "/run/systemd/resolve/resolv.conf"
+eventRecordQPS: 5
+shutdownGracePeriod: 60s
+shutdownGracePeriodCriticalPods: 20s

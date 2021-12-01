@@ -1,0 +1,146 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 10.0.10.5:6443
+  creationTimestamp: null
+  labels:
+    component: kube-apiserver
+    tier: control-plane
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --advertise-address=10.0.10.5
+    - --allow-privileged=true
+    - --anonymous-auth=True
+    - --apiserver-count=3
+    - --authorization-mode=Node,RBAC
+    - --bind-address=0.0.0.0
+    - --client-ca-file=/etc/kubernetes/ssl/ca.crt
+    - --default-not-ready-toleration-seconds=300
+    - --default-unreachable-toleration-seconds=300
+    - --enable-admission-plugins=NodeRestriction
+    - --enable-aggregator-routing=False
+    - --enable-bootstrap-token-auth=true
+    - --encryption-provider-config=/opt/vault-kms/encryption_config.yaml # Add this line
+    - --endpoint-reconciler-type=lease
+    - --etcd-cafile=/etc/ssl/etcd/ssl/ca.pem
+    - --etcd-certfile=/etc/ssl/etcd/ssl/node-development-ha-master-0.pem
+    - --etcd-keyfile=/etc/ssl/etcd/ssl/node-development-ha-master-0-key.pem
+    - --etcd-servers=https://10.0.10.5:2379,https://10.0.10.4:2379,https://10.0.10.3:2379
+    - --event-ttl=1h0m0s
+    - --insecure-port=0
+    - --kubelet-client-certificate=/etc/kubernetes/ssl/apiserver-kubelet-client.crt
+    - --kubelet-client-key=/etc/kubernetes/ssl/apiserver-kubelet-client.key
+    - --kubelet-preferred-address-types=InternalDNS,InternalIP,Hostname,ExternalDNS,ExternalIP
+    - --profiling=False
+    - --proxy-client-cert-file=/etc/kubernetes/ssl/front-proxy-client.crt
+    - --proxy-client-key-file=/etc/kubernetes/ssl/front-proxy-client.key
+    - --request-timeout=1m0s
+    - --requestheader-allowed-names=front-proxy-client
+    - --requestheader-client-ca-file=/etc/kubernetes/ssl/front-proxy-ca.crt
+    - --requestheader-extra-headers-prefix=X-Remote-Extra-
+    - --requestheader-group-headers=X-Remote-Group
+    - --requestheader-username-headers=X-Remote-User
+    - --secure-port=6443
+    - --service-account-issuer=https://kubernetes.default.svc.cluster.local
+    - --service-account-key-file=/etc/kubernetes/ssl/sa.pub
+    - --service-account-signing-key-file=/etc/kubernetes/ssl/sa.key
+    - --service-cluster-ip-range=10.233.0.0/18
+    - --service-node-port-range=30000-32767
+    - --storage-backend=etcd3
+    - --tls-cert-file=/etc/kubernetes/ssl/apiserver.crt
+    - --tls-private-key-file=/etc/kubernetes/ssl/apiserver.key
+    image: k8s.gcr.io/kube-apiserver:v1.21.6
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: 10.0.10.5
+        path: /livez
+        port: 6443
+        scheme: HTTPS
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 15
+    name: kube-apiserver
+    readinessProbe:
+      failureThreshold: 3
+      httpGet:
+        host: 10.0.10.5
+        path: /readyz
+        port: 6443
+        scheme: HTTPS
+      periodSeconds: 1
+      timeoutSeconds: 15
+    resources:
+      requests:
+        cpu: 250m
+    startupProbe:
+      failureThreshold: 30
+      httpGet:
+        host: 10.0.10.5
+        path: /livez
+        port: 6443
+        scheme: HTTPS
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 15
+    volumeMounts:
+    - mountPath: /etc/ssl/certs
+      name: ca-certs
+      readOnly: true
+    - mountPath: /etc/ca-certificates
+      name: etc-ca-certificates
+      readOnly: true
+    - mountPath: /etc/ssl/etcd/ssl
+      name: etcd-certs-0
+      readOnly: true
+    - mountPath: /etc/kubernetes/ssl
+      name: k8s-certs
+      readOnly: true
+    - mountPath: /usr/local/share/ca-certificates
+      name: usr-local-share-ca-certificates
+      readOnly: true
+    - mountPath: /usr/share/ca-certificates
+      name: usr-share-ca-certificates
+      readOnly: true
+    - mountPath: /opt/vault-kms                   # Add this section
+      name: vaultkms
+      readOnly: true
+  hostNetwork: true
+  priorityClassName: system-node-critical
+  volumes:
+  - hostPath:
+      path: /etc/ssl/certs
+      type: DirectoryOrCreate
+    name: ca-certs
+  - hostPath:
+      path: /etc/ca-certificates
+      type: DirectoryOrCreate
+    name: etc-ca-certificates
+  - hostPath:
+      path: /etc/ssl/etcd/ssl
+      type: DirectoryOrCreate
+    name: etcd-certs-0
+  - hostPath:
+      path: /etc/kubernetes/ssl
+      type: DirectoryOrCreate
+    name: k8s-certs
+  - hostPath:
+      path: /usr/local/share/ca-certificates
+      type: DirectoryOrCreate
+    name: usr-local-share-ca-certificates
+  - hostPath:
+      path: /usr/share/ca-certificates
+      type: ""
+    name: usr-share-ca-certificates
+  - hostPath:
+      path: /opt/vault-kms                      # Add this section
+      type: ""
+    name: vaultkms
+status: {}
