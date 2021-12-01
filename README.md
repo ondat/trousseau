@@ -1,4 +1,13 @@
 # Trousseau KMS provider plugin for Vault
+Table of contents  
+* [Setup Vault](#setup-vault)  
+  * [Requirements](#requirements)  
+  * [Shell Environment Variables](#shell-environment-variables)  
+  * [Enable a Vault Transit Engine](#enable-a-vault-transit-engine)  
+  * [Setup Kubernetes](#setup-kubernetes)  
+  * [RKE Specifics](#rke-specifics)  
+  * [Enable Trousseau KMS Vault](#enable-trousseau-kms-vault)  
+* [Setup monitoring](#setup-monitoring)  
 
 ## Setup Vault
 
@@ -31,7 +40,7 @@ or a sub namespace like admin/gke01
 export VAULT_NAMESPACE=admin/gke01
 ```
 
-### Enable a Vault Transit enginer
+### Enable a Vault Transit engine
 
 Make sure to have a Transit engine enable within Vault:
 
@@ -293,8 +302,36 @@ shutdownGracePeriod: 60s
 shutdownGracePeriodCriticalPods: 20s
 ```
 
+## RKE Specifics
+When deploying RKE, use version 1.3.3-rc2 of the tool to benefit of a fix related to handling YAML configuration within the ```cluster.yml``` definition. 
+
+After successfuly deploying kubernetes using a standard ```cluster.yml``` with ```rke up```, modify the file as such along with the previous steps to setup the Vault and the configuration files:
+
+the ```kube-api``` section:
+```YAML
+  kube-api:
+    image: ""
+    extra_args:
+      encryption-provider-config: /opt/vault-kms/encryption_config.yaml
+    extra_binds: 
+      - "/opt/vault-kms:/opt/vault-kms"
+```
+
+the ```kubelet``` section:
+```YAML
+  kubelet:
+    image: ""
+    extra_args: 
+      pod-manifest-path: "/etc/kubernetes/manifests"
+    extra_binds: 
+      - "/opt/vault-kms:/opt/vault-kms"
+```
+
+Once everything in place, perform a ```rke up``` to reload the configuration.
+
 ### Enable Trousseau KMS Vault
-At this stage, restart the kube-apimanager to along with the kubelet if necessary.  Refer to your kubernetes distribution to do so.
+At this stage, for none RKE based deployment, restart the kube-apimanager to along with the kubelet if necessary.  Refer to your kubernetes distribution to do so.
+
 
 ## Setup monitoring
 Trousseau is coming with a Prometheus endpoint for monitoring with basic Grafana dashboard.  
