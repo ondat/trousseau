@@ -12,11 +12,14 @@ spec:
   hostNetwork: true
   containers:
     - name: vault-kms-provider
-      image: ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_VERSION}
+      image: ghcr.io/trousseau-io/trousseau:v1.0.0-alpha
       imagePullPolicy: Always
+      env:                        # For community edition - remove the env, name and value
+        - name: VAULT_NAMESPACE   # For Enterprise - set the value for the namespace
+          value: admin      
       args:
         - -v=5
-        - --config-file-path=/etc/kubernetes/vault-kms-provider.yaml
+        - --config-file-path=/opt/vault-kms/config.yaml
         - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
         - --log-format-json=false
       securityContext:
@@ -33,7 +36,7 @@ spec:
         httpGet:
           path: /healthz
           port: 8787
-        failureThreshold: 2
+        failureThreshold: 3
         periodSeconds: 10
       resources:
         requests:
@@ -43,20 +46,9 @@ spec:
           cpu: 300m
           memory: 256Mi
       volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: etc-ssl
-          mountPath: /etc/ssl
-          readOnly: true
-        - name: sock
-          mountPath: /opt
+        - name: vault-kms
+          mountPath: /opt/vault-kms
   volumes:
-    - name: etc-kubernetes
+    - name: vault-kms
       hostPath:
-        path: /etc/kubernetes
-    - name: etc-ssl
-      hostPath:
-        path: /etc/ssl
-    - name: sock
-      hostPath:
-        path: /opt
+        path: /opt/vault-kms

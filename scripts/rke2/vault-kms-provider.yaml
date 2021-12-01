@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vault-kms-provider
+  namespace: kube-system
+  labels:
+    tier: control-plane
+    app: vault-kms-provider
+spec:
+  selector:
+    matchLabels:
+      name: vault-kms-provider
+  template:
+    metadata:
+      labels:
+        name: vault-kms-provider
+    spec:
+      priorityClassName: system-cluster-critical
+      hostNetwork: true
+      containers:
+        - name: vault-kms-provider
+          image: ghcr.io/trousseau-io/trousseau:v1.0.0-alpha
+          imagePullPolicy: Always
+          env:                        # For community edition - remove the env, name and value
+            - name: VAULT_NAMESPACE   # For Enterprise - set the value for the namespace
+              value: admin
+          args:
+            - -v=5
+            - --config-file-path=/opt/vault-kms/config.yaml
+            - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
+            - --log-format-json=false
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsUser: 0
+          ports:
+            - containerPort: 8787
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8787
+            failureThreshold: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          volumeMounts:
+            - name: vault-kms
+              mountPath: /opt/vault-kms
+      volumes:
+        - name: vault-kms
+          hostPath:
+            path: /opt/vault-kms
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/master
+                    operator: Exists
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
