@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Pod
 metadata:
@@ -16,7 +17,7 @@ spec:
       args:
         - -v=5
         - --config-file-path=/etc/kubernetes/vault-kms-provider.yaml
-        - --listen-addr=unix:///opt/vaultkms.socket                            # [REQUIRED] Version of the key to use
+        - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
         - --log-format-json=false
       securityContext:
         allowPrivilegeEscalation: false

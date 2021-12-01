@@ -1,3 +1,4 @@
+---
 kind: EncryptionConfiguration
 apiVersion: apiserver.config.k8s.io/v1
 resources:
@@ -6,6 +7,6 @@ resources:
     providers:
       - kms:
           name: vaultprovider
-          endpoint: unix:///opt/vaultkms.socket
+          endpoint: unix:///opt/vault-kms/vaultkms.socket
           cachesize: 1000
       - identity: {}
