@@ -1,0 +1,32 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: vault-kms-metrics
+  namespace: kube-system
+  labels:
+     app: vault-kms-provider
+spec:
+  selector:
+     app: vault-kms-provider
+  ports:
+  - name: metrics
+    port: 8095
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vault-kms-provider
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  selector:
+    matchLabels:
+      app: vault-kms-provider
+  endpoints:
+  - port: metrics
+    path: /metrics

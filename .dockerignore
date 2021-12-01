@@ -1,0 +1,12 @@
+Taskfile.yml
+skaffold.yaml
+README.md
+.git
+.gitignore
+.gitattributes
+scripts
+bin
+.vscode
+.envrc
+deploy
+tests
