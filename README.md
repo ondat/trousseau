@@ -1,3 +1,7 @@
+# Build status:
+[![run golang-ci-lint](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml/badge.svg?branch=main)](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml)  
+[![run gosec scanner](https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml/badge.svg?branch=main)](https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml)
+
 # Trousseau KMS provider plugin for Vault
 Table of contents  
 * [Setup Vault](#setup-vault)  
