@@ -101,7 +101,7 @@ spec:
   hostNetwork: true
   containers:
     - name: vault-kms-provider
-      image: wwojcik/kms-vault:demo3
+      image: ghcr.io/trousseau-io/trousseau:v1.0.0-alpha
       imagePullPolicy: Always
       args:
         - -v=5
