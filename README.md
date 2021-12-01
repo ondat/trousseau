@@ -8,9 +8,10 @@ Table of contents
   * [Requirements](#requirements)  
   * [Shell Environment Variables](#shell-environment-variables)  
   * [Enable a Vault Transit Engine](#enable-a-vault-transit-engine)  
-  * [Setup Kubernetes](#setup-kubernetes)  
-  * [RKE Specifics](#rke-specifics)  
-  * [Enable Trousseau KMS Vault](#enable-trousseau-kms-vault)  
+* [Kubernetes](#kubernetes)
+  * [Vanilla k8s](#vanilla-k8s-like-gke)  
+  * [RKE Specifics](#rke-specifics)
+  * [RKE2 Specifics](#rke2-specifics)    
 * [Setup monitoring](#setup-monitoring)  
 
 ## Setup Vault
@@ -110,7 +111,7 @@ Verifiy ```kubelet-config.yaml``` within ```/etc/kubernetes``` to ensure this pa
 
 Finally, restart the ```kube-apiserver``` to apply the configuration. Trousseau should start allow with it.
 
-### RKE (not RKE2) Specifics
+### RKE Specifics
 When deploying using rke (not RKE2) and after successfuly deploying a working kubernetes using your ```cluster.yml``` with ```rke up```, modify the following sections of your ```cluster.yml```:
 
 the ```kube-api``` section:
@@ -150,7 +151,6 @@ kube-apiserver-extra-mount:
 * restart the ```rke2-server``` service via ```systemctl restart rke2-server.service``` or reboot the node.
 
 Note that based on the above, the cluster can be build from the ground up without first creating and then updating with the additional configuraiton. 
-
 
 ## Setup monitoring
 Trousseau is coming with a Prometheus endpoint for monitoring with basic Grafana dashboard.  
