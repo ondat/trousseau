@@ -1,4 +1,4 @@
-# trousseau-tsh
+# trousseau
 
 Requirements:
 

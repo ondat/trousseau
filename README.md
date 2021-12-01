@@ -296,6 +296,35 @@ shutdownGracePeriodCriticalPods: 20s
 ### Enable Trousseau KMS Vault
 At this stage, restart the kube-apimanager to along with the kubelet if necessary.  Refer to your kubernetes distribution to do so.
 
+## RKE
+When deploying RKE, use version 1.3.3-rc2 of the tool to benefit of a fix related to handling YAML configuration within the ```cluster.yml``` definition. 
+
+After successfuly deploying kubernetes using a standard ```cluster.yml``` with ```rke up```, modify the file as such along with the previous steps to setup the Vault and the configuration files:
+
+the ```kube-api``` section:
+```YAML
+  kube-api:
+    image: ""
+    extra_args:
+      encryption-provider-config: /opt/vault-kms/encryption_config.yaml
+    extra_binds: 
+      - "/opt/vault-kms:/opt/vault-kms"
+```
+
+the ```kubelet``` section:
+```YAML
+  kubelet:
+    image: ""
+    extra_args: 
+      pod-manifest-path: "/etc/kubernetes/manifests"
+    extra_binds: 
+      - "/opt/vault-kms:/opt/vault-kms"
+```
+
+Once everything in place, perform a ```rke up``` to reload the configuration.
+
+
+
 ## Setup monitoring
 Trousseau is coming with a Prometheus endpoint for monitoring with basic Grafana dashboard.  
 
