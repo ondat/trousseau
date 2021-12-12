@@ -2,38 +2,41 @@
 [![run golang-ci-lint](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml/badge.svg?branch=main)](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml)  
 [![run gosec scanner](https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml/badge.svg?branch=main)](https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml)
 
-# Trousseau KMS provider plugin for Vault
-Table of contents  
-* [Setup Vault](#setup-vault)  
+# Trousseau KMS provider plugin for HashiCorp Vault
+Table of contents
+* [Installation with HashiCorp Vault](#installation-with-hashicorp-vault)  
+* [Setup HashiCorp Vault](#setup-hashicorp-vault)  
   * [Requirements](#requirements)  
   * [Shell Environment Variables](#shell-environment-variables)  
-  * [Enable a Vault Transit Engine](#enable-a-vault-transit-engine)  
+  * [Enable a Transit Engine](#enable-a-transit-engine)  
 * [Kubernetes](#kubernetes)
   * [Vanilla k8s](#vanilla-k8s-like-gke)  
   * [RKE Specifics](#rke-specifics)
   * [RKE2 Specifics](#rke2-specifics)    
 * [Setup monitoring](#setup-monitoring)  
 
-## Setup Vault
+# Installation with HashiCorp Vault
 
-### Requirements
+## Requirements
 The following are required:
-- a working kubernetes cluster 
-- a Vault instance (Community or Enterprise)
+- a working kubernetes cluster with access to the control plane nodes
+- a HashiCorp Vault instance (Community or Enterprise)
 - a SSH access to the control plane nodes as an admin
 - the necessary user permissions to handle files in ```etc``` and restart serivces, root is best, sudo is better ;)
 - the vault cli tool 
 - the kubectl cli tool
 
+## Setup HashiCorp Vault
+
 ### Shell Environment Variables
-Export environment variables to reach out the Vault instance:
+Export environment variables to reach out the HashiCorp Vault instance:
 
 ```bash
 export VAULT_ADDR="https://addresss:8200"
 export VAULT_TOKEN="s.oYpiOmnWL0PFDPS2ImJTdhRf.CxT2N"
 ```
    
-**NOTE: when using the Vault Enterprise, the concept of namespace is introduced.**   
+**NOTE: when using the HashiCorp Vault Enterprise, the concept of namespace is introduced.**   
 This requires an additional environment variables to target the base root namespace:
 
 ```bash
@@ -45,7 +48,7 @@ or a sub namespace like admin/gke01
 export VAULT_NAMESPACE=admin/gke01
 ```
 
-### Enable a Vault Transit engine
+### Enable a Transit engine
 
 Make sure to have a Transit engine enable within Vault:
 
@@ -89,7 +92,7 @@ Success! Data written to: transit/keys/vault-kms-demo
 ```
 
 ## Kubernetes
-### Vanilla k8s (like GKE)
+### vanilla k8s
 **The following steps needs to be executed on every node part of the control plane; usually one master node in dev/test environment, 3 in production environment.**
 
 The Trousseau KMS Vault provider plugin needs to be set as a Pod starting along with the kube-apimanager.  
@@ -137,21 +140,113 @@ the ```kubelet``` section:
 Once everything in place, perform a ```rke up``` to reload the configuration.
 
 ### RKE2 Specifics
-Building a Kubernetes RKE2 cluster is a different approach then with RKE fromn a configuration perpective. Here is a quick step by step approach:
+Building a Kubernetes RKE2 cluster is a different approach then with RKE fromn a configuration perpective as there is no more ```cluster.yml```configuration file.   
 
-* prepare the directory ```/opt/vault-kms``` like explain within the Vanilla Kubernetes
-* add the following content in the ```config.yaml``` file in ```/etc/rancher/rke2/``` of each control plane node:
-``` 
-kube-apiserver-extra-env:
-  - "--encryption-provider-config=/opt/vault-kms/encryption_config.yaml" 
+**Note: if you already have an existing RKE2 cluster deployed, the *etcd* is being encrypted at-rest by default with a key configured in the file ```/var/lib/rancher/rke2/server/cred/encryption-config.json```. Removing this file or reconfiguring with the below steps will render previous secrets unreadable!**
+
+Here are the steps for a fresh deployment:  
+* prepare the following directory structure:
+```
+├── etc
+│   └── rancher
+│       └── rke2
+│           └── config.yaml
+├── opt
+│   └── vault-kms
+│       ├── config.yaml
+│       └── encryption_config.yaml
+└── var
+    └── lib
+        └── rancher
+            └── rke2
+                └── server
+                    ├── cred
+                    │   ├── encryption-config.json
+                    │   └── encryption_config.yaml
+                    └── manifests
+                        └── vault-kms-provider.yaml
+```
+
+Here are the content for each files:
+* ```/etc/rancher/rke2/config.yaml```:   
+
+```
+# server: https://<address>:9345    #to edit/uncomment for second and third control plane node
+# token: <rke2_server_token>             #to edit/uncomment for second and third control plane node
+kube-apiserver-arg:
+  - "--encryption-provider-config=/var/lib/rancher/rke2/server/cred/vault-kms-encryption-config.yaml" 
 kube-apiserver-extra-mount:
   - "/opt/vault-kms:/opt/vault-kms"
 ```
-* add the file ```vault-kms-provider.yaml``` from the folder ```scripts/rke2``` in the folder ```/var/lib/rancher/rke2/server/manifests``` of each control plane node.
-* restart the ```rke2-server``` service via ```systemctl restart rke2-server.service``` or reboot the node.
 
-Note that based on the above, the cluster can be build from the ground up without first creating and then updating with the additional configuraiton. 
+* ```/opt/vault-kms/config.yaml```: 
+```
+provider: vault
+vault:
+  keynames:
+  - demo-token-test
+  address: https://<vault_address>:8200
+  token: <vault_token>
+```
 
+* ```/opt/vault-kms/encryption_config.yaml```
+```
+kind: EncryptionConfiguration
+apiVersion: apiserver.config.k8s.io/v1
+resources:
+  - resources:
+      - secrets
+    providers:
+      - kms:
+          name: vaultprovider
+          endpoint: unix:///opt/vault-kms/vaultkms.socket
+          cachesize: 1000
+      - identity: {}
+```
+
+* ```/var/lib/rancher/rke2/server/cred/encryption-config.json```:
+```
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+    - secrets
+    providers:
+    - identity: {}
+```
+
+* ```/var/lib/rancher/rke2/server/cred/encryption_config.yaml```:
+```
+kind: EncryptionConfiguration
+apiVersion: apiserver.config.k8s.io/v1
+resources:
+  - resources:
+      - secrets
+    providers:
+      - kms:
+          name: vaultprovider
+          endpoint: unix:///opt/vault-kms/vaultkms.socket
+          cachesize: 1000
+      - identity: {}    
+```
+
+* ```/var/lib/rancher/rke2/manifests/vault-kms-provider.yaml```: see [DaemonSet file here](https://github.com/Trousseau-io/trousseau/blob/main/scripts/rke2/vault-kms-provider.yaml)
+
+* on the first control plane/master/server node, run the followings:
+```
+curl -sfL https://get.rke2.io | sh -
+systemctl enable --now rke2-server.service
+```
+
+* get the server node token from ```/var/lib/rancher/rke2/server/node-token``` and add it to the ```/etc/rancher/rke2/config.yaml``` for control plane/master/server node 2 and 3
+
+* run on control plane/master/server node 2 and 3:
+```
+curl -sfL https://get.rke2.io | sh -
+systemctl enable --now rke2-server.service
+```
+
+* carry on with adding worker/agent nodes as usual (and without any of the about configuration)
 ## Setup monitoring
 Trousseau is coming with a Prometheus endpoint for monitoring with basic Grafana dashboard.  
 

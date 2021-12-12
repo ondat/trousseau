@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       containers:
         - name: vault-kms-provider
-          image: ghcr.io/trousseau-io/trousseau:v1.0.0-alpha
+          image: ghcr.io/trousseau-io/trousseau:v1.0.0
           imagePullPolicy: Always
           env:                        # For community edition - remove the env, name and value
             - name: VAULT_NAMESPACE   # For Enterprise - set the value for the namespace
