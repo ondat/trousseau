@@ -2,254 +2,29 @@
 [![run golang-ci-lint](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml/badge.svg?branch=main)](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml)  
 [![run gosec scanner](https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml/badge.svg?branch=main)](https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml)
 
-# Trousseau KMS provider plugin for HashiCorp Vault
-Table of contents
-* [Installation with HashiCorp Vault](#installation-with-hashicorp-vault)  
-* [Setup HashiCorp Vault](#setup-hashicorp-vault)  
-  * [Requirements](#requirements)  
-  * [Shell Environment Variables](#shell-environment-variables)  
-  * [Enable a Transit Engine](#enable-a-transit-engine)  
-* [Kubernetes](#kubernetes)
-  * [Vanilla k8s](#vanilla-k8s-like-gke)  
-  * [RKE Specifics](#rke-specifics)
-  * [RKE2 Specifics](#rke2-specifics)    
-* [Setup monitoring](#setup-monitoring)  
+Welcome to the Trousseau Git repo!
 
-# Installation with HashiCorp Vault
+### why Trousseau
 
-## Requirements
-The following are required:
-- a working kubernetes cluster with access to the control plane nodes
-- a HashiCorp Vault instance (Community or Enterprise)
-- a SSH access to the control plane nodes as an admin
-- the necessary user permissions to handle files in ```etc``` and restart serivces, root is best, sudo is better ;)
-- the vault cli tool 
-- the kubectl cli tool
+Kubernetes platform users are all facing the very same question; how to handle Secrets?   
 
-## Setup HashiCorp Vault
+While there are significant efforts to improve Kubernetes component layers, [the state of Secret Management is not receiving much interests](https://fosdem.org/2021/schedule/event/kubernetes_secret_management/).   
+Using *etcd* to store API object definition & states, Kubernetes secrets are encoded in Base64 and shipped into the key value store database.  Even if the filesystems on which *etcd* runs are encrypted, the secrets are still not.   
 
-### Shell Environment Variables
-Export environment variables to reach out the HashiCorp Vault instance:
+Instead of leveraging the native Kubernetes way to manage secrets, commercial and open source solutions solve this design flaw by leveraging different approaches all using different toolsets or practices. This leads to training and maintaining niche skills and tools increasing cost and complexity of Kubernetes day 0, 1 and 2. 
 
-```bash
-export VAULT_ADDR="https://addresss:8200"
-export VAULT_TOKEN="s.oYpiOmnWL0PFDPS2ImJTdhRf.CxT2N"
-```
-   
-**NOTE: when using the HashiCorp Vault Enterprise, the concept of namespace is introduced.**   
-This requires an additional environment variables to target the base root namespace:
+Once deployed, Trousseau will enable seamless secret management using the native Kubernetes API and ```kubectl``` CLI usage while leveraging an existing Key Management Service (KMS) provider.  
+How? By using using the [Kubernetes KMS pluging](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/) framework to provide an envelop encryption scheme to encrypt secrets on the fly.
 
-```bash
-export VAULT_NAMESPACE=admin
-```
-or a sub namespace like admin/gke01
+### what is Trousseau
 
-```bash
-export VAULT_NAMESPACE=admin/gke01
-```
+Trousseau is: 
 
-### Enable a Transit engine
+* Open source project
+* Kubernetes native respecting the [Kubernetes KMS plugin design](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/)
+* Universal plugin addressing potentially any KMS provider (see release notes)
+* Easy deployment
+* API driven approach
 
-Make sure to have a Transit engine enable within Vault:
-
-```bash
-vault secrets enable transit
-
-Success! Enabled the transit secrets engine at: transit/
-```
-
-List the secret engines:
-```bash
-vault secrets list
-Path          Type            Accessor                 Description
-----          ----            --------                 -----------
-cubbyhole/    ns_cubbyhole    ns_cubbyhole_491a549d    per-token private secret storage
-identity/     ns_identity     ns_identity_01d57d96     identity store
-sys/          ns_system       ns_system_d0f157ca       system endpoints used for control, policy and debugging
-transit/      transit         transit_3a41addc         n/a
-```
-
-**NOTE about missing VAULT_NAMESPACE**  
-Not exporting the VAULT_NAMESPACE will results in a similar error message when enabling the transit engine or even trying to list them:
-
-```
-vault secrets enable transit
-
-Error enabling: Error making API request.
-
-URL: POST https://vault-dev.vault.3c414da7-6890-49b8-b635-e3808a5f4fee.aws.hashicorp.cloud:8200/v1/sys/mounts/transit
-Code: 403. Errors:
-
-* 1 error occurred:
-        * permission denied
-```
-
-Finally, create a transit key:
-
-```bash
-vault write -f transit/keys/vault-kms-demo
-Success! Data written to: transit/keys/vault-kms-demo
-```
-
-## Kubernetes
-### vanilla k8s
-**The following steps needs to be executed on every node part of the control plane; usually one master node in dev/test environment, 3 in production environment.**
-
-The Trousseau KMS Vault provider plugin needs to be set as a Pod starting along with the kube-apimanager.  
-To do so, the ```vault-kms-provider.yaml``` configuration file from ```scripts/k8s``` can be used as a template and should be added to every nodes part of the control plane within the directory ```/etc/kubernetes/manifests/```.   
-
-**Note that only the image version and the Vault namespace are open for changes to match your enviroment and everything else is at your own risks.**
-
-Then, create the directory ```/opt/vault-kms/``` to hosts the trousseau configuration files:
-* ```config.yaml``` to be update to match your environment
-* ```encryption_config.yaml``` as-is and to not modify for any reasons
-
-Add the parameter ```--encryption-provider-config=/opt/vault-kms/encryption_config.yaml``` within the ```kube-apiserver.yaml``` configuration file which is usually located in the folder ```/etc/kubernetes/manifests``` and add the extra volumes bindings for ```/opt/vault-kms```. 
-
-An example is available with the directory ```scripts/k8s``` with commented sections.   
-**Edit your own ```kube-apiserver.yaml``` file and not copy/paste the entire content of the example file.**
-
-**NOTES: depending on the Kubernetes distribution, the kubelet might not include the ```/etc/kubernetes/manifests``` for ```staticPodPath```. 
-Verifiy ```kubelet-config.yaml``` within ```/etc/kubernetes``` to ensure this parameter is present.**
-
-Finally, restart the ```kube-apiserver``` to apply the configuration. Trousseau should start allow with it.
-
-### RKE Specifics
-When deploying using rke (not RKE2) and after successfuly deploying a working kubernetes using your ```cluster.yml``` with ```rke up```, modify the following sections of your ```cluster.yml```:
-
-the ```kube-api``` section:
-```YAML
-  kube-api:
-    image: ""
-    extra_args:
-      encryption-provider-config: /opt/vault-kms/encryption_config.yaml
-    extra_binds: 
-      - "/opt/vault-kms:/opt/vault-kms"
-```
-
-the ```kubelet``` section:
-```YAML
-  kubelet:
-    image: ""
-    extra_args: 
-      pod-manifest-path: "/etc/kubernetes/manifests"
-    extra_binds: 
-      - "/opt/vault-kms:/opt/vault-kms"
-```
-
-Once everything in place, perform a ```rke up``` to reload the configuration.
-
-### RKE2 Specifics
-Building a Kubernetes RKE2 cluster is a different approach then with RKE fromn a configuration perpective as there is no more ```cluster.yml```configuration file.   
-
-**Note: if you already have an existing RKE2 cluster deployed, the *etcd* is being encrypted at-rest by default with a key configured in the file ```/var/lib/rancher/rke2/server/cred/encryption-config.json```. Removing this file or reconfiguring with the below steps will render previous secrets unreadable!**
-
-Here are the steps for a fresh deployment:  
-* prepare the following directory structure:
-```
-├── etc
-│   └── rancher
-│       └── rke2
-│           └── config.yaml
-├── opt
-│   └── vault-kms
-│       ├── config.yaml
-│       └── encryption_config.yaml
-└── var
-    └── lib
-        └── rancher
-            └── rke2
-                └── server
-                    ├── cred
-                    │   ├── encryption-config.json
-                    │   └── encryption_config.yaml
-                    └── manifests
-                        └── vault-kms-provider.yaml
-```
-
-Here are the content for each files:
-* ```/etc/rancher/rke2/config.yaml```:   
-
-```
-# server: https://<address>:9345    #to edit/uncomment for second and third control plane node
-# token: <rke2_server_token>             #to edit/uncomment for second and third control plane node
-kube-apiserver-arg:
-  - "--encryption-provider-config=/var/lib/rancher/rke2/server/cred/vault-kms-encryption-config.yaml" 
-kube-apiserver-extra-mount:
-  - "/opt/vault-kms:/opt/vault-kms"
-```
-
-* ```/opt/vault-kms/config.yaml```: 
-```
-provider: vault
-vault:
-  keynames:
-  - demo-token-test
-  address: https://<vault_address>:8200
-  token: <vault_token>
-```
-
-* ```/opt/vault-kms/encryption_config.yaml```
-```
-kind: EncryptionConfiguration
-apiVersion: apiserver.config.k8s.io/v1
-resources:
-  - resources:
-      - secrets
-    providers:
-      - kms:
-          name: vaultprovider
-          endpoint: unix:///opt/vault-kms/vaultkms.socket
-          cachesize: 1000
-      - identity: {}
-```
-
-* ```/var/lib/rancher/rke2/server/cred/encryption-config.json```:
-```
-apiVersion: apiserver.config.k8s.io/v1
-kind: EncryptionConfiguration
-resources:
-  - resources:
-    - secrets
-    providers:
-    - identity: {}
-```
-
-* ```/var/lib/rancher/rke2/server/cred/encryption_config.yaml```:
-```
-kind: EncryptionConfiguration
-apiVersion: apiserver.config.k8s.io/v1
-resources:
-  - resources:
-      - secrets
-    providers:
-      - kms:
-          name: vaultprovider
-          endpoint: unix:///opt/vault-kms/vaultkms.socket
-          cachesize: 1000
-      - identity: {}    
-```
-
-* ```/var/lib/rancher/rke2/manifests/vault-kms-provider.yaml```: see [DaemonSet file here](https://github.com/Trousseau-io/trousseau/blob/main/scripts/rke2/vault-kms-provider.yaml)
-
-* on the first control plane/master/server node, run the followings:
-```
-curl -sfL https://get.rke2.io | sh -
-systemctl enable --now rke2-server.service
-```
-
-* get the server node token from ```/var/lib/rancher/rke2/server/node-token``` and add it to the ```/etc/rancher/rke2/config.yaml``` for control plane/master/server node 2 and 3
-
-* run on control plane/master/server node 2 and 3:
-```
-curl -sfL https://get.rke2.io | sh -
-systemctl enable --now rke2-server.service
-```
-
-* carry on with adding worker/agent nodes as usual (and without any of the about configuration)
-## Setup monitoring
-Trousseau is coming with a Prometheus endpoint for monitoring with basic Grafana dashboard.  
-
-An example of configuration for the Prometheus endpoint access is available within the folder ```scripts/templates/monitoring``` with the name ```prometheus.yaml```. 
-
-An example of configuration for the Grafana dashboard configuration is available within the folder ```scripts/templates/monitoring``` with the name ```grafana-dashboard.yaml```. 
+### about the name
+The name "Trousseau" comes from the French language used within the context of "Trousseau de clés" or "Keyring".
