@@ -1,4 +1,4 @@
-name: "golangcu-lint"
+name: "golangci-lint"
 
 on:
   pull_request:
