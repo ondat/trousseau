@@ -1,4 +1,4 @@
-name: run golang-ci-lint on pull_request
+name: "golangcu-lint"
 
 on:
   pull_request:
