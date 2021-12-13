@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"path/filepath"
+	// "strings"
 
 	"github.com/imdario/mergo"
 	"github.com/spf13/cobra"
@@ -29,11 +31,10 @@ var kopsCmd = &cobra.Command{
 	Short: "generate kops config with vault-kms-provider support",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		f, err := ioutil.ReadFile(kopsCfgFile)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		out, err := generateConfig(f)
+		repoFile := kopsCfgFile
+		repoFile = filepath.Clean(repoFile) 
+		byContext, err := ioutil.ReadFile(repoFile)
+		out, err := generateConfig(byContext)
 		if err != nil {
 			log.Fatalln(err)
 		}
