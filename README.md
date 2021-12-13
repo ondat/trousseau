@@ -1,7 +1,8 @@
 ### Build status:
-[![golangci-lint](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml/badge.svg)](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml)
 [![gosec](https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml/badge.svg?branch=main)](https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml)
 [![CodeQL](https://github.com/Trousseau-io/trousseau/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Trousseau-io/trousseau/actions/workflows/codeql-analysis.yml)
+[![golangci-lint](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml/badge.svg)](https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5460/badge)](https://bestpractices.coreinfrastructure.org/projects/5460)
 
 Welcome to the Trousseau Git repo!
 
