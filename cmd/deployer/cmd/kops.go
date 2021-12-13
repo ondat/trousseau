@@ -44,7 +44,7 @@ var kopsCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Println("%s", string(out))
+		fmt.Println(string(out))
 
 	},
 }
