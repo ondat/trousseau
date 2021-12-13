@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
-	// "strings"
 
 	"github.com/imdario/mergo"
 	"github.com/spf13/cobra"
@@ -32,10 +31,6 @@ var kopsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		repoFile := kopsCfgFile
-		// repoFile = filepath.Clean(repoFile)
-		// if !strings.HasPrefix(repoFile, "./scripts/"){
-		// 	panic(fmt.Errorf("Unsafe input! - Use a the local subdirectory scripts to host your files"))
-		// }
 		byContext, err := ioutil.ReadFile(filepath.Clean(repoFile))
 		if err != nil {
 			panic(err)
