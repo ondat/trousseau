@@ -38,7 +38,7 @@ var kopsCmd = &cobra.Command{
 		}
 		byContext, err := ioutil.ReadFile(repoFile)
 		if err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
 		out, err := generateConfig(byContext)
 		if err != nil {
