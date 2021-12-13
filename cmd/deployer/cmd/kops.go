@@ -18,10 +18,10 @@ var kubeManifestCfgFile string
 var deploymentManifestCfgFile string
 
 func init() {
-	kopsCmd.Flags().StringVarP(&kopsCfgFile, "kops-cluster-file", "", "scripts/kops/cluster.yaml", "generate config path")
-	kopsCmd.Flags().StringVarP(&vaultCfgFile, "vault-cluster-file", "", "tests/e2e/generated_manifests/config.yaml", "generate config path")
-	kopsCmd.Flags().StringVarP(&kubeManifestCfgFile, "encryption-config-file", "", "scripts/encryption-config.yaml", "generate config path")
-	kopsCmd.Flags().StringVarP(&deploymentManifestCfgFile, "deployment-config-file", "", "tests/e2e/generated_manifests/kms.yaml", "generate config path")
+	kopsCmd.Flags().StringVarP(&kopsCfgFile, "kops-cluster-file", "", "./scripts/kops/cluster.yaml", "generate config path")
+	kopsCmd.Flags().StringVarP(&vaultCfgFile, "vault-cluster-file", "", "./tests/e2e/generated_manifests/config.yaml", "generate config path")
+	kopsCmd.Flags().StringVarP(&kubeManifestCfgFile, "encryption-config-file", "", "./scripts/encryption-config.yaml", "generate config path")
+	kopsCmd.Flags().StringVarP(&deploymentManifestCfgFile, "deployment-config-file", "", "./tests/e2e/generated_manifests/kms.yaml", "generate config path")
 	rootCmd.AddCommand(kopsCmd)
 
 }
@@ -33,7 +33,7 @@ var kopsCmd = &cobra.Command{
 
 		repoFile := kopsCfgFile
 		repoFile = filepath.Clean(repoFile)
-		if !strings.HasPrefix(repoFile, "scripts/"){
+		if !strings.HasPrefix(repoFile, "./scripts/"){
 			panic(fmt.Errorf("Unsafe input! - Use a the local subdirectory scripts to host your files"))
 		}
 		byContext, err := ioutil.ReadFile(repoFile)
@@ -44,7 +44,7 @@ var kopsCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Println(string(out))
+		fmt.Println("%s", string(out))
 
 	},
 }
