@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 
 	"github.com/imdario/mergo"
 	"github.com/spf13/cobra"
@@ -16,10 +17,10 @@ var kubeManifestCfgFile string
 var deploymentManifestCfgFile string
 
 func init() {
-	kopsCmd.Flags().StringVarP(&kopsCfgFile, "kops-cluster-file", "", "scripts/kops/cluster.yaml", "generate config path")
-	kopsCmd.Flags().StringVarP(&vaultCfgFile, "vault-cluster-file", "", "tests/e2e/generated_manifests/config.yaml", "generate config path")
-	kopsCmd.Flags().StringVarP(&kubeManifestCfgFile, "encryption-config-file", "", "scripts/encryption-config.yaml", "generate config path")
-	kopsCmd.Flags().StringVarP(&deploymentManifestCfgFile, "deployment-config-file", "", "tests/e2e/generated_manifests/kms.yaml", "generate config path")
+	kopsCmd.Flags().StringVarP(&kopsCfgFile, "kops-cluster-file", "", "./scripts/kops/cluster.yaml", "generate config path")
+	kopsCmd.Flags().StringVarP(&vaultCfgFile, "vault-cluster-file", "", "./tests/e2e/generated_manifests/config.yaml", "generate config path")
+	kopsCmd.Flags().StringVarP(&kubeManifestCfgFile, "encryption-config-file", "", "./scripts/encryption-config.yaml", "generate config path")
+	kopsCmd.Flags().StringVarP(&deploymentManifestCfgFile, "deployment-config-file", "", "./tests/e2e/generated_manifests/kms.yaml", "generate config path")
 	rootCmd.AddCommand(kopsCmd)
 
 }
@@ -29,11 +30,12 @@ var kopsCmd = &cobra.Command{
 	Short: "generate kops config with vault-kms-provider support",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		f, err := ioutil.ReadFile(kopsCfgFile)
+		repoFile := kopsCfgFile
+		byContext, err := ioutil.ReadFile(filepath.Clean(repoFile))
 		if err != nil {
-			log.Fatalln(err)
+			panic(err)
 		}
-		out, err := generateConfig(f)
+		out, err := generateConfig(byContext)
 		if err != nil {
 			log.Fatalln(err)
 		}
