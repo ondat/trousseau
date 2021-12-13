@@ -34,6 +34,9 @@ var kopsCmd = &cobra.Command{
 		repoFile := kopsCfgFile
 		repoFile = filepath.Clean(repoFile) 
 		byContext, err := ioutil.ReadFile(repoFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		out, err := generateConfig(byContext)
 		if err != nil {
 			log.Fatalln(err)
