@@ -22,9 +22,11 @@ spec:
         - name: vault-kms-provider
           image: ghcr.io/trousseau-io/trousseau:v1.0.0
           imagePullPolicy: Always
-          env:                        # For community edition - remove the env, name and value
+          env:                        # Extra Vault variables
             - name: VAULT_NAMESPACE   # For Enterprise - set the value for the namespace
               value: admin
+            - name: VAULT_SKIP_VERIFY # For vault deployment with a self-signed certificate
+              value: "true"           # 
           args:
             - -v=5
             - --config-file-path=/opt/vault-kms/config.yaml
