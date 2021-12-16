@@ -6,6 +6,7 @@ vars:
   HELM_VERSION: 3.6.3
   VAULT_VERSION: 1.8.1
   KUBECTL_VERSION: 1.21.1
+  SCRIPT: scripts/templates/testing
 silent: true
 tasks:
   default:
@@ -66,7 +67,7 @@ tasks:
       - task: generate:manifests
     desc: create kind cluster
     cmds:
-      - ./bin/kind create cluster --retain --image kindest/node:"v{{.KUBERNETES_VERSION}}" --name "{{.KIND_CLUSTER_NAME}}" --wait 2m --config ./scripts/kind-cluster.yaml
+      - ./bin/kind create cluster --retain --image kindest/node:"v{{.KUBERNETES_VERSION}}" --name "{{.KIND_CLUSTER_NAME}}" --wait 2m --config ./{{.SCRIPT}}/kind-cluster.yaml
   cluster:delete:
     desc: destroy kind cluster
     cmds:
@@ -76,7 +77,7 @@ tasks:
     cmds:
       - ./bin/helm repo add banzaicloud-stable https://kubernetes-charts.banzaicloud.com
       - ./bin/helm upgrade --install vault-operator banzaicloud-stable/vault-operator --wait
-      - ./bin/kubectl apply -f scripts/vault.yaml
+      - ./bin/kubectl apply -f {{.SCRIPT}}/vault.yaml
   vault:port-forward:
     desc: port forwarding for vault
     cmds:
@@ -85,12 +86,12 @@ tasks:
     deps:
       - task: fetch:helm
       - task: fetch:kubectl
-    desc: install promethues and grafana on cluster
+    desc: install prometheus and grafana on cluster
     cmds:
       - ./bin/helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
       - ./bin/helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --wait
-      - ./bin/kubectl apply -f scripts/prometheus.yaml --wait
-      - ./bin/kubectl apply -f scripts/grafana-dashboard.yaml --wait
+      - ./bin/kubectl apply -f {{.SCRIPT}}/prometheus.yaml --wait
+      - ./bin/kubectl apply -f {{.SCRIPT}}/grafana-dashboard.yaml --wait
   prometheus:port-forward:
     deps:
       - task: fetch:kubectl
@@ -108,7 +109,7 @@ tasks:
     deps:
       - bin-dir:init
     cmds:
-      - envsubst < scripts/kms.yaml > tests/e2e/generated_manifests/kms.yaml
+      - envsubst < {{.SCRIPT}}/kms.yaml > tests/e2e/generated_manifests/kms.yaml
       - chmod 644 tests/e2e/generated_manifests/*
   docker:build:
     desc: build docker image
@@ -128,7 +129,7 @@ tasks:
   example:load:
     desc: load demo data
     cmds:
-      - sh scripts/test.bash
+      - sh {{.SCRIPT}}/test.bash
   example:before-key-rotate:
     desc: data before key rotate
     cmds:
