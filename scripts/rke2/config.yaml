@@ -1,0 +1,7 @@
+# server: https://<address>:9345    #to edit/uncomment for second and third control plane node
+# token: <rke2_server_token>             #to edit/uncomment for second and third control plane node
+kube-apiserver-arg:
+#  - "--encryption-provider-config=/var/lib/rancher/rke2/server/cred/encryption-config.json"
+#  - "--encryption-provider-config=/var/lib/rancher/rke2/server/cred/vault-kms-encryption-config.yaml" 
+kube-apiserver-extra-mount:
+  - "/opt/vault-kms:/opt/vault-kms"
