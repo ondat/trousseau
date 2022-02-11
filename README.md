@@ -3,6 +3,7 @@
     <img src="https://raw.githubusercontent.com/ondat/trousseau/main/assets/android-chrome-192x192.png?sanitize=true" height="130">
 </p>
 <p align="center">
+        <a href="https://lgtm.com/projects/g/ondat/trousseau/alerts/"><img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/ondat/trousseau.svg?logo=lgtm&logoWidth=18"/></a>
       <a href="https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml" alt="gosec">
         <img src="https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml/badge.svg?branch=main" /></a>
       <a href="https://github.com/Trousseau-io/trousseau/actions/workflows/codeql-analysis.yml" alt="codeql">
