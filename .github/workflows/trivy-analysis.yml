@@ -8,6 +8,8 @@ name: build
 on:
   workflow_dispatch:
 
+permissions: read-all
+
 jobs:
   build:
     name: Build
