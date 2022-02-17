@@ -1,6 +1,6 @@
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/ondat/trousseau/main/assets/logo-color-horizontal.png" >
+    <img src="https://github.com/ondat/trousseau/blob/main/assets/logo-horizontal.png" >
 </p>
 <p align="center">
         <a href="https://lgtm.com/projects/g/ondat/trousseau/alerts/"><img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/ondat/trousseau.svg?logo=lgtm&logoWidth=18"/></a>
@@ -35,7 +35,7 @@ How? By using using the [Kubernetes KMS provider](https://kubernetes.io/docs/tas
 
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/Trousseau-io/trousseau/main/assets/trousseau_overview.png" height="480">
+    <img src="https://github.com/ondat/trousseau/blob/main/assets/Ondat%20Diagram-w-all.png" height="600">
 </p>
 
 ## about the name
