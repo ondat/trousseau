@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       containers:
         - name: vault-kms-provider
-          image: ghcr.io/ondat/trousseau:v1.0.0
+          image: ghcr.io/ondat/trousseau:v1.1.0
           imagePullPolicy: Always
           env:                        # Extra Vault variables
             - name: VAULT_NAMESPACE   # For Enterprise - set the value for the namespace
