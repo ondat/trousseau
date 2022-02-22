@@ -60,13 +60,15 @@ func createVaultConfig(vaultCfg config.VaultConfig) {
 		log.Fatalln(err)
 	}
 }
+
 func prefixedNames(prefix, name string) string {
 	if prefix == "" {
 		return name
-	} else {
-		return fmt.Sprintf("%s-%s", prefix, name)
 	}
+
+	return fmt.Sprintf("%s-%s", prefix, name)
 }
+
 func prepareTransitKeyWithPolicy(cl *api.Client, policy, key string) {
 	configData := map[string]interface{}{
 		"deletion_allowed": allowDeleteKey,
