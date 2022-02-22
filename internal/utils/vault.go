@@ -37,7 +37,6 @@ func RotateVaultTransitKey(cli *api.Client, prefix, name string, params map[stri
 }
 
 func CreateVaultAppRole(cli *api.Client, prefix, name string, params map[string]interface{}) (*AppRoleCredentials, error) {
-
 	path := fmt.Sprintf("auth/%s/role/%s", prefix, name)
 	_, err := cli.Logical().Write(path, params)
 	if err != nil {
@@ -81,5 +80,4 @@ func CreateVaultToken(cli *api.Client, name string, params map[string]interface{
 		return "", err
 	}
 	return r.Auth.ClientToken, nil
-
 }
