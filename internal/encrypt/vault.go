@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Trousseau-io/trousseau/internal/config"
 	vaultapi "github.com/hashicorp/vault/api"
+	"github.com/ondat/trousseau/internal/config"
 	"k8s.io/klog/v2"
 )
 
