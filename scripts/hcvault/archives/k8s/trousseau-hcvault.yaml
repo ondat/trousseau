@@ -2,31 +2,31 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: vault-kms-provider
+  name: trousseau-hcvault
   namespace: kube-system
   labels:
     tier: control-plane
-    app: vault-kms-provider
+    app: trousseau-hcvault
 spec:
   selector:
     matchLabels:
-      name: vault-kms-provider
+      name: trousseau-hcvault
   template:
     metadata:
       labels:
-        name: vault-kms-provider
+        name: trousseau-hcvault
     spec:
       priorityClassName: system-cluster-critical
       hostNetwork: true
       containers:
-        - name: vault-kms-provider
-          image: ghcr.io/ondat/trousseau:v1.0.0
+        - name: trousseau-hcvault
+          image: ghcr.io/ondat/trousseau:v1.1.0
           imagePullPolicy: Always
           env:                        # Extra Vault variables
             - name: VAULT_NAMESPACE   # For Enterprise - set the value for the namespace
               value: admin
             - name: VAULT_SKIP_VERIFY # For vault deployment with a self-signed certificate
-              value: "true"           # 
+              value: "false"          # 
           args:
             - -v=5
             - --config-file-path=/opt/vault-kms/config.yaml

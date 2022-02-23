@@ -1,0 +1,38 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trousseau-vault-agent-config
+  namespace: kube-system
+data:
+  vault-agent-config.hcl: |
+    exit_after_auth = true
+    pid_file = "/home/vault/pidfile"
+    auto_auth {
+        method "kubernetes" {
+            mount_path = "auth/kubernetes"
+            config = {
+                role = "trousseau"
+            }
+        }
+        sink "file" {
+            config = {
+                path = "/home/vault/.vault-token"
+            }
+        }
+    }
+
+    template {
+    destination = "/etc/secrets/config.yaml"
+    contents = <<EOT
+    {{- with secret "secret/data/trousseau/config" }}
+    --- 
+    provider: vault
+    vault:
+      keynames:
+      - {{ .Data.data.transitkeyname }} 
+      address: {{ .Data.data.vaultaddress }} 
+      token: {{ .Data.data.vaulttoken }} 
+    {{ end }} 
+    EOT
+    }

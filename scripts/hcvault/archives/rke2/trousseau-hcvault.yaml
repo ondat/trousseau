@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trousseau-hcvault
+  namespace: kube-system
+  labels:
+    tier: control-plane
+    app: trousseau-hcvault
+spec:
+  selector:
+    matchLabels:
+      name: trousseau-hcvault
+  template:
+    metadata:
+      labels:
+        name: trousseau-hcvault
+    spec:
+      priorityClassName: system-cluster-critical
+      hostNetwork: true
+      containers:
+        - name: trousseau-hcvault
+          image: ghcr.io/ondat/trousseau:v1.1.0
+          imagePullPolicy: Always
+          env:                        # Extra Vault variables
+            - name: VAULT_NAMESPACE   # For Enterprise - set the value for the namespace
+              value: admin
+            - name: VAULT_SKIP_VERIFY # For vault deployment with a self-signed certificate
+              value: "false"           # 
+          args:
+            - -v=5
+            - --config-file-path=/opt/vault-kms/config.yaml
+            - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
+            - --log-format-json=false
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsUser: 0
+          ports:
+            - containerPort: 8787
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8787
+            failureThreshold: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          volumeMounts:
+            - name: vault-kms
+              mountPath: /opt/vault-kms
+      volumes:
+        - name: vault-kms
+          hostPath:
+            path: /opt/vault-kms
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/etcd
+          operator: Exists
+          effect: NoExecute

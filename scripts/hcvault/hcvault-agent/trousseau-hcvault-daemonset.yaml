@@ -1,0 +1,106 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vault-kms-provider
+  namespace: kube-system
+  labels:
+    tier: control-plane
+    app: vault-kms-provider
+spec:
+  selector:
+    matchLabels:
+      name: vault-kms-provider
+  template:
+    metadata:
+      labels:
+        name: vault-kms-provider
+    spec:
+      serviceAccountName: vault-auth
+      priorityClassName: system-cluster-critical
+      hostNetwork: true
+      initContainers:
+        - name: vault-agent
+          image: vault
+          securityContext:
+            privileged: true
+          args:
+            - agent
+            - -config=/etc/vault/vault-agent-config.hcl
+            - -log-level=debug
+          env:
+            - name: VAULT_ADDR
+              value: http://tdevhvc-01.trousseau.io:8200
+          volumeMounts:
+            - name: config
+              mountPath: /etc/vault
+            - name: shared-data 
+              mountPath: /etc/secrets
+      containers:
+        - name: vault-kms-provider
+          image: ghcr.io/ondat/trousseau:v1.1.0
+          imagePullPolicy: Always
+          env:                        
+            #- name: VAULT_NAMESPACE    # For Enterprise - set the value for the namespace
+            #  value: admin
+            - name: VAULT_SKIP_VERIFY # For vault deployment with a self-signed certificate
+              value: "true"           
+          args:
+            - -v=5
+            - --config-file-path=/opt/trousseau/config.yaml
+            - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
+            - --log-format-json=false
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsUser: 0
+          ports:
+            - containerPort: 8787
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8787
+            failureThreshold: 3
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          volumeMounts:
+            - name: vault-kms
+              mountPath: /opt/vault-kms
+            - name: shared-data
+              mountPath: /opt/trousseau/
+      volumes:
+        - name: vault-kms
+          hostPath:
+            path: /opt/vault-kms
+        - configMap:
+            items:
+              - key: vault-agent-config.hcl
+                path: vault-agent-config.hcl
+            name: trousseau-vault-agent-config
+          name: config
+        - emptyDir: {}
+          name: shared-data
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/etcd
+          operator: Exists
+          effect: NoExecute
