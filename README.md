@@ -21,7 +21,7 @@ This repo hosts:
 * documentation [wiki](https://github.com/ondat/trousseau/wiki)
 * container image for [HashiCorp Vault](https://github.com/ondat/trousseau/pkgs/container/trousseau)
 
-## why Trousseau
+## Why Trousseau
 
 Kubernetes platform users are all facing the very same question:  
 ***how to handle Secrets?***  
@@ -38,8 +38,11 @@ How? By using using the [Kubernetes KMS provider](https://kubernetes.io/docs/tas
     <img src="https://github.com/ondat/trousseau/blob/main/assets/Ondat%20Diagram-w-all.png" height="600">
 </p>
 
-## about the name
+## About the name
 The name ***trousseau*** comes from the French language and is usually associated with keys like in ***trousseau de clés*** meaning ***keyring***.
+
+## Contributing Guidelines
+We love your input! We want to make contributing to this project as easy and transparent as possible. You can find the full guidelines [here](https://github.com/ondat/trousseau/blob/main/CONTRIBUTING.md).
 
 ## Community
 Please reach out for any questions or issues via our [Github Discussions](https://github.com/ondat/trousseau/discussions).
@@ -50,3 +53,6 @@ Alternatively you can:
 
 ## Roadmap
 You can view our project board [here](https://github.com/orgs/ondat/projects/1/views/4).
+
+## License
+Trousseau is under the Apache 2.0 license. See [LICENSE](https://github.com/ondat/trousseau/blob/main/LICENSE) file for details.
