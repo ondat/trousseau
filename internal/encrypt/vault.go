@@ -59,9 +59,9 @@ func newClientWrapper(config *config.VaultConfig) (*vaultWrapper, error) {
 		client.SetToken(config.Token)
 	} else {
 		err = wrapper.getInitialToken(config)
-	}
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return wrapper, nil
@@ -110,6 +110,8 @@ func (c *vaultWrapper) tlsToken(config *config.VaultConfig) (string, error) {
 	resp, err := c.client.Logical().Write("/"+path.Join(c.authPath, "cert", "login"), nil)
 	if err != nil {
 		return "", err
+	} else if resp.Auth == nil {
+		return "", errors.New("authentication information not found")
 	}
 
 	return resp.Auth.ClientToken, nil
@@ -123,6 +125,8 @@ func (c *vaultWrapper) appRoleToken(config *config.VaultConfig) (string, error) 
 	resp, err := c.client.Logical().Write("/"+path.Join(c.authPath, "approle", "login"), data)
 	if err != nil {
 		return "", err
+	} else if resp.Auth == nil {
+		return "", errors.New("authentication information not found")
 	}
 
 	return resp.Auth.ClientToken, nil
@@ -156,18 +160,14 @@ func (c *vaultWrapper) request(path string, data interface{}) (*vaultapi.Secret,
 		}
 		return nil, fmt.Errorf("error making POST request to path: %v , error: %v", path, err)
 	}
-	if resp != nil {
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			secret, err := vaultapi.ParseSecret(resp.Body)
-			if err != nil {
-				return nil, err
-			}
-			return secret, nil
-		}
+	if resp == nil {
+		return nil, fmt.Errorf("no response received for POST request to %v", path)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected response code: %v received for POST request to %v", resp.StatusCode, path)
 	}
-	return nil, fmt.Errorf("no response received for POST request to %v", path)
+	return vaultapi.ParseSecret(resp.Body)
 }
 
 // Return this error when get HTTP code 403.
@@ -218,12 +218,10 @@ func (c *vaultWrapper) refreshTokenLocked(config *config.VaultConfig) error {
 }
 
 func (c *vaultWrapper) encryptLocked(key string, data string) (string, error) {
-	var result string = ""
-
 	dataReq := map[string]string{"plaintext": data}
 	resp, err := c.request(path.Join(c.encryptPath, key), dataReq)
 	if err != nil {
-		return result, fmt.Errorf("error during encrypt request: %v ", err)
+		return "", fmt.Errorf("error during encrypt request: %v ", err)
 	}
 
 	result, ok := resp.Data["ciphertext"].(string)
@@ -236,12 +234,10 @@ func (c *vaultWrapper) encryptLocked(key string, data string) (string, error) {
 }
 
 func (c *vaultWrapper) decryptLocked(key string, data string) (string, error) {
-	var result string = ""
-
 	dataReq := map[string]string{"ciphertext": string(data)}
 	resp, err := c.request(path.Join(c.decryptPath, c.config.KeyNames[0]), dataReq)
 	if err != nil {
-		return result, fmt.Errorf("error during decrypt request: %v ", err)
+		return "", fmt.Errorf("error during decrypt request: %v ", err)
 	}
 
 	result, ok := resp.Data["plaintext"].(string)

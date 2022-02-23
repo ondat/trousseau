@@ -1,8 +1,8 @@
 ---
-name: Task
-about: Task description based on an existing user story or not
-title: "[TASK] "
-labels: ''
+name: RFE
+about: Request for Enhancement description
+title: "[RFE] "
+labels: enhancement
 assignees: ''
 
 ---

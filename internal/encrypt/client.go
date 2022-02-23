@@ -19,5 +19,4 @@ func NewService(config cfg.ProviderConfig) (EncryptionClient, error) {
 	default:
 		return nil, errors.New("unknown provider")
 	}
-
 }
