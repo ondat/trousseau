@@ -40,3 +40,13 @@ How? By using using the [Kubernetes KMS provider](https://kubernetes.io/docs/tas
 
 ## about the name
 The name ***trousseau*** comes from the French language and is usually associated with keys like in ***trousseau de clés*** meaning ***keyring***.
+
+## Community
+Please reach out for any questions or issues via our [Github Discussions](https://github.com/ondat/trousseau/discussions).
+
+Alternatively you can:
+* Raise an issue or PR on this repo
+* Follow us on Twitter [@ondat_io](https://twitter.com/ondat_io)
+
+## Roadmap
+You can view our project board [here](https://github.com/orgs/ondat/projects/1/views/4).
