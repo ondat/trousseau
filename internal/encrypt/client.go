@@ -3,7 +3,7 @@ package encrypt
 import (
 	"errors"
 
-	cfg "github.com/Trousseau-io/trousseau/internal/config"
+	cfg "github.com/ondat/trousseau/internal/config"
 )
 
 type EncryptionClient interface {

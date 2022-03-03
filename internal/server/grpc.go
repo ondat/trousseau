@@ -5,10 +5,10 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/Trousseau-io/trousseau/internal/config"
-	"github.com/Trousseau-io/trousseau/internal/encrypt"
-	"github.com/Trousseau-io/trousseau/internal/metrics"
-	"github.com/Trousseau-io/trousseau/internal/version"
+	"github.com/ondat/trousseau/internal/config"
+	"github.com/ondat/trousseau/internal/encrypt"
+	"github.com/ondat/trousseau/internal/metrics"
+	"github.com/ondat/trousseau/internal/version"
 	"k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	"k8s.io/klog/v2"
 )
