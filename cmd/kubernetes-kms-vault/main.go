@@ -49,7 +49,7 @@ func main() {
 		os.Exit(1)
 	}
 	klog.InfoS("Starting VaultEncryptionServiceServer service", "version", version.BuildVersion, "buildDate", version.BuildDate)
-	cfg, err := config.New(configFilePath)
+	cfg, err := config.New(*configFilePath)
 	if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)

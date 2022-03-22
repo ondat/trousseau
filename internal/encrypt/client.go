@@ -1,9 +1,8 @@
 package encrypt
 
 import (
-	"errors"
-
 	cfg "github.com/ondat/trousseau/internal/config"
+	errors "github.com/pkg/errors"
 )
 
 type EncryptionClient interface {

@@ -2,13 +2,13 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/ondat/trousseau/internal/version"
+	errors "github.com/pkg/errors"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	"k8s.io/klog/v2"
@@ -81,10 +81,10 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *HealthZ) checkRPC(ctx context.Context, client pb.KeyManagementServiceClient) error {
 	v, err := client.Version(ctx, &pb.VersionRequest{})
 	if err != nil {
-		return err
+		return errors.WithMessage(err, "unable to get version")
 	}
 	if v.Version != version.APIVersion || v.RuntimeName != version.Runtime || v.RuntimeVersion != version.BuildVersion {
-		return fmt.Errorf("failed to get correct version response")
+		return errors.New("failed to get correct version response")
 	}
 	return nil
 }
