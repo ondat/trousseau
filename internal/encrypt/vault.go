@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"sync"
 
-	errors "errors"
+	"errors"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/ondat/trousseau/internal/config"

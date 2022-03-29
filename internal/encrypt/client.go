@@ -1,7 +1,7 @@
 package encrypt
 
 import (
-	errors "errors"
+	"errors"
 
 	cfg "github.com/ondat/trousseau/internal/config"
 )

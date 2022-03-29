@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	errors "errors"
+	"errors"
 
 	"github.com/ondat/trousseau/internal/version"
 	"google.golang.org/grpc"
