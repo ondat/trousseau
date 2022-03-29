@@ -26,12 +26,14 @@ type HealthZ struct {
 }
 
 // Serve creates the http handler for serving health requests
-func (h *HealthZ) Serve() {
+func (h *HealthZ) Serve() error {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
 	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && err != http.ErrServerClosed {
-		klog.Fatalf("failed to start health check server, err: %+v", err)
+		return errors.Wrap(err, "failed to start health check server")
 	}
+
+	return nil
 }
 
 func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {

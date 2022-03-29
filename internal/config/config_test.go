@@ -37,9 +37,9 @@ func setUp() {
 }
 
 func tearDown() {
-	e := os.Remove(file)
-	if e != nil {
-		log.Fatal(e)
+	err := os.Remove(file)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 

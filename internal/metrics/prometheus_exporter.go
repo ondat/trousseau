@@ -13,7 +13,8 @@ const (
 	metricsEndpoint = "metrics"
 )
 
-func initPrometheusExporter(metricsAddress string) error {
+// serve creates the http handler for serving metrics requests
+func servePrometheusExporter(metricsAddress string) error {
 	exporter, err := prometheus.InstallNewPipeline(prometheus.Config{
 		DefaultHistogramBoundaries: []float64{
 			0.1, 0.2, 0.3, 0.4, 0.5, 1, 1.5, 2, 2.5, 3.0, 5.0, 10.0, 15.0, 30.0,
@@ -23,13 +24,11 @@ func initPrometheusExporter(metricsAddress string) error {
 		return errors.Wrap(err, "failed to register prometheus exporter")
 	}
 
+	klog.InfoS("Prometheus metrics server starting", "address", metricsAddress)
 	http.HandleFunc(fmt.Sprintf("/%s", metricsEndpoint), exporter.ServeHTTP)
-	go func() {
-		if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsAddress), nil); err != nil {
-			klog.Fatalf("Failed to register prometheus endpoint - %v", err)
-		}
-	}()
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsAddress), nil); err != nil {
+		return errors.Wrap(err, "failed to register prometheus endpoint")
+	}
 
-	klog.InfoS("Prometheus metrics server running", "address", metricsAddress)
 	return nil
 }

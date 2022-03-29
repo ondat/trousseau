@@ -16,6 +16,7 @@ import (
 	"github.com/ondat/trousseau/internal/server"
 	"github.com/ondat/trousseau/internal/utils"
 	"github.com/ondat/trousseau/internal/version"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	json "k8s.io/component-base/logs/json"
@@ -43,11 +44,15 @@ func main() {
 	ctx := withShutdownSignal(context.Background())
 
 	// initialize metrics exporter
-	err := metrics.InitMetricsExporter(*metricsBackend, *metricsAddress)
-	if err != nil {
-		klog.Errorln(err)
-		os.Exit(1)
-	}
+	go func() {
+		err := metrics.Serve(*metricsBackend, *metricsAddress)
+		if err != nil {
+			klog.Errorln(err)
+			os.Exit(1)
+		}
+		klog.Fatalln("metrics service has stopped gracefully")
+	}()
+
 	klog.InfoS("Starting VaultEncryptionServiceServer service", "version", version.BuildVersion, "buildDate", version.BuildDate)
 	cfg, err := config.New(*configFilePath)
 	if err != nil {
@@ -73,13 +78,17 @@ func main() {
 	kmsServer, err := server.New(ctx, cfg)
 	pb.RegisterKeyManagementServiceServer(s, kmsServer)
 	if err != nil {
-		klog.Fatalf("failed to listen: %v", err)
+		klog.Errorln(errors.Wrap(err, "failed to listen"))
+		os.Exit(1)
 	}
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
 	go func() {
 		err := s.Serve(listener)
-		klog.Errorln(err)
-		os.Exit(1)
+		if err != nil {
+			klog.Errorln(err)
+			os.Exit(1)
+		}
+		klog.Fatalln("GRPC service has stopped gracefully")
 	}()
 	healthz := &server.HealthZ{
 		Service: kmsServer,
@@ -90,7 +99,15 @@ func main() {
 		UnixSocketPath: listener.Addr().String(),
 		RPCTimeout:     *healthzTimeout,
 	}
-	go healthz.Serve()
+	go func() {
+		err := healthz.Serve()
+		if err != nil {
+			klog.Errorln(err)
+			os.Exit(1)
+		}
+		klog.Fatalln("healtz service has stopped gracefully")
+	}()
+
 	<-ctx.Done()
 	// gracefully stop the grpc server
 	klog.Infof("terminating the server")
@@ -98,7 +115,6 @@ func main() {
 	klog.Flush()
 	// using os.Exit skips running deferred functions
 	os.Exit(0)
-
 }
 
 // withShutdownSignal returns a copy of the parent context that will close if
