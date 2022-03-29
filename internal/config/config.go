@@ -2,10 +2,10 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 
-	errors "github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"k8s.io/klog/v2"
 )
@@ -20,16 +20,16 @@ func New(cfpPath string) (ProviderConfig, error) {
 	viper.SetConfigType("yaml")
 	file, err := os.ReadFile(filepath.Clean(cfpPath))
 	if err != nil {
-		return nil, errors.WithMessagef(err, "unable to open config file %s", cfpPath)
+		return nil, fmt.Errorf("unable to open config file %s: %w", cfpPath, err)
 	}
 	err = viper.ReadConfig(bytes.NewBuffer(file))
 	if err != nil {
-		return nil, errors.WithMessagef(err, "unable to read config file %s", cfpPath)
+		return nil, fmt.Errorf("unable to read config file %s: %w", cfpPath, err)
 	}
 	var cfg appConfig
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "unable to unmarshal config file %s", cfpPath)
+		return nil, fmt.Errorf("unable to unmarshal config file %s: %w", cfpPath, err)
 	}
 	return &cfg, nil
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/vault/api"
-	"github.com/pkg/errors"
 )
 
 type AppRoleCredentials struct {
@@ -16,13 +15,13 @@ func CreateVaultTransitKey(cli *api.Client, prefix, name string, params map[stri
 	path := fmt.Sprintf("%s/keys/%s", prefix, name)
 	_, err := cli.Logical().Write(path, params)
 	if err != nil {
-		return errors.WithMessagef(err, "unable to create params for %s", path)
+		return fmt.Errorf("unable to create params for %s: %w", path, err)
 	}
 	if configParams != nil {
 		path := fmt.Sprintf("transit/keys/%s/config", name)
 		_, err := cli.Logical().Write(path, configParams)
 		if err != nil {
-			return errors.WithMessagef(err, "unable to create config params for %s", path)
+			return fmt.Errorf("unable to create config params for %s: %w", path, err)
 		}
 	}
 	return nil
@@ -32,7 +31,7 @@ func RotateVaultTransitKey(cli *api.Client, prefix, name string, params map[stri
 	path := fmt.Sprintf("%s/keys/%s/rotate", prefix, name)
 	_, err := cli.Logical().Write(path, params)
 	if err != nil {
-		return errors.WithMessagef(err, "unable to rotate params for %s", path)
+		return fmt.Errorf("unable to rotate params for %s: %w", path, err)
 	}
 	return nil
 }
@@ -41,15 +40,15 @@ func CreateVaultAppRole(cli *api.Client, prefix, name string, params map[string]
 	path := fmt.Sprintf("auth/%s/role/%s", prefix, name)
 	_, err := cli.Logical().Write(path, params)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "unable to create role for %s", path)
+		return nil, fmt.Errorf("unable to create role for %s: %w", path, err)
 	}
 	roleSecret, err := cli.Logical().Read(path + "/role-id")
 	if err != nil {
-		return nil, errors.WithMessagef(err, "unable to read role for %s", path)
+		return nil, fmt.Errorf("unable to read role for %s: %w", path, err)
 	}
 	SecretIDSecret, err := cli.Logical().Write(path+"/secret-id", nil)
 	if err != nil {
-		return nil, errors.WithMessagef(err, "unable to read secret for %s", path)
+		return nil, fmt.Errorf("unable to read secret for %s: %w", path, err)
 	}
 	return &AppRoleCredentials{
 		RoleID:   roleSecret.Data["role_id"].(string),
@@ -71,7 +70,7 @@ func CreateVaultPolicy(api *api.Client, policyName string, keyName string) error
 		"policy": policy,
 	})
 	if err != nil {
-		return errors.WithMessagef(err, "unable to create policy for %s", path)
+		return fmt.Errorf("unable to create policy for %s: %w", path, err)
 	}
 	return nil
 }
@@ -80,7 +79,7 @@ func CreateVaultToken(cli *api.Client, name string, params map[string]interface{
 	path := "/auth/token/create"
 	r, err := cli.Logical().Write(path, params)
 	if err != nil {
-		return "", errors.WithMessagef(err, "unable to create vault token for %s", path)
+		return "", fmt.Errorf("unable to create vault token for %s: %w", path, err)
 	}
 	return r.Auth.ClientToken, nil
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	errors "github.com/pkg/errors"
 	"go.opentelemetry.io/otel/exporters/metric/prometheus"
 	"k8s.io/klog/v2"
 )
@@ -21,13 +20,13 @@ func servePrometheusExporter(metricsAddress string) error {
 		}},
 	)
 	if err != nil {
-		return errors.Wrap(err, "failed to register prometheus exporter")
+		return fmt.Errorf("failed to register prometheus exporter: %w", err)
 	}
 
 	klog.InfoS("Prometheus metrics server starting", "address", metricsAddress)
 	http.HandleFunc(fmt.Sprintf("/%s", metricsEndpoint), exporter.ServeHTTP)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsAddress), nil); err != nil {
-		return errors.Wrap(err, "failed to register prometheus endpoint")
+		return fmt.Errorf("failed to register prometheus endpoint: %w", err)
 	}
 
 	return nil

@@ -2,13 +2,15 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 
+	errors "errors"
+
 	"github.com/ondat/trousseau/internal/version"
-	errors "github.com/pkg/errors"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	"k8s.io/klog/v2"
@@ -30,7 +32,7 @@ func (h *HealthZ) Serve() error {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
 	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && err != http.ErrServerClosed {
-		return errors.Wrap(err, "failed to start health check server")
+		return fmt.Errorf("failed to start health check server: %w", err)
 	}
 
 	return nil
@@ -83,7 +85,7 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *HealthZ) checkRPC(ctx context.Context, client pb.KeyManagementServiceClient) error {
 	v, err := client.Version(ctx, &pb.VersionRequest{})
 	if err != nil {
-		return errors.WithMessage(err, "unable to get version")
+		return fmt.Errorf("unable to get version: %w", err)
 	}
 	if v.Version != version.APIVersion || v.RuntimeName != version.Runtime || v.RuntimeVersion != version.BuildVersion {
 		return errors.New("failed to get correct version response")

@@ -2,9 +2,9 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
 )
@@ -17,7 +17,7 @@ func ParseEndpoint(ep string) (string, string, error) {
 			return s[0], s[1], nil
 		}
 	}
-	return "", "", errors.Errorf("invalid endpoint: %s", ep)
+	return "", "", fmt.Errorf("invalid endpoint: %s", ep)
 }
 
 // UnaryServerInterceptor provides metrics around Unary RPCs.
@@ -26,7 +26,7 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 	resp, err := handler(ctx, req)
 	if err != nil {
 		klog.ErrorS(err, "GRPC request error")
-		err = errors.WithMessage(err, "GRPC request error")
+		err = fmt.Errorf("GRPC request error: %w", err)
 	}
 	return resp, err
 }

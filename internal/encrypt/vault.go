@@ -8,9 +8,10 @@ import (
 	"strings"
 	"sync"
 
+	errors "errors"
+
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/ondat/trousseau/internal/config"
-	errors "github.com/pkg/errors"
 	"k8s.io/klog/v2"
 )
 
@@ -31,7 +32,7 @@ type vaultWrapper struct {
 func newClientWrapper(config *config.VaultConfig) (*vaultWrapper, error) {
 	client, err := newVaultApiClient(config)
 	if err != nil {
-		return nil, errors.WithMessage(err, "unable to create vault client")
+		return nil, fmt.Errorf("unable to create vault client: %w", err)
 	}
 
 	// Vault transit path is configurable. "path", "/path", "path/" and "/path/"
@@ -59,7 +60,7 @@ func newClientWrapper(config *config.VaultConfig) (*vaultWrapper, error) {
 		client.SetToken(config.Token)
 	} else {
 		if err := wrapper.getInitialToken(config); err != nil {
-			return nil, errors.WithMessage(err, "unable to get initial token")
+			return nil, fmt.Errorf("unable to get initial token: %w", err)
 		}
 	}
 
@@ -77,7 +78,7 @@ func newVaultApiClient(config *config.VaultConfig) (*vaultapi.Client, error) {
 		TLSServerName: config.TLSServerName,
 	}
 	if err := vaultConfig.ConfigureTLS(tlsConfig); err != nil {
-		return nil, errors.WithMessagef(err, "unable to configure TLS for %s", config.TLSServerName)
+		return nil, fmt.Errorf("unable to configure TLS for %s: %w", config.TLSServerName, err)
 	}
 
 	return vaultapi.NewClient(vaultConfig)
@@ -88,13 +89,13 @@ func (c *vaultWrapper) getInitialToken(config *config.VaultConfig) error {
 	case config.ClientCert != "" && config.ClientKey != "":
 		token, err := c.tlsToken(config)
 		if err != nil {
-			return errors.Wrap(err, "rotating token through TLS auth backend")
+			return fmt.Errorf("rotating token through TLS auth backend: %w", err)
 		}
 		c.client.SetToken(token)
 	case config.RoleID != "":
 		token, err := c.appRoleToken(config)
 		if err != nil {
-			return errors.Wrap(err, "rotating token through app role backend")
+			return fmt.Errorf("rotating token through app role backend: %w", err)
 		}
 		c.client.SetToken(token)
 	default:
@@ -109,7 +110,7 @@ func (c *vaultWrapper) tlsToken(config *config.VaultConfig) (string, error) {
 	path := path.Join("/", c.authPath, "cert", "login")
 	resp, err := c.client.Logical().Write(path, nil)
 	if err != nil {
-		return "", errors.WithMessagef(err, "unable to write TLS via API on %s", path)
+		return "", fmt.Errorf("unable to write TLS via API on %s: %w", path, err)
 	} else if resp.Auth == nil {
 		return "", errors.New("authentication information not found")
 	}
@@ -125,7 +126,7 @@ func (c *vaultWrapper) appRoleToken(config *config.VaultConfig) (string, error) 
 	path := path.Join("/", c.authPath, "approle", "login")
 	resp, err := c.client.Logical().Write(path, data)
 	if err != nil {
-		return "", errors.WithMessagef(err, "unable to write app role token via API on %s", path)
+		return "", fmt.Errorf("unable to write app role token via API on %s: %w", path, err)
 	} else if resp.Auth == nil {
 		return "", errors.New("authentication information not found")
 	}
@@ -135,7 +136,7 @@ func (c *vaultWrapper) appRoleToken(config *config.VaultConfig) (string, error) 
 func (c *vaultWrapper) Encrypt(data []byte) ([]byte, error) {
 	response, err := c.withRefreshToken(true, c.config.KeyNames[0], string(data))
 	if err != nil {
-		return nil, errors.WithMessage(err, "unable to encrypt data")
+		return nil, fmt.Errorf("unable to encrypt data: %w", err)
 	}
 	return []byte(response), nil
 
@@ -143,7 +144,7 @@ func (c *vaultWrapper) Encrypt(data []byte) ([]byte, error) {
 func (c *vaultWrapper) Decrypt(data []byte) ([]byte, error) {
 	response, err := c.withRefreshToken(false, c.config.KeyNames[0], string(data))
 	if err != nil {
-		return nil, errors.WithMessage(err, "unable to decrypt data")
+		return nil, fmt.Errorf("unable to decrypt data: %w", err)
 	}
 	return []byte(response), nil
 }
@@ -151,7 +152,7 @@ func (c *vaultWrapper) Decrypt(data []byte) ([]byte, error) {
 func (c *vaultWrapper) request(path string, data interface{}) (*vaultapi.Secret, error) {
 	req := c.client.NewRequest("POST", "/"+path)
 	if err := req.SetJSONBody(data); err != nil {
-		return nil, errors.WithMessagef(err, "unable to set request JSON on %s", path)
+		return nil, fmt.Errorf("unable to set request JSON on %s: %w", path, err)
 	}
 
 	resp, err := c.client.RawRequest(req)
@@ -159,14 +160,14 @@ func (c *vaultWrapper) request(path string, data interface{}) (*vaultapi.Secret,
 		if strings.Contains(err.Error(), "Code: 403") {
 			return nil, &forbiddenError{err: err}
 		}
-		return nil, errors.Wrapf(err, "error making POST request on %s", path)
+		return nil, fmt.Errorf("error making POST request on %s: %w", path, err)
 	}
 	if resp == nil {
-		return nil, errors.Wrapf(err, "no response received for POST request on %s", path)
+		return nil, fmt.Errorf("no response received for POST request on %s: %w", path, err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("unexpected response code: %v received for POST request to %v", resp.StatusCode, path)
+		return nil, fmt.Errorf("unexpected response code: %v received for POST request to %v", resp.StatusCode, path)
 	}
 	return vaultapi.ParseSecret(resp.Body)
 }
@@ -204,7 +205,7 @@ func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (strin
 	defer c.rwmutex.Unlock()
 	err = c.refreshTokenLocked(c.config)
 	if err != nil {
-		return result, errors.Wrap(err, "error refresh token request")
+		return result, fmt.Errorf("error refresh token request: %w", err)
 	}
 	klog.V(2).Infof("vault token refreshed")
 	if isEncrypt {
@@ -222,12 +223,12 @@ func (c *vaultWrapper) encryptLocked(key string, data string) (string, error) {
 	dataReq := map[string]string{"plaintext": data}
 	resp, err := c.request(path.Join(c.encryptPath, key), dataReq)
 	if err != nil {
-		return "", errors.Wrap(err, "error during encrypt request")
+		return "", fmt.Errorf("error during encrypt request: %w", err)
 	}
 
 	result, ok := resp.Data["ciphertext"].(string)
 	if !ok {
-		return result, errors.Errorf("failed type assertion of vault encrypt response type: %v to string", reflect.TypeOf(resp.Data["ciphertext"]))
+		return result, fmt.Errorf("failed type assertion of vault encrypt response type: %v to string", reflect.TypeOf(resp.Data["ciphertext"]))
 	}
 
 	return result, nil
@@ -238,12 +239,12 @@ func (c *vaultWrapper) decryptLocked(key string, data string) (string, error) {
 	dataReq := map[string]string{"ciphertext": string(data)}
 	resp, err := c.request(path.Join(c.decryptPath, c.config.KeyNames[0]), dataReq)
 	if err != nil {
-		return "", errors.Wrap(err, "error during decrypt request")
+		return "", fmt.Errorf("error during decrypt request: %w", err)
 	}
 
 	result, ok := resp.Data["plaintext"].(string)
 	if !ok {
-		return result, errors.Errorf("failed type assertion of vault decrypt response type: %v to string", reflect.TypeOf(resp.Data["plaintext"]))
+		return result, fmt.Errorf("failed type assertion of vault decrypt response type: %v to string", reflect.TypeOf(resp.Data["plaintext"]))
 	}
 
 	return result, nil

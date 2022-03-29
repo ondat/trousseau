@@ -3,13 +3,13 @@ package server
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"time"
 
 	"github.com/ondat/trousseau/internal/config"
 	"github.com/ondat/trousseau/internal/encrypt"
 	"github.com/ondat/trousseau/internal/metrics"
 	"github.com/ondat/trousseau/internal/version"
-	errors "github.com/pkg/errors"
 	"k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	"k8s.io/klog/v2"
 )
@@ -28,7 +28,7 @@ type keyManagementServiceServer struct {
 func New(ctx context.Context, cfg config.ProviderConfig) (KeyManagementService, error) {
 	kvClient, err := encrypt.NewService(cfg)
 	if err != nil {
-		return nil, errors.WithMessage(err, "unable to create encrypt service")
+		return nil, fmt.Errorf("unable to create encrypt service: %w", err)
 	}
 	return &keyManagementServiceServer{
 		kvClient: kvClient,
@@ -53,12 +53,12 @@ func (k *keyManagementServiceServer) Decrypt(ctx context.Context, data *v1beta1.
 	r, err := k.kvClient.Decrypt(data.Cipher)
 	if err != nil {
 		klog.ErrorS(err, "failed to decrypt")
-		return nil, errors.WithMessage(err, "failed to decrypt")
+		return nil, fmt.Errorf("failed to decrypt: %w", err)
 	}
 	w, err := base64.StdEncoding.DecodeString(string(r))
 	if err != nil {
 		klog.ErrorS(err, "failed decode encrypted data")
-		return nil, errors.WithMessage(err, "failed decode encrypted data")
+		return nil, fmt.Errorf("failed decode encrypted data: %w", err)
 	}
 	klog.V(2).Infof("decrypt request complete")
 	return &v1beta1.DecryptResponse{Plain: w}, nil
@@ -82,7 +82,7 @@ func (k *keyManagementServiceServer) Encrypt(ctx context.Context, data *v1beta1.
 	response, err := k.kvClient.Encrypt([]byte(plain))
 	if err != nil {
 		klog.ErrorS(err, "failed to encrypt")
-		return nil, errors.WithMessage(err, "failed to encrypt")
+		return nil, fmt.Errorf("failed to encrypt: %w", err)
 	}
 	klog.V(2).Infof("encrypt request complete")
 	return &v1beta1.EncryptResponse{Cipher: response}, nil

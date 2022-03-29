@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -16,7 +17,6 @@ import (
 	"github.com/ondat/trousseau/internal/server"
 	"github.com/ondat/trousseau/internal/utils"
 	"github.com/ondat/trousseau/internal/version"
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	json "k8s.io/component-base/logs/json"
@@ -78,7 +78,7 @@ func main() {
 	kmsServer, err := server.New(ctx, cfg)
 	pb.RegisterKeyManagementServiceServer(s, kmsServer)
 	if err != nil {
-		klog.Errorln(errors.Wrap(err, "failed to listen"))
+		klog.Errorln(fmt.Errorf("failed to listen: %w", err))
 		os.Exit(1)
 	}
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
