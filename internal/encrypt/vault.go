@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"path"
 	"reflect"
-	"strings"
 	"sync"
 
 	errors "errors"
@@ -157,8 +156,8 @@ func (c *vaultWrapper) request(path string, data interface{}) (*vaultapi.Secret,
 
 	resp, err := c.client.RawRequest(req)
 	if err != nil {
-		if strings.Contains(err.Error(), "Code: 403") {
-			return nil, &forbiddenError{err: err}
+		if resp.StatusCode == http.StatusForbidden {
+			return nil, newForbiddenError(err)
 		}
 		return nil, fmt.Errorf("error making POST request on %s: %w", path, err)
 	}
@@ -170,15 +169,6 @@ func (c *vaultWrapper) request(path string, data interface{}) (*vaultapi.Secret,
 		return nil, fmt.Errorf("unexpected response code: %v received for POST request to %v", resp.StatusCode, path)
 	}
 	return vaultapi.ParseSecret(resp.Body)
-}
-
-// Return this error when get HTTP code 403.
-type forbiddenError struct {
-	err error
-}
-
-func (e *forbiddenError) Error() string {
-	return fmt.Sprintf("error %s", e.err)
 }
 
 func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (string, error) {
@@ -199,7 +189,7 @@ func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (strin
 	}
 	_, ok := err.(*forbiddenError)
 	if !ok {
-		return result, err
+		return result, fmt.Errorf("error during connection: %w", err)
 	}
 	c.rwmutex.Lock()
 	defer c.rwmutex.Unlock()
@@ -212,6 +202,9 @@ func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (strin
 		result, err = c.encryptLocked(key, data)
 	} else {
 		result, err = c.decryptLocked(key, data)
+	}
+	if err != nil {
+		err = fmt.Errorf("error during en/de-cryption: %w", err)
 	}
 	return result, err
 }
