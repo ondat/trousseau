@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 
 	errors "github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -17,7 +18,7 @@ type ProviderConfig interface {
 func New(cfpPath string) (ProviderConfig, error) {
 	klog.V(5).Infof("Populating AppConfig from %s", cfpPath)
 	viper.SetConfigType("yaml")
-	file, err := os.ReadFile(cfpPath)
+	file, err := os.ReadFile(filepath.Clean(cfpPath))
 	if err != nil {
 		return nil, errors.WithMessagef(err, "unable to open config file %s", cfpPath)
 	}
