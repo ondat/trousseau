@@ -1,6 +1,7 @@
 version: 3
 vars:
   KIND_CLUSTER_NAME: kms-vault
+  GOSEC_VERSION: 2.11.0
   KIND_VERSION: 0.11.1
   KUBERNETES_VERSION: 1.21.2
   HELM_VERSION: 3.6.3
@@ -20,6 +21,17 @@ tasks:
     status:
       - test -d ./bin
       - test -d tests/e2e/generated_manifests
+  fetch:gosec:
+    deps:
+      - bin-dir:init
+    desc: install gosec
+    cmds:
+      - curl -L https://github.com/securego/gosec/releases/download/v{{.GOSEC_VERSION}}/gosec_{{.GOSEC_VERSION}}_{{OS}}_{{ARCH}}.tar.gz | tar xvz --one-top-level=gosectmp
+      - mv gosectmp/gosec ./bin/gosec
+      - chmod 755 bin/gosec
+      - rm -rf gosectmp
+    status:
+      - test -f ./bin/gosec
   fetch:kind:
     deps:
       - bin-dir:init
@@ -33,7 +45,7 @@ tasks:
       - bin-dir:init
     desc: install helm
     cmds:
-      - wget -qO- https://get.helm.sh/helm-v{{.HELM_VERSION}}-{{OS}}-{{ARCH}}.tar.gz | tar xvz -C ./
+      - curl -L https://get.helm.sh/helm-v{{.HELM_VERSION}}-{{OS}}-{{ARCH}}.tar.gz | tar xvz -C ./
       - mv {{OS}}-{{ARCH}}/helm ./bin/helm
       - chmod 755 bin/helm
       - rm -rf {{OS}}-{{ARCH}}
