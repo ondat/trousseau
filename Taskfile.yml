@@ -7,7 +7,7 @@ vars:
   HELM_VERSION: 3.6.3
   VAULT_VERSION: 1.8.1
   KUBECTL_VERSION: 1.21.1
-  SCRIPT: scripts/templates/testing
+  SCRIPT: scripts/hcvault/archives/testing
 silent: true
 tasks:
   default:
@@ -126,11 +126,10 @@ tasks:
   docker:build:
     desc: build docker image
     cmds:
-      - docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:latest .
+      - docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_VERSION .
   docker:push:
     desc: push docker image
     cmds:
-      - docker tag $DOCKER_REGISTRY/$IMAGE_NAME:latest $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_VERSION
       - docker push $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_VERSION
   go:unit-tests:
     cmds:

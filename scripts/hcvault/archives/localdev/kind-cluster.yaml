@@ -5,15 +5,11 @@ nodes:
 - role: control-plane
   extraMounts:
   - containerPath: /etc/kubernetes/encryption-config.yaml
-    hostPath: scripts/hcvault/archives/testing/encryption-config.yaml
+    hostPath: scripts/hcvault/archives/localdev/encryption-config.yaml
     readOnly: true
     propagation: None
-  - containerPath: /etc/kubernetes/vault-kms-provider.yaml
-    hostPath: tests/e2e/generated_manifests/config.yaml
-    readOnly: true
-    propagation: None
-  - containerPath: /etc/kubernetes/manifests/kubernetes-kms.yaml
-    hostPath: tests/e2e/generated_manifests/kms.yaml
+  - containerPath: /opt/vault-kms/vaultkms.socket
+    hostPath: vaultkms.socket
     readOnly: true
     propagation: None
   kubeadmConfigPatches:
