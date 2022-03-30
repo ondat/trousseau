@@ -117,4 +117,40 @@ When you submit your pull request, or you push new commits to it, our GitHub Act
 At this point your changes are available in the ***main*** release of Trousseau! At this stage, the changes are not yet push tagged container image and user will need to build from sources to benefit of your latest and greatest contribution. 
 The Trousseau maintainers might invite you to be part of the Contributors team - it's up to you to accept ;)
 
+## Coding standards
 
+### Error handling
+
+The project is using standard Go error handling with the following rules:
+
+ * Each error has to be wrapped with meaningful context: `fmt.Errorf("...:%w", err)`
+ * Errors without any validation in the code base should be in-line: `errors.New()` or `fmt.Errorf()`
+ * Errors with validation must be package private structs with constructor in a separated file:
+   ```
+   type customError struct { error }
+   func (e *customError) Error() string { return fmt.Sprintf("custom error %s", e.error) }
+   func newCustomError(err error) error { return &customError{error: err} }
+   ```
+   `_, ok := err.(*customError)`
+ * Errors require validation outside of it's package have to publish validation function(s):
+   ```
+   type customErrorType interface { customErrorType() }
+
+   type customError struct {
+      error
+      customErrorType //lint:ignore U1000 type check
+   }
+
+   func (e *customError) Error() string {
+      return fmt.Sprintf("custom error %s", e.error)
+   }
+
+   func newCustomError(err error) error {
+      return &customError{error: err}
+   }
+
+   func IsCustomError(err error) bool {
+      return errors.As(err, new(customErrorType))
+   }
+   ```
+   `package.IsCustomError(err)`

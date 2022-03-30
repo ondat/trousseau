@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	"errors"
+
 	"github.com/ondat/trousseau/internal/version"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
@@ -26,12 +28,14 @@ type HealthZ struct {
 }
 
 // Serve creates the http handler for serving health requests
-func (h *HealthZ) Serve() {
+func (h *HealthZ) Serve() error {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
 	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && err != http.ErrServerClosed {
-		klog.Fatalf("failed to start health check server, err: %+v", err)
+		return fmt.Errorf("failed to start health check server: %w", err)
 	}
+
+	return nil
 }
 
 func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -81,10 +85,10 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *HealthZ) checkRPC(ctx context.Context, client pb.KeyManagementServiceClient) error {
 	v, err := client.Version(ctx, &pb.VersionRequest{})
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get version: %w", err)
 	}
 	if v.Version != version.APIVersion || v.RuntimeName != version.Runtime || v.RuntimeVersion != version.BuildVersion {
-		return fmt.Errorf("failed to get correct version response")
+		return errors.New("failed to get correct version response")
 	}
 	return nil
 }

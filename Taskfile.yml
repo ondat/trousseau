@@ -134,10 +134,13 @@ tasks:
       - docker push $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_VERSION
   go:unit-tests:
     cmds:
-      - go test ./...
+      - go test -race -timeout 30s ./...
   go:integration-tests:
     cmds:
       - KUBECTL_CONTEXT=kind-{{.KIND_CLUSTER_NAME}} go test --tags=integration ./...
+  go:mod-tidy:
+    cmds:
+      - go mod tidy
   example:load:
     desc: load demo data
     cmds:

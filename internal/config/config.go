@@ -2,7 +2,9 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 	"k8s.io/klog/v2"
@@ -13,21 +15,21 @@ type ProviderConfig interface {
 	GetVaultConfig() VaultConfig
 }
 
-func New(cfpPath *string) (ProviderConfig, error) {
-	klog.V(5).Infof("Populating AppConfig from %s", *cfpPath)
+func New(cfpPath string) (ProviderConfig, error) {
+	klog.V(5).Infof("Populating AppConfig from %s", cfpPath)
 	viper.SetConfigType("yaml")
-	file, err := os.ReadFile(*cfpPath)
+	file, err := os.ReadFile(filepath.Clean(cfpPath))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to open config file %s: %w", cfpPath, err)
 	}
 	err = viper.ReadConfig(bytes.NewBuffer(file))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read config file %s: %w", cfpPath, err)
 	}
 	var cfg appConfig
 	err = viper.Unmarshal(&cfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to unmarshal config file %s: %w", cfpPath, err)
 	}
 	return &cfg, nil
 }

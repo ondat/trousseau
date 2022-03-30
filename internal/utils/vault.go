@@ -15,13 +15,13 @@ func CreateVaultTransitKey(cli *api.Client, prefix, name string, params map[stri
 	path := fmt.Sprintf("%s/keys/%s", prefix, name)
 	_, err := cli.Logical().Write(path, params)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create params for %s: %w", path, err)
 	}
 	if configParams != nil {
 		path := fmt.Sprintf("transit/keys/%s/config", name)
 		_, err := cli.Logical().Write(path, configParams)
 		if err != nil {
-			return err
+			return fmt.Errorf("unable to create config params for %s: %w", path, err)
 		}
 	}
 	return nil
@@ -31,7 +31,7 @@ func RotateVaultTransitKey(cli *api.Client, prefix, name string, params map[stri
 	path := fmt.Sprintf("%s/keys/%s/rotate", prefix, name)
 	_, err := cli.Logical().Write(path, params)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to rotate params for %s: %w", path, err)
 	}
 	return nil
 }
@@ -40,15 +40,15 @@ func CreateVaultAppRole(cli *api.Client, prefix, name string, params map[string]
 	path := fmt.Sprintf("auth/%s/role/%s", prefix, name)
 	_, err := cli.Logical().Write(path, params)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create role for %s: %w", path, err)
 	}
 	roleSecret, err := cli.Logical().Read(path + "/role-id")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read role for %s: %w", path, err)
 	}
 	SecretIDSecret, err := cli.Logical().Write(path+"/secret-id", nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read secret for %s: %w", path, err)
 	}
 	return &AppRoleCredentials{
 		RoleID:   roleSecret.Data["role_id"].(string),
@@ -65,19 +65,21 @@ func CreateVaultPolicy(api *api.Client, policyName string, keyName string) error
 		capabilities = ["update"]
 	}
 	`, keyName, keyName)
-	_, err := api.Logical().Write(fmt.Sprintf("sys/policy/%s", policyName), map[string]interface{}{
+	path := fmt.Sprintf("sys/policy/%s", policyName)
+	_, err := api.Logical().Write(path, map[string]interface{}{
 		"policy": policy,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to create policy for %s: %w", path, err)
 	}
 	return nil
 }
 
 func CreateVaultToken(cli *api.Client, name string, params map[string]interface{}) (string, error) {
-	r, err := cli.Logical().Write("/auth/token/create", params)
+	path := "/auth/token/create"
+	r, err := cli.Logical().Write(path, params)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("unable to create vault token for %s: %w", path, err)
 	}
 	return r.Auth.ClientToken, nil
 }

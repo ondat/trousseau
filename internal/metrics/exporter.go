@@ -11,15 +11,15 @@ const (
 	prometheusExporter = "prometheus"
 )
 
-// InitMetricsExporter initializes new exporter
-func InitMetricsExporter(metricsBackend, metricsAddress string) error {
+// Serve starts new exporter if needed
+func Serve(metricsBackend, metricsAddress string) error {
 	exporter := strings.ToLower(metricsBackend)
 	klog.Infof("metrics backend: %s", exporter)
 
 	switch exporter {
 	// Prometheus is the only exporter supported for now
 	case prometheusExporter:
-		return initPrometheusExporter(metricsAddress)
+		return servePrometheusExporter(metricsAddress)
 	default:
 		return fmt.Errorf("unsupported metrics backend %v", metricsBackend)
 	}
