@@ -49,6 +49,19 @@ task cluster:create SCRIPT=scripts/hcvault/archives/localdev
 
 You are ready for create secrets!
 
+### Verify secret encryption
+
+To verify encryption please create a secret and check value in ETCD.
+
+```
+kubectl create secret -n default generic trousseau-test --from-literal=FOO=bar
+docker exec kms-vault-control-plane bash -c 'apt update && apt install -y etcd-client' # only once
+docker exec -it -e ETCDCTL_API=3 -e SSL_OPTS='--cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/apiserver-etcd-client.crt --key=/etc/kubernetes/pki/apiserver-etcd-client.key --endpoints=localhost:2379' kms-vault-control-plane \
+bash -c 'etcdctl $SSL_OPTS get --keys-only=false --prefix /registry/secrets/default'
+```
+
+You have to see encrypted data in ETCD dump.
+
 ### Cleanup cluster
 
 After you have finished fun on Trousseau you should terminate the cluster with the following command:
@@ -56,3 +69,4 @@ After you have finished fun on Trousseau you should terminate the cluster with t
 ```bash
 task cluster:delete
 ```
+
