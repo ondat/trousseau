@@ -1,2 +1,3 @@
 bin
 tests/e2e/generated_manifests
+vaultkms.socket
