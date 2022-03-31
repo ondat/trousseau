@@ -27,8 +27,7 @@ docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' -p 820
 You can validate your Vault instance by performing a login:
 
 ```bash
-docker exec -it dev-vault vault login -address=http://localhost:8200      
-Token (will be hidden): vault-kms-demo
+docker exec -it dev-vault vault login -address=http://localhost:8200 vault-kms-demo   
 ```
 
 Enable `transit` secret engine in Vault:
