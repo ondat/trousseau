@@ -184,7 +184,9 @@ func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (strin
 			result, err = c.decryptLocked(key, data)
 		}
 	}()
-	if err == nil || c.config.Token != "" {
+	if err != nil {
+		return result, err
+	} else if c.config.Token != "" {
 		return result, nil
 	}
 	_, ok := err.(*forbiddenError)
