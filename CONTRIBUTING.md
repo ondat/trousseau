@@ -51,6 +51,10 @@ Once you see an issue that you would like to work on, please post a comment sayi
 ## Ask for Help
 The best way to reach us with a question when contributing is to ask on [GitHub Discussions](https://github.com/ondat/trousseau/discussions). 
 
+## Setup your local development environment
+
+Please follow our documentation about how to setup development environment [here](https://github.com/ondat/trousseau/blob/main/localdev.md).
+
 ## Which branch to use 
 For any issues, your branch should be against the ***main*** branch except if explicit guidance within the [GitHub Issues](https://github.com/ondat/trousseau/issues) description. 
 
