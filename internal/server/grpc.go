@@ -49,7 +49,7 @@ func (k *keyManagementServiceServer) Decrypt(ctx context.Context, data *v1beta1.
 		}
 		k.reporter.ReportRequest(ctx, metrics.DecryptOperationTypeValue, status, time.Since(start).Seconds(), errors)
 	}()
-	klog.V(2).Infof("decrypt request started ")
+	klog.V(2).Infof("decrypt request started")
 	r, err := k.kvClient.Decrypt(data.Cipher)
 	if err != nil {
 		klog.ErrorS(err, "failed to decrypt")

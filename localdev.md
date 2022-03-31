@@ -31,6 +31,12 @@ docker exec -it dev-vault vault login -address=http://localhost:8200
 Token (will be hidden): vault-kms-demo
 ```
 
+Enable `transit` secret engine in Vault:
+
+```bash
+docker exec -it dev-vault vault secrets enable -address=http://localhost:8200 transit
+```
+
 ## Run Trousseau
 
 Use command line or our favorite IDE to start Trousseau on your machine:

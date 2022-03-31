@@ -8,5 +8,6 @@ resources:
       - kms:
           name: vaultprovider
           endpoint: unix:///opt/vault-kms/vaultkms.socket
-          cachesize: 1
+          cachesize: -1
+          timeout: 300s
       - identity: {}

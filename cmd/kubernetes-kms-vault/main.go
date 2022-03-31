@@ -76,12 +76,12 @@ func main() {
 
 	s := grpc.NewServer(opts...)
 	kmsServer, err := server.New(ctx, cfg)
-	pb.RegisterKeyManagementServiceServer(s, kmsServer)
 	if err != nil {
 		klog.Errorln(fmt.Errorf("failed to listen: %w", err))
 		os.Exit(1)
 	}
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
+	pb.RegisterKeyManagementServiceServer(s, kmsServer)
 	go func() {
 		err := s.Serve(listener)
 		if err != nil {
