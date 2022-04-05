@@ -111,15 +111,17 @@ for project in response.json()['values']:
 
 # go through list
 safe_to_fix = open("safe_to_fix.csv", "a+")
+leaky_repos_file = open("leaky_repos_file.csv", "a+")
 pre_existing_count = 0
 for key, value in sorted(repo_map.items()):
 
   if (key in leaky_repos):
-    print(f"the repo {key} has a leak!!")
+    leaky_repos_file.write( f'{key}, {value}\n' )
   
   if (key not in leaky_repos and key not in already_migrated and key not in wont_migrate):
     safe_to_fix.write( f'{key}, {value}\n' )
 
+leaky_repos_file.close( )
 safe_to_fix.close( )
 
 percent_complete = len(already_migrated) + len(wont_migrate) / len(repo_map) * 100
