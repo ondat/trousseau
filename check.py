@@ -112,7 +112,7 @@ def get_repos(username, password, team):
         repo_name = repo['slug']
         repo_folder = f'repos/{repo_name}.git'
 
-        if (repo_map[repo_name] == "EXISTS"):
+        if (repo_name in repo_map and repo_map[repo_name] == "EXISTS"):
           repo_name = repo_name + "_" + team
 
         if (team == 'MIG' or team == 'WON'):
