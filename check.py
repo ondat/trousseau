@@ -5,6 +5,9 @@ import collections
 
 projects = 'http://code.storageos.net/rest/api/1.0/projects/'
 
+username = os.environ.get('USERNAME')
+password = os.environ.get('PASSWORD')
+
 response = requests.get(projects, auth=(username, password))
 
 already_migrated = set()
@@ -12,6 +15,7 @@ already_migrated.add("kubecover-deprecated")
 already_migrated.add("edge-deprecated")
 already_migrated.add("edge")
 already_migrated.add("t2")
+already_migrated.add("t2infra")
 already_migrated.add("ansible-jenkins-builder-old")
 
 known_leaky_repos = set()
@@ -103,12 +107,15 @@ def get_repos(username, password, team):
   repos = f'http://code.storageos.net/rest/api/1.0/projects/{team}/repos?limit=1000'
 
   response = requests.get(repos, auth=(username, password))
+
+  os.system("mkdir -p repos")
+  
   # Parse repositories from the JSON
   for repo in response.json()['values']:
     for link in repo['links']['clone']:
       if link['name'] == 'ssh':
         repo_name = repo['slug']
-        repo_folder = f'{repo_name}.git'
+        repo_folder = f'repos/{repo_name}.git'
         repo_description = None
         descr_append = f"Copied from archived bitbucket repo: '{link['href']}' from team '{team}'"
 
@@ -130,7 +137,7 @@ def get_repos(username, password, team):
             os.system(f"cd {repo_folder};git remote update; cd ..")
           else:    
             print(f"folder does not exist for {repo_name}, cloning...")
-            os.system(f"git clone --mirror {link['href']} {repo_name}")
+            os.system(f"cd repos;git clone --mirror {link['href']} {repo_name}")
 
           # check for leaks
           if (repo_name not in known_leaky_repos):
