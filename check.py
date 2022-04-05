@@ -5,8 +5,8 @@ import collections
 
 projects = 'http://code.storageos.net/rest/api/1.0/projects/'
 
-username = os.environ.get('USERNAME')
-password = os.environ.get('PASSWORD')
+username = os.environ.get('MIG_UNAME')
+password = os.environ.get('MIG_PWD')
 
 response = requests.get(projects, auth=(username, password))
 
@@ -78,9 +78,6 @@ def get_repos(username, password, team):
       if link['name'] == 'ssh':
         repo_name = repo['slug']
         repo_folder = f'repos/{repo_name}.git'
-        repo_description = None
-        descr_append = f"Copied from archived bitbucket repo: '{link['href']}' from team '{team}'"
-
         if (team == 'MIG' or team == 'WON'):
           if (team == 'MIG'):
             print(f"Skipping '{repo_name}' as it is already migrated")
@@ -121,7 +118,7 @@ for key, value in sorted(repo_map.items()):
     print(f"the repo {key} has a leak!!")
   
   if (key not in leaky_repos and key not in already_migrated and key not in wont_migrate):
-    safe_to_fix.write( f'{key}, {value}' )
+    safe_to_fix.write( f'{key}, {value}\n' )
 
 safe_to_fix.close( )
 
