@@ -65,39 +65,6 @@ known_leaky_repos.add("vol-test")
 repo_map = collections.OrderedDict()
 leaky_repos = set()
 
-repo_map["cluster_lifecycle"] = "EXISTS"
-repo_map["cluster_create_action"] = "EXISTS"
-repo_map["demos"] = "EXISTS"
-repo_map["docs"] = "EXISTS"
-repo_map["documentation"] = "EXISTS"
-repo_map["documentation-backend"] = "EXISTS"
-repo_map["etcd3-bootstrap"] = "EXISTS"
-repo_map["etcd3-terraform"] = "EXISTS"
-repo_map["github_actions"] = "EXISTS"
-repo_map["github_resources"] = "EXISTS"
-repo_map["jenkins-infra"] = "EXISTS"
-repo_map["jenkins-vagrant-aws"] = "EXISTS"
-repo_map["kubecover"] = "EXISTS"
-repo_map["kubecover-actions"] = "EXISTS"
-repo_map["kubecover-testsuite"] = "EXISTS"
-repo_map["license-api"] = "EXISTS"
-repo_map["migrations"] = "EXISTS"
-repo_map["opensource-project-template"] = "EXISTS"
-repo_map["platform-builder-cli"] = "EXISTS"
-repo_map["portal"] = "EXISTS"
-repo_map["Instruqt"] = "EXISTS"
-repo_map["pre-containers"] = "EXISTS"
-repo_map["pre_tests"] = "EXISTS"
-repo_map["shared-infrastructure"] = "EXISTS"
-repo_map["test-action"] = "EXISTS"
-repo_map["test-kubecover"] = "EXISTS"
-repo_map["trousseau"] = "EXISTS"
-repo_map["use-cases"] = "EXISTS"
-repo_map["cluster_lifecycle"] = "EXISTS"
-repo_map["metrics-exporter"] = "EXISTS"
-repo_map["operator-toolkit"] = "EXISTS"
-repo_map["portal-scripts"] = "EXISTS"
-
 def get_repos(username, password, team):
   repos = f'http://code.storageos.net/rest/api/1.0/projects/{team}/repos?limit=1000'
 
@@ -145,45 +112,25 @@ def get_repos(username, password, team):
             if (has_leaks):
               print(f"the repo {repo_name} has a leak!!")
               leaky_repos.add(repo_name)
+          else:
+            print(f"the repo {repo_name} has a leak!!")
+            leaky_repos.add(repo_name)      
 
 for project in response.json()['values']:
   get_repos(username, password, project['key'])
 
-# grab existing repos
-# terraform_existing = open("terraform_repos.json", "r")
-
 # go through list
-terraform = open("terraform", "a+")
+safe_to_fix = open("safe_to_fix", "a+")
 pre_existing_count = 0
-safe_to_fix = set()
 for key, value in sorted(repo_map.items()):
 
   if (key in leaky_repos):
     print(f"the repo {key} has a leak!!")
-  else:
-    safe_to_fix.add(key)
+  
+  if (key not in leaky_repos and key not in already_migrated and key not in wont_migrate):
+    safe_to_fix.write( key )
 
-  if (value == "EXISTS"):
-    pre_existing_count = pre_existing_count + 1
-  else:  
-    if (value):
-      line = f'''
-      {key} : {{ 
-        description = "{value}"
-      }}
-      '''
-    else:
-      print("no description for this repo")
-      line = f'''
-      {key} : {{ }}
-      '''
-    terraform.write( line )
-terraform.close( )
+safe_to_fix.close( )
 
-print("These items are safe to migrate:")
-for key in safe_to_fix:
-  print(f"\t{key}")
-print("")
-
-percent_complete = len(already_migrated) + pre_existing_count + len(wont_migrate) / len(repo_map) * 100
+percent_complete = len(already_migrated) + len(wont_migrate) / len(repo_map) * 100
 print(f"We are {percent_complete}% complete!!")
