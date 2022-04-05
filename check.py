@@ -65,6 +65,39 @@ known_leaky_repos.add("vol-test")
 repo_map = collections.OrderedDict()
 leaky_repos = set()
 
+repo_map["cluster_lifecycle"] = "EXISTS"
+repo_map["cluster_create_action"] = "EXISTS"
+repo_map["demos"] = "EXISTS"
+repo_map["docs"] = "EXISTS"
+repo_map["documentation"] = "EXISTS"
+repo_map["documentation-backend"] = "EXISTS"
+repo_map["etcd3-bootstrap"] = "EXISTS"
+repo_map["etcd3-terraform"] = "EXISTS"
+repo_map["github_actions"] = "EXISTS"
+repo_map["github_resources"] = "EXISTS"
+repo_map["jenkins-infra"] = "EXISTS"
+repo_map["jenkins-vagrant-aws"] = "EXISTS"
+repo_map["kubecover"] = "EXISTS"
+repo_map["kubecover-actions"] = "EXISTS"
+repo_map["kubecover-testsuite"] = "EXISTS"
+repo_map["license-api"] = "EXISTS"
+repo_map["migrations"] = "EXISTS"
+repo_map["opensource-project-template"] = "EXISTS"
+repo_map["platform-builder-cli"] = "EXISTS"
+repo_map["portal"] = "EXISTS"
+repo_map["Instruqt"] = "EXISTS"
+repo_map["pre-containers"] = "EXISTS"
+repo_map["pre_tests"] = "EXISTS"
+repo_map["shared-infrastructure"] = "EXISTS"
+repo_map["test-action"] = "EXISTS"
+repo_map["test-kubecover"] = "EXISTS"
+repo_map["trousseau"] = "EXISTS"
+repo_map["use-cases"] = "EXISTS"
+repo_map["cluster_lifecycle"] = "EXISTS"
+repo_map["metrics-exporter"] = "EXISTS"
+repo_map["operator-toolkit"] = "EXISTS"
+repo_map["portal-scripts"] = "EXISTS"
+
 def get_repos(username, password, team):
   repos = f'http://code.storageos.net/rest/api/1.0/projects/{team}/repos?limit=1000'
 
@@ -78,6 +111,10 @@ def get_repos(username, password, team):
       if link['name'] == 'ssh':
         repo_name = repo['slug']
         repo_folder = f'repos/{repo_name}.git'
+
+        if (repo_map[repo_name] == "EXISTS"):
+          repo_name = repo_name + "_" + team
+
         if (team == 'MIG' or team == 'WON'):
           if (team == 'MIG'):
             print(f"Skipping '{repo_name}' as it is already migrated")
@@ -98,7 +135,7 @@ def get_repos(username, password, team):
 
           # check for leaks
           if (repo_name not in known_leaky_repos):
-            has_leaks = os.system(f"gitleaks detect --source {repo_folder}")  
+            has_leaks = False #os.system(f"gitleaks detect --source {repo_folder}")  
             if (has_leaks):
               print(f"the repo {repo_name} has a leak!!")
               leaky_repos.add(repo_name)
@@ -115,12 +152,24 @@ leaky_repos_file = open("leaky_repos_file.csv", "a+")
 pre_existing_count = 0
 for key, value in sorted(repo_map.items()):
 
+  state = "PENDING"
+
+  if (key in wont_migrate):
+    state = "WONT_MIGRATE"
+
+  if (key in already_migrated):
+    state = "MIGRATED"
+
   if (key in leaky_repos):
     leaky_repos_file.write( f'{key}, {value}\n' )
+    state = "VULNERABLE"
   
-  if (key not in leaky_repos and key not in already_migrated and key not in wont_migrate):
-    safe_to_fix.write( f'{key}, {value}\n' )
-
+  # if (key not in leaky_repos and key not in already_migrated and key not in wont_migrate):
+  safe_to_fix.write( f'{key}, {value}, {state}\n' )
+  repo_folder = f'repos/{key}.git'
+  if (key == 'vagrant-metadata'):
+    os.system(f"cd {repo_folder}; git push --mirror ssh://github.com/ondat/{key}")  
+    
 leaky_repos_file.close( )
 safe_to_fix.close( )
 
