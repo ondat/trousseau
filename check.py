@@ -11,12 +11,7 @@ password = os.environ.get('PASSWORD')
 response = requests.get(projects, auth=(username, password))
 
 already_migrated = set()
-already_migrated.add("kubecover-deprecated")
-already_migrated.add("edge-deprecated")
-already_migrated.add("edge")
-already_migrated.add("t2")
-already_migrated.add("t2infra")
-already_migrated.add("ansible-jenkins-builder-old")
+wont_migrate = set()
 
 known_leaky_repos = set()
 known_leaky_repos.add("ubuntu")
@@ -119,8 +114,13 @@ def get_repos(username, password, team):
         repo_description = None
         descr_append = f"Copied from archived bitbucket repo: '{link['href']}' from team '{team}'"
 
-        if (repo_name in already_migrated):
-          print(f"Skipping '{repo_name}' as it is already migrated")
+        if (team == 'MIG' or team == 'WON'):
+          if (team == 'MIG'):
+            print(f"Skipping '{repo_name}' as it is already migrated")
+            already_migrated.add(repo_name)
+          else:
+            print(f"Won't migrate {repo_name} as not required")
+            wont_migrate.add(repo_name)
         else:  
           if (repo_name in repo_map):
             repo_name = f'{repo_name}_{team}'
@@ -185,5 +185,5 @@ for key in safe_to_fix:
   print(f"\t{key}")
 print("")
 
-percent_complete = len(already_migrated) + pre_existing_count / len(repo_map) * 100
+percent_complete = len(already_migrated) + pre_existing_count + len(wont_migrate) / len(repo_map) * 100
 print(f"We are {percent_complete}% complete!!")
