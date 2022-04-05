@@ -167,8 +167,8 @@ for key, value in sorted(repo_map.items()):
   # if (key not in leaky_repos and key not in already_migrated and key not in wont_migrate):
   safe_to_fix.write( f'{key}, {value}, {state}\n' )
   repo_folder = f'repos/{key}.git'
-  if (key == 'vagrant-metadata'):
-    os.system(f"cd {repo_folder}; git push --mirror ssh://github.com/ondat/{key}")  
+  # if (key == 'vagrant-metadata'):
+  #   os.system(f"cd {repo_folder}; git push --mirror ssh://github.com/ondat/{key}")  
     
 leaky_repos_file.close( )
 safe_to_fix.close( )
