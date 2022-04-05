@@ -89,14 +89,7 @@ def get_repos(username, password, team):
             print(f"Won't migrate {repo_name} as not required")
             wont_migrate.add(repo_name)
         else:  
-          if (repo_name in repo_map):
-            repo_name = f'{repo_name}_{team}'
-          
-          # Use descr, otherwise add old repo
-          if ( 'description' in repo):
-            repo_map[repo_name]=f"{repo['description']}. {descr_append}" 
-          else:  
-            repo_map[repo_name]=descr_append
+          repo_map[repo_name]=team
           
           # clone in new otherwise get most recent
           if (os.path.isdir(repo_folder)):
@@ -120,7 +113,7 @@ for project in response.json()['values']:
   get_repos(username, password, project['key'])
 
 # go through list
-safe_to_fix = open("safe_to_fix", "a+")
+safe_to_fix = open("safe_to_fix.csv", "a+")
 pre_existing_count = 0
 for key, value in sorted(repo_map.items()):
 
@@ -128,7 +121,7 @@ for key, value in sorted(repo_map.items()):
     print(f"the repo {key} has a leak!!")
   
   if (key not in leaky_repos and key not in already_migrated and key not in wont_migrate):
-    safe_to_fix.write( key )
+    safe_to_fix.write( f'{key}, {value}' )
 
 safe_to_fix.close( )
 
