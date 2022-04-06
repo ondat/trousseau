@@ -17,6 +17,6 @@ jobs:
       - uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492
       - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@b517f99ae23d86ecc4c0dec08dcf48d2336abc29
+        uses: golangci/golangci-lint-action@4b237a63e5299c390fb934f06848da715fdde07c
         with:
           version: latest
