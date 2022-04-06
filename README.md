@@ -12,7 +12,6 @@
         <img src="https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml/badge.svg" /></a>
       <a href="https://bestpractices.coreinfrastructure.org/projects/5460" alt="CII Best Practices">
         <img src="https://bestpractices.coreinfrastructure.org/projects/5460/badge" /></a>
-    <a href="https://lgtm.com/projects/g/ondat/trousseau/alerts/"><img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/ondat/trousseau.svg?logo=lgtm&logoWidth=18"/></a>
 </p>
 
 -----
