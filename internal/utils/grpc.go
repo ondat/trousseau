@@ -9,8 +9,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
-const klogv = 5
-const splitin = 2
+const (
+	klogv = 5
+	splitin = 2
+)
 
 // ParseEndpoint returns unix socket's protocol and address
 func ParseEndpoint(ep string) (string, string, error) {
