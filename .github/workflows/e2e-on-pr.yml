@@ -1,0 +1,26 @@
+# in test don't use yet
+
+name: end-2-end build
+
+on:
+  workflow_dispatch:
+  
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-e2e-${{ github.ref }}-1
+  cancel-in-progress: true
+
+jobs:
+  call-golangci-lint:
+    uses: ondat/trousseau/.github/workflows/go-lint-pull_request.yaml@main
+  
+  call-gosec-scanning:
+    uses: ondat/trousseau/.github/workflows/gosec-scanner-on-pull_request.yaml@main
+    needs: call-golangci-lint
+    
+  call-codeql-analysis:
+    uses: ondat/trousseau/.github/workflows/codeql-analysis.yml@main
+    needs: call-gosec-scanning
