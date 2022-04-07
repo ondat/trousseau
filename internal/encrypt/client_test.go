@@ -26,5 +26,4 @@ func TestCreatingVaultClient(t *testing.T) {
 	cfg := testConfig{}
 	_, err := encrypt.NewService(&cfg)
 	assert.NoError(t, err)
-
 }

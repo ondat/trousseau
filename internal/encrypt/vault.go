@@ -138,7 +138,6 @@ func (c *vaultWrapper) Encrypt(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("unable to encrypt data: %w", err)
 	}
 	return []byte(response), nil
-
 }
 func (c *vaultWrapper) Decrypt(data []byte) ([]byte, error) {
 	response, err := c.withRefreshToken(false, c.config.KeyNames[0], string(data))
@@ -225,7 +224,6 @@ func (c *vaultWrapper) encryptLocked(key string, data string) (string, error) {
 	}
 
 	return result, nil
-
 }
 
 func (c *vaultWrapper) decryptLocked(key string, data string) (string, error) {

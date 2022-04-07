@@ -126,7 +126,6 @@ func withShutdownSignal(ctx context.Context) context.Context {
 	nctx, cancel := context.WithCancel(ctx)
 
 	go func() {
-
 		<-signalChan
 		klog.Info("received shutdown signal")
 		cancel()

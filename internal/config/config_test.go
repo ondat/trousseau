@@ -24,6 +24,7 @@ func TestMain(m *testing.M) {
 	tearDown()
 	os.Exit(retCode)
 }
+
 func setUp() {
 	f, err := os.Create(file)
 	if err != nil {
@@ -47,16 +48,16 @@ func TestParseProvderInConfig(t *testing.T) {
 	r, err := cfg.New(file)
 	assert.NoError(t, err)
 	assert.Equal(t, "vault", r.GetProvider(), "Provider should return vault")
-
 }
+
 func TestParseVaultAddressInConfig(t *testing.T) {
 	r, err := cfg.New(file)
 
 	vaultCfg := r.GetVaultConfig()
 	assert.NoError(t, err)
 	assert.Equal(t, "http://localhost:9200", vaultCfg.Address, "Config should return vault address")
-
 }
+
 func BenchmarkCreatingConfig(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		_, err := cfg.New(file)
