@@ -2,7 +2,9 @@ name: "gosec"
 
 on: workflow_call 
 
-permissions: read-all
+permissions: 
+  contents: read
+  pull-requests: read
 
 jobs:
   build:
