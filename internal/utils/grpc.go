@@ -8,12 +8,14 @@ import (
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
 )
+
 const klogv = 5
+const splitin = 2
 
 // ParseEndpoint returns unix socket's protocol and address
 func ParseEndpoint(ep string) (string, string, error) {
 	if strings.HasPrefix(strings.ToLower(ep), "unix://") {
-		s := strings.SplitN(ep, "://", 2)
+		s := strings.SplitN(ep, "://", splitin)
 		if s[1] != "" {
 			return s[0], s[1], nil
 		}
