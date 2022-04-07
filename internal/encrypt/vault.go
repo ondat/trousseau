@@ -14,8 +14,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
-const defaultTransitPath = "transit"
-const defaultAuthPath = "auth"
+const (
+	defaultTransitPath = "transit"
+	defaultAuthPath = "auth"
+)
 
 // Handle all communication with Vault server.
 type vaultWrapper struct {

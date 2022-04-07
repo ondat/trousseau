@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	klogv = 2
+	klogv   = 2
 	splitin = 2
 )
 
