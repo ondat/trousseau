@@ -55,7 +55,7 @@ func newClientWrapper(config *config.VaultConfig) (*vaultWrapper, error) {
 	}
 
 	// Set token for the vaultapi.client.
-	if len(config.Token) != 0 {
+	if config.Token != "" {
 		client.SetToken(config.Token)
 	} else {
 		if err := wrapper.getInitialToken(config); err != nil {
