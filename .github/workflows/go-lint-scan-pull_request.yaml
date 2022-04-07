@@ -20,3 +20,9 @@ jobs:
         uses: golangci/golangci-lint-action@4b237a63e5299c390fb934f06848da715fdde07c
         with:
           version: latest
+          args: --issues-exit-code=0
+          only-new-issues: true
+          skip-cache: true
+          skip-pkg-cache: true
+          skip-build-cache: true
+
