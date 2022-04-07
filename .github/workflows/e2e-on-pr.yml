@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   call-golangci-lint:
-    uses: ondat/trousseau/.github/workflows/go-lint-pull_request.yaml@main
+    uses: ondat/trousseau/.github/workflows/gocilint.yml@main
   
   call-gosec-scanning:
     uses: ondat/trousseau/.github/workflows/gosec-scanner-on-pull_request.yaml@main
