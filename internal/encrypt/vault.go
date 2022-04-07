@@ -172,8 +172,11 @@ func (c *vaultWrapper) request(path string, data interface{}) (*vaultapi.Secret,
 
 func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (string, error) {
 	// Execute operation first time.
-	var result string
-	var err error
+	var (
+		result string
+		err error
+	)
+
 	func() {
 		c.rwmutex.RLock()
 		defer c.rwmutex.RUnlock()
