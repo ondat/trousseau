@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
 )
+const klogv = 5
 
 // ParseEndpoint returns unix socket's protocol and address
 func ParseEndpoint(ep string) (string, string, error) {
@@ -22,7 +23,7 @@ func ParseEndpoint(ep string) (string, string, error) {
 
 // UnaryServerInterceptor provides metrics around Unary RPCs.
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	klog.V(5).Infof("GRPC call: %s", info.FullMethod)
+	klog.V(klogv).Infof("GRPC call: %s", info.FullMethod)
 	resp, err := handler(ctx, req)
 	if err != nil {
 		klog.ErrorS(err, "GRPC request error")
