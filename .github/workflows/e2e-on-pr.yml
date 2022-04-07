@@ -15,12 +15,12 @@ concurrency:
 
 jobs:
   call-golangci-lint:
-    uses: ondat/trousseau/.github/workflows/gocilint.yml@main
+    uses: ondat/trousseau/.github/workflows/_gocilint.yml@main
   
   call-gosec-scanning:
-    uses: ondat/trousseau/.github/workflows/gosec-scanner-on-pull_request.yaml@main
+    uses: ondat/trousseau/.github/workflows/_gosecscan.yml@main
     needs: call-golangci-lint
     
   call-codeql-analysis:
-    uses: ondat/trousseau/.github/workflows/codeql-analysis.yml@main
+    uses: ondat/trousseau/.github/workflows/_codeqlanalysis.yml@main
     needs: call-gosec-scanning
