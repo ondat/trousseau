@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	klogv = 5
 	healthCheckPlainText = "healthcheck"
 )
 
