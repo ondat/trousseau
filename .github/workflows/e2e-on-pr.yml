@@ -26,3 +26,7 @@ jobs:
   call-codeql-analysis:
     uses: ondat/trousseau/.github/workflows/_codeqlanalysis.yml@main
     needs: call-gosec-scanning
+    
+  call-docker-build:
+    uses: ondat/trousseau/.github/workflows/_docker-build.yml@main
+    needs: call-codeql-analysis
