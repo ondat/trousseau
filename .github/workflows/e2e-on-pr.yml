@@ -26,4 +26,4 @@ jobs:
     
   call-docker-build:
     uses: ondat/trousseau/.github/workflows/_docker-build.yml@main
-    needs: call-golangci-lint
+    needs: call-gosec-scanning
