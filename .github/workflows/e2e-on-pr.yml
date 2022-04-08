@@ -10,6 +10,7 @@ permissions:
   pull-requests: read
   actions: read
   security-events: write
+  packages: write
 
 concurrency:
   group: ci-e2e-${{ github.ref }}-1
