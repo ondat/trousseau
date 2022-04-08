@@ -23,10 +23,6 @@ jobs:
     uses: ondat/trousseau/.github/workflows/_gosecscan.yml@main
     needs: call-golangci-lint
     
-  call-codeql-analysis:
-    uses: ondat/trousseau/.github/workflows/_codeqlanalysis.yml@main
-    needs: call-gosec-scanning
-    
   call-docker-build:
     uses: ondat/trousseau/.github/workflows/_docker-build.yml@main
-    needs: call-codeql-analysis
+    needs: call-golangci-lint
