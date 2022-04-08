@@ -3,7 +3,7 @@ name: docker build
 on: workflow_call
 
 env:
-  REGISTRY: ghrc.io
+  REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 jobs:
   build-and-push:
@@ -28,5 +28,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ github.sha }}
-        
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
