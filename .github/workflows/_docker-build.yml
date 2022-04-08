@@ -2,15 +2,31 @@ name: docker build
 
 on: workflow_call
 
+env:
+  REGISTRY: ghrc.io
+  IMAGE_NAME: ${{ github.repository }}
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      
     steps:
-    - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
-    - name: build container image
-      run: |
-        echo $TOKEN | docker login -u rovandep ghrc.io --password-stdin
-        docker build . --file Dockerfile --tag ghcr.io/ondat/trousseau:v{{ github.sha }}
-        docker push ghcr.io/ondat/trousseau:v{{ github.sha }}
-      env:
-        TOKEN: ${{ secrets.pat }} 
+    - name: checkout repository
+      uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+    
+    - name: log in to ghrc.io 
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with: 
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+  
+    - name: build and container image
+      uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      with:
+        context: .
+        push: true
+        tags: ${{ github.sha }}
+        
