@@ -17,13 +17,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  call-golangci-lint:
-    uses: ondat/trousseau/.github/workflows/_gocilint.yml@main
+  golangci-lint:
+    uses: ./.github/workflows/_gocilint.yml
   
-  call-gosec-scanning:
-    uses: ondat/trousseau/.github/workflows/_gosecscan.yml@main
-    needs: call-golangci-lint
+  gosec-scanning:
+    uses: ./.github/workflows/_gosecscan.yml
+    needs: golangci-lint
     
-  call-docker-build:
-    uses: ondat/trousseau/.github/workflows/_docker-build.yml@main
-    needs: call-gosec-scanning
+  image-build:
+    uses: ./.github/workflows/_docker-build.yml
+    needs: gosec-scanning
