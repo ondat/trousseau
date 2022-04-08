@@ -8,6 +8,7 @@ permissions:
 
 jobs:
   build:
+    name: scan
     runs-on: ubuntu-latest
     env: 
       GO111MODULE: on
