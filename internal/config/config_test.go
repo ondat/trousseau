@@ -20,8 +20,11 @@ vault:
 
 func TestMain(m *testing.M) {
 	setUp()
+
 	retCode := m.Run()
+
 	tearDown()
+
 	os.Exit(retCode)
 }
 
@@ -54,7 +57,9 @@ func TestParseVaultAddressInConfig(t *testing.T) {
 	r, err := cfg.New(file)
 
 	vaultCfg := r.GetVaultConfig()
+
 	assert.NoError(t, err)
+	
 	assert.Equal(t, "http://localhost:9200", vaultCfg.Address, "Config should return vault address")
 }
 
