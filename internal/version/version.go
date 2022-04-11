@@ -30,11 +30,13 @@ func PrintVersion() (err error) {
 	}
 
 	var res []byte
+
 	if res, err = json.Marshal(pv); err != nil {
 		return
 	}
 
 	fmt.Printf(string(res) + "\n")
+
 	return
 }
 
