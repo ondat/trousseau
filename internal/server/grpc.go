@@ -28,11 +28,13 @@ type keyManagementServiceServer struct {
 
 // New creates an instance of the KMS Service Server.
 func New(ctx context.Context, cfg config.ProviderConfig) (KeyManagementService, error) {
+	
 	kvClient, err := encrypt.NewService(cfg)
+	
 	if err != nil {
 		return nil, fmt.Errorf("unable to create encrypt service: %w", err)
 	}
-	
+
 	return &keyManagementServiceServer{
 		kvClient: kvClient,
 		reporter: metrics.NewStatsReporter(),
@@ -46,23 +48,28 @@ func (k *keyManagementServiceServer) Decrypt(ctx context.Context, data *v1beta1.
 	defer func() {
 		errors := ""
 		status := metrics.SuccessStatusTypeValue
+		
 		if err != nil {
 			status = metrics.ErrorStatusTypeValue
 			errors = err.Error()
 		}
+		
 		k.reporter.ReportRequest(ctx, metrics.DecryptOperationTypeValue, status, time.Since(start).Seconds(), errors)
 	}()
 	klog.V(klogv).Infof("decrypt request started ")
+	
 	r, err := k.kvClient.Decrypt(data.Cipher)
 	if err != nil {
 		klog.ErrorS(err, "failed to decrypt")
 		return nil, fmt.Errorf("failed to decrypt: %w", err)
 	}
+	
 	w, err := base64.StdEncoding.DecodeString(string(r))
 	if err != nil {
 		klog.ErrorS(err, "failed decode encrypted data")
 		return nil, fmt.Errorf("failed decode encrypted data: %w", err)
 	}
+	
 	klog.V(2).Infof("decrypt request complete")
 	return &v1beta1.DecryptResponse{Plain: w}, nil
 }
