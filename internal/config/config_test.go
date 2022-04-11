@@ -34,6 +34,7 @@ func setUp() {
 		log.Fatal(err)
 	}
 	defer f.Close()
+
 	_, err = f.Write(data)
 	if err != nil {
 		log.Fatal(err)
@@ -59,7 +60,7 @@ func TestParseVaultAddressInConfig(t *testing.T) {
 	vaultCfg := r.GetVaultConfig()
 
 	assert.NoError(t, err)
-	
+
 	assert.Equal(t, "http://localhost:9200", vaultCfg.Address, "Config should return vault address")
 }
 
