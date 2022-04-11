@@ -32,6 +32,7 @@ func New(ctx context.Context, cfg config.ProviderConfig) (KeyManagementService, 
 	if err != nil {
 		return nil, fmt.Errorf("unable to create encrypt service: %w", err)
 	}
+	
 	return &keyManagementServiceServer{
 		kvClient: kvClient,
 		reporter: metrics.NewStatsReporter(),
