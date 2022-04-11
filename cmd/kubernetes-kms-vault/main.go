@@ -47,6 +47,7 @@ func main() {
 	if *logFormatJSON {
 		klog.SetLogger(json.JSONLogger)
 	}
+
 	ctx := withShutdownSignal(context.Background())
 
 	// initialize metrics exporter
@@ -56,21 +57,28 @@ func main() {
 			klog.Errorln(err)
 			os.Exit(1)
 		}
+
 		klog.Fatalln("metrics service has stopped gracefully")
 	}()
 
 	klog.InfoS("Starting VaultEncryptionServiceServer service", "version", version.BuildVersion, "buildDate", version.BuildDate)
+
 	cfg, err := config.New(*configFilePath)
+
 	if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)
 	}
+
 	proto, addr, err := utils.ParseEndpoint(*listenAddr)
+
 	if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)
 	}
+
 	listener, err := net.Listen(proto, addr)
+
 	if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)
@@ -87,6 +95,7 @@ func main() {
 		klog.Errorln(fmt.Errorf("failed to listen: %w", err))
 		os.Exit(1)
 	}
+
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
 
 	go func() {
@@ -95,8 +104,10 @@ func main() {
 			klog.Errorln(err)
 			os.Exit(1)
 		}
+
 		klog.Fatalln("GRPC service has stopped gracefully")
 	}()
+
 	healthz := &server.HealthZ{
 		Service: kmsServer,
 		HealthCheckURL: &url.URL{
@@ -113,6 +124,7 @@ func main() {
 			klog.Errorln(err)
 			os.Exit(1)
 		}
+
 		klog.Fatalln("healtz service has stopped gracefully")
 	}()
 
@@ -138,5 +150,6 @@ func withShutdownSignal(ctx context.Context) context.Context {
 		klog.Info("received shutdown signal")
 		cancel()
 	}()
+
 	return nctx
 }

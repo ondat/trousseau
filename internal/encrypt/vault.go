@@ -39,12 +39,14 @@ func newClientWrapper(config *config.VaultConfig) (*vaultWrapper, error) {
 	// Vault transit path is configurable. "path", "/path", "path/" and "/path/"
 	// are the same.
 	transit := defaultTransitPath
+
 	if config.TransitPath != "" {
 		transit = config.TransitPath
 	}
 
 	// auth path is configurable. "path", "/path", "path/" and "/path/" are the same.
 	auth := defaultAuthPath
+
 	if config.AuthPath != "" {
 		auth = config.AuthPath
 	}
@@ -79,6 +81,7 @@ func newVaultApiClient(config *config.VaultConfig) (*vaultapi.Client, error) {
 		ClientKey:     config.ClientKey,
 		TLSServerName: config.TLSServerName,
 	}
+
 	if err := vaultConfig.ConfigureTLS(tlsConfig); err != nil {
 		return nil, fmt.Errorf("unable to configure TLS for %s: %w", config.TLSServerName, err)
 	}
@@ -93,7 +96,9 @@ func (c *vaultWrapper) getInitialToken(config *config.VaultConfig) error {
 		if err != nil {
 			return fmt.Errorf("rotating token through TLS auth backend: %w", err)
 		}
+
 		c.client.SetToken(token)
+
 	case config.RoleID != "":
 		token, err := c.appRoleToken(config)
 		if err != nil {
