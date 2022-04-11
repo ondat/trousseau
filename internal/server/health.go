@@ -18,7 +18,6 @@ import (
 
 const (
 	healthCheckPlainText = "healthcheck"
-	klogv = 2
 )
 
 type HealthZ struct {

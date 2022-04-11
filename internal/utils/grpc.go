@@ -22,13 +22,12 @@ func ParseEndpoint(ep string) (string, string, error) {
 			return s[0], s[1], nil
 		}
 	}
-	
+
 	return "", "", fmt.Errorf("invalid endpoint: %s", ep)
 }
 
 // UnaryServerInterceptor provides metrics around Unary RPCs.
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-
 	klog.V(klogv).Infof("GRPC call: %s", info.FullMethod)
 
 	resp, err := handler(ctx, req)
@@ -37,7 +36,7 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 		klog.ErrorS(err, "GRPC request error")
 		err = fmt.Errorf("GRPC request error: %w", err)
 	}
-	
+
 	return resp, err
 }
 
