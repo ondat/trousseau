@@ -16,7 +16,7 @@ import (
 
 const (
 	defaultTransitPath = "transit"
-	defaultAuthPath = "auth"
+	defaultAuthPath    = "auth"
 )
 
 // Handle all communication with Vault server.
@@ -176,7 +176,7 @@ func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (strin
 	// Execute operation first time.
 	var (
 		result string
-		err error
+		err    error
 	)
 
 	func() {

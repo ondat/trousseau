@@ -24,9 +24,9 @@ import (
 )
 
 const (
-	healthPort = 8787
+	healthPort  = 8787
 	metricsPort = "8095"
-	timeout = 20
+	timeout     = 20
 )
 
 var (
