@@ -17,6 +17,7 @@ import (
 const (
 	defaultTransitPath = "transit"
 	defaultAuthPath    = "auth"
+	klogv              = 2
 )
 
 // Handle all communication with Vault server.
@@ -230,7 +231,7 @@ func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (strin
 		return result, fmt.Errorf("error refresh token request: %w", err)
 	}
 
-	klog.V(2).Infof("vault token refreshed")
+	klog.V(klogv).Infof("vault token refreshed")
 
 	if isEncrypt {
 		result, err = c.encryptLocked(key, data)
