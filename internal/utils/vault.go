@@ -68,7 +68,7 @@ func CreateVaultAppRole(cli *api.Client, prefix, name string, params map[string]
 	}, nil
 }
 
-func CreateVaultPolicy(api *api.Client, policyName string, keyName string) error {
+func CreateVaultPolicy(cli *api.Client, policyName string, keyName string) error {
 	policy := fmt.Sprintf(`
 	path "transit/encrypt/%s" {
 		capabilities = ["update"]
@@ -78,7 +78,7 @@ func CreateVaultPolicy(api *api.Client, policyName string, keyName string) error
 	}
 	`, keyName, keyName)
 	path := fmt.Sprintf("sys/policy/%s", policyName)
-	_, err := api.Logical().Write(path, map[string]interface{}{
+	_, err := cli.Logical().Write(path, map[string]interface{}{
 		"policy": policy,
 	})
 
