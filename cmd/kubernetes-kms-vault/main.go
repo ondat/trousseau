@@ -91,6 +91,7 @@ func main() {
 	s := grpc.NewServer(opts...)
 	kmsServer, err := server.New(ctx, cfg)
 	pb.RegisterKeyManagementServiceServer(s, kmsServer)
+
 	if err != nil {
 		klog.Errorln(fmt.Errorf("failed to listen: %w", err))
 		os.Exit(1)
@@ -100,6 +101,7 @@ func main() {
 
 	go func() {
 		err := s.Serve(listener)
+
 		if err != nil {
 			klog.Errorln(err)
 			os.Exit(1)
