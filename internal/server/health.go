@@ -41,6 +41,7 @@ func (h *HealthZ) Serve() error {
 func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	klog.V(klogv).Infof("Started health check")
 	ctx, cancel := context.WithTimeout(context.Background(), h.RPCTimeout)
+
 	defer cancel()
 
 	conn, err := h.dialUnixSocket()

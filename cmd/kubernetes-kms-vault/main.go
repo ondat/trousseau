@@ -88,6 +88,7 @@ func main() {
 		os.Exit(1)
 	}
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
+
 	go func() {
 		err := s.Serve(listener)
 		if err != nil {
@@ -105,6 +106,7 @@ func main() {
 		UnixSocketPath: listener.Addr().String(),
 		RPCTimeout:     *healthzTimeout,
 	}
+
 	go func() {
 		err := healthz.Serve()
 		if err != nil {
