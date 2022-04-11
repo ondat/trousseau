@@ -30,6 +30,7 @@ type HealthZ struct {
 // Serve creates the http handler for serving health requests
 func (h *HealthZ) Serve() error {
 	serveMux := http.NewServeMux()
+
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
 
 	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && err != http.ErrServerClosed {
@@ -41,6 +42,7 @@ func (h *HealthZ) Serve() error {
 
 func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	klog.V(klogv).Infof("Started health check")
+
 	ctx, cancel := context.WithTimeout(context.Background(), h.RPCTimeout)
 
 	defer cancel()
@@ -55,6 +57,7 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	kmsClient := pb.NewKeyManagementServiceClient(conn)
+
 	err = h.checkRPC(ctx, kmsClient)
 
 	if err != nil {
