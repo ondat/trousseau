@@ -261,7 +261,7 @@ func (c *vaultWrapper) encryptLocked(key string, data string) (string, error) {
 }
 
 func (c *vaultWrapper) decryptLocked(key string, data string) (string, error) {
-	dataReq := map[string]string{"ciphertext": string(data)}
+	dataReq := map[string]string{"ciphertext": data}
 	resp, err := c.request(path.Join(c.decryptPath, c.config.KeyNames[0]), dataReq)
 
 	if err != nil {
