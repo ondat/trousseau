@@ -44,6 +44,7 @@ func main() {
 	klog.InitFlags(nil)
 
 	flag.Parse()
+
 	if *logFormatJSON {
 		klog.SetLogger(json.JSONLogger)
 	}
