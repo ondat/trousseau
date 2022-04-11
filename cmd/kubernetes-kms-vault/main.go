@@ -26,6 +26,7 @@ import (
 const (
 	healthPort = 8787
 	metricsPort = "8095"
+	timeout = 20
 )
 
 var (
@@ -34,7 +35,7 @@ var (
 	configFilePath = flag.String("config-file-path", "./config.yaml", "Path for Vault Provider config file")
 	healthzPort    = flag.Int("healthz-port", healthPort, "port for health check")
 	healthzPath    = flag.String("healthz-path", "/healthz", "path for health check")
-	healthzTimeout = flag.Duration("healthz-timeout", 20*time.Second, "RPC timeout for health check")
+	healthzTimeout = flag.Duration("healthz-timeout", timeout*time.Second, "RPC timeout for health check")
 	metricsBackend = flag.String("metrics-backend", "prometheus", "Backend used for metrics")
 	metricsAddress = flag.String("metrics-addr", metricsPort, "The address the metric endpoint binds to")
 )
