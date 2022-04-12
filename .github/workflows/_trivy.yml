@@ -11,7 +11,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@f39d29766a1eb7432c47f6bb7b64ed70b2241524
         with:
-          image-ref: ghcr.io/ondat/trousseau:${{ github.sha }}'
+          image-ref: ghcr.io/ondat/trousseau:${{ github.sha }}
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
