@@ -3,6 +3,8 @@
 name: end-2-end build
 
 on:
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
   
 permissions:
