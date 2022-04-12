@@ -29,3 +29,8 @@ jobs:
   image-build:
     uses: ./.github/workflows/_docker-build.yml
     needs: gosec-scanning
+
+  image-vulnerability-scan:
+    uses: ./.github/workflows/_trivy.yml
+    needs: image-build
+
