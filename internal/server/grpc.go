@@ -60,7 +60,7 @@ func (k *keyManagementServiceServer) Decrypt(ctx context.Context, data *v1beta1.
 		klog.ErrorS(err, "failed decode encrypted data")
 		return nil, fmt.Errorf("failed decode encrypted data: %w", err)
 	}
-	klog.V(2).Infof("decrypt request complete")
+	klog.V(2).Infof("decrypt request completed")
 	return &v1beta1.DecryptResponse{Plain: w}, nil
 }
 
@@ -84,7 +84,7 @@ func (k *keyManagementServiceServer) Encrypt(ctx context.Context, data *v1beta1.
 		klog.ErrorS(err, "failed to encrypt")
 		return nil, fmt.Errorf("failed to encrypt: %w", err)
 	}
-	klog.V(2).Infof("encrypt request complete")
+	klog.V(2).Infof("encrypt request completed")
 	return &v1beta1.EncryptResponse{Cipher: response}, nil
 }
 

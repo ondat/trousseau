@@ -16,7 +16,7 @@ type ProviderConfig interface {
 }
 
 func New(cfpPath string) (ProviderConfig, error) {
-	klog.V(5).Infof("Populating AppConfig from %s", cfpPath)
+	klog.V(5).Infof("populating AppConfig from %s", cfpPath)
 	viper.SetConfigType("yaml")
 	file, err := os.ReadFile(filepath.Clean(cfpPath))
 	if err != nil {
