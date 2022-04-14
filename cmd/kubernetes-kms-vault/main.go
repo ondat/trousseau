@@ -53,9 +53,11 @@ func main() {
 		klog.Fatalln("metrics service has stopped gracefully")
 	}()
 
-	klog.InfoS("Starting VaultEncryptionServiceServer service", "version", version.BuildVersion, "buildDate", version.BuildDate)
-	cfg, err := config.New(*configFilePath)
-	if err != nil {
+        klog.Infof("starting VaultEncryptionServiceServer service version: %v buildDate: %v", version.BuildVersion, version.BuildDate)
+	
+        cfg, err := config.New(*configFilePath)
+	
+        if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)
 	}
@@ -81,7 +83,7 @@ func main() {
 		klog.Errorln(fmt.Errorf("failed to listen: %w", err))
 		os.Exit(1)
 	}
-	klog.Infof("Listening for connections on address: %v", listener.Addr())
+	klog.Infof("listening for connections on address: %v", listener.Addr())
 	go func() {
 		err := s.Serve(listener)
 		if err != nil {

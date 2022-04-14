@@ -19,12 +19,15 @@ func servePrometheusExporter(metricsAddress string) error {
 			0.1, 0.2, 0.3, 0.4, 0.5, 1, 1.5, 2, 2.5, 3.0, 5.0, 10.0, 15.0, 30.0,
 		}},
 	)
+
 	if err != nil {
 		return fmt.Errorf("failed to register prometheus exporter: %w", err)
 	}
 
 	klog.InfoS("Prometheus metrics server starting", "address", metricsAddress)
+
 	http.HandleFunc(fmt.Sprintf("/%s", metricsEndpoint), exporter.ServeHTTP)
+
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsAddress), nil); err != nil {
 		return fmt.Errorf("failed to register prometheus endpoint: %w", err)
 	}
