@@ -53,7 +53,7 @@ func main() {
 		klog.Fatalln("metrics service has stopped gracefully")
 	}()
 
-        klog.Infof("starting VaultEncryptionServiceServer service version: %v buildDate: %v", version.BuildVersion, version.BuildDate)
+        klog.Infof("starting VaultEncryptionServiceServer service (version: %v - buildDate: %v)", version.BuildVersion, version.BuildDate)
 	
         cfg, err := config.New(*configFilePath)
 	
