@@ -1,0 +1,36 @@
+# in test don't use yet
+
+name: end-2-end build
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+  
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  security-events: write
+  packages: write
+
+concurrency:
+  group: ci-e2e-${{ github.ref }}-1
+  cancel-in-progress: true
+
+jobs:
+  golangci-lint:
+    uses: ./.github/workflows/_gocilint.yml
+  
+  gosec-scanning:
+    uses: ./.github/workflows/_gosecscan.yml
+    needs: golangci-lint
+    
+  image-build:
+    uses: ./.github/workflows/_docker-build.yml
+    needs: gosec-scanning
+
+  image-vulnerability-scan:
+    uses: ./.github/workflows/_trivy.yml
+    needs: image-build
+

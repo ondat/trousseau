@@ -14,6 +14,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const klogv = 2
+
 type KeyManagementService interface {
 	Decrypt(context.Context, *v1beta1.DecryptRequest) (*v1beta1.DecryptResponse, error)
 	Encrypt(context.Context, *v1beta1.EncryptRequest) (*v1beta1.EncryptResponse, error)
@@ -49,7 +51,7 @@ func (k *keyManagementServiceServer) Decrypt(ctx context.Context, data *v1beta1.
 		}
 		k.reporter.ReportRequest(ctx, metrics.DecryptOperationTypeValue, status, time.Since(start).Seconds(), errors)
 	}()
-	klog.V(2).Infof("decrypt request started ")
+	klog.V(klogv).Infof("decrypt request started ")
 	r, err := k.kvClient.Decrypt(data.Cipher)
 	if err != nil {
 		klog.ErrorS(err, "failed to decrypt")
@@ -77,7 +79,7 @@ func (k *keyManagementServiceServer) Encrypt(ctx context.Context, data *v1beta1.
 		}
 		k.reporter.ReportRequest(ctx, metrics.EncryptOperationTypeValue, status, time.Since(start).Seconds(), errors)
 	}()
-	klog.V(2).Infof("encrypt request started")
+	klog.V(klogv).Infof("encrypt request started")
 	plain := base64.StdEncoding.EncodeToString(data.Plain)
 	response, err := k.kvClient.Encrypt([]byte(plain))
 	if err != nil {

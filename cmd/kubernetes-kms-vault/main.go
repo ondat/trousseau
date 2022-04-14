@@ -23,15 +23,20 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	healthPort = 8787
+	metricsPort = "8095"
+)
+
 var (
 	listenAddr     = flag.String("listen-addr", "unix:///opt/vaultkms.socket", "gRPC listen address")
 	logFormatJSON  = flag.Bool("log-format-json", false, "set log formatter to json")
 	configFilePath = flag.String("config-file-path", "./config.yaml", "Path for Vault Provider config file")
-	healthzPort    = flag.Int("healthz-port", 8787, "port for health check")
+	healthzPort    = flag.Int("healthz-port", healthPort, "port for health check")
 	healthzPath    = flag.String("healthz-path", "/healthz", "path for health check")
 	healthzTimeout = flag.Duration("healthz-timeout", 20*time.Second, "RPC timeout for health check")
 	metricsBackend = flag.String("metrics-backend", "prometheus", "Backend used for metrics")
-	metricsAddress = flag.String("metrics-addr", "8095", "The address the metric endpoint binds to")
+	metricsAddress = flag.String("metrics-addr", metricsPort, "The address the metric endpoint binds to")
 )
 
 func main() {
@@ -128,7 +133,6 @@ func withShutdownSignal(ctx context.Context) context.Context {
 	nctx, cancel := context.WithCancel(ctx)
 
 	go func() {
-
 		<-signalChan
 		klog.Info("received shutdown signal")
 		cancel()

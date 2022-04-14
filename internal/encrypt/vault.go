@@ -14,8 +14,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
-const defaultTransitPath = "transit"
-const defaultAuthPath = "auth"
+const (
+	defaultTransitPath = "transit"
+	defaultAuthPath = "auth"
+)
 
 // Handle all communication with Vault server.
 type vaultWrapper struct {
@@ -55,7 +57,7 @@ func newClientWrapper(config *config.VaultConfig) (*vaultWrapper, error) {
 	}
 
 	// Set token for the vaultapi.client.
-	if len(config.Token) != 0 {
+	if config.Token != "" {
 		client.SetToken(config.Token)
 	} else {
 		if err := wrapper.getInitialToken(config); err != nil {
@@ -138,7 +140,6 @@ func (c *vaultWrapper) Encrypt(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("unable to encrypt data: %w", err)
 	}
 	return []byte(response), nil
-
 }
 func (c *vaultWrapper) Decrypt(data []byte) ([]byte, error) {
 	response, err := c.withRefreshToken(false, c.config.KeyNames[0], string(data))
@@ -173,8 +174,11 @@ func (c *vaultWrapper) request(path string, data interface{}) (*vaultapi.Secret,
 
 func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (string, error) {
 	// Execute operation first time.
-	var result string
-	var err error
+	var (
+		result string
+		err error
+	)
+
 	func() {
 		c.rwmutex.RLock()
 		defer c.rwmutex.RUnlock()
@@ -225,7 +229,6 @@ func (c *vaultWrapper) encryptLocked(key string, data string) (string, error) {
 	}
 
 	return result, nil
-
 }
 
 func (c *vaultWrapper) decryptLocked(key string, data string) (string, error) {

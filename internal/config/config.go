@@ -10,28 +10,39 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const klogv = 5
+
 type ProviderConfig interface {
 	GetProvider() string
 	GetVaultConfig() VaultConfig
 }
 
 func New(cfpPath string) (ProviderConfig, error) {
-	klog.V(5).Infof("populating AppConfig from %s", cfpPath)
-	viper.SetConfigType("yaml")
-	file, err := os.ReadFile(filepath.Clean(cfpPath))
-	if err != nil {
+  klog.V(klogv).Infof("Populating AppConfig from %s", cfpPath)
+	
+  viper.SetConfigType("yaml")
+	
+  file, err := os.ReadFile(filepath.Clean(cfpPath))
+	
+  if err != nil {
 		return nil, fmt.Errorf("unable to open config file %s: %w", cfpPath, err)
 	}
-	err = viper.ReadConfig(bytes.NewBuffer(file))
-	if err != nil {
+	
+  err = viper.ReadConfig(bytes.NewBuffer(file))
+	
+  if err != nil {
 		return nil, fmt.Errorf("unable to read config file %s: %w", cfpPath, err)
 	}
-	var cfg appConfig
-	err = viper.Unmarshal(&cfg)
-	if err != nil {
+	
+  var cfg appConfig
+	
+  err = viper.Unmarshal(&cfg)
+	
+  if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal config file %s: %w", cfpPath, err)
 	}
-	return &cfg, nil
+	
+  return &cfg, nil
 }
 
 type appConfig struct {

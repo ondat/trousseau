@@ -1,0 +1,23 @@
+name: Vulnerability Scanning 
+
+on: workflow_call 
+
+jobs:
+  build:
+    name: Build
+    runs-on: "ubuntu-latest"
+    steps:
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@f39d29766a1eb7432c47f6bb7b64ed70b2241524
+        with:
+          image-ref: ghcr.io/ondat/trousseau:${{ github.sha }}
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@1fc1008278d05ba9455caf083444e6c5a1a3cfd8
+        with:
+          sarif_file: 'trivy-results.sarif'

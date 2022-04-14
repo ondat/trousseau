@@ -9,10 +9,15 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	klogv   = 2
+	splitin = 2
+)
+
 // ParseEndpoint returns unix socket's protocol and address
 func ParseEndpoint(ep string) (string, string, error) {
 	if strings.HasPrefix(strings.ToLower(ep), "unix://") {
-		s := strings.SplitN(ep, "://", 2)
+		s := strings.SplitN(ep, "://", splitin)
 		if s[1] != "" {
 			return s[0], s[1], nil
 		}
@@ -23,7 +28,7 @@ func ParseEndpoint(ep string) (string, string, error) {
 
 // UnaryServerInterceptor provides metrics around Unary RPCs.
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	klog.V(5).Infof("GRPC call: %s", info.FullMethod)
+	klog.V(klogv).Infof("GRPC call: %s", info.FullMethod)
 	resp, err := handler(ctx, req)
 
 	if err != nil {
