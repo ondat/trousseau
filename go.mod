@@ -14,7 +14,7 @@ require (
 	google.golang.org/grpc v1.45.0
 	k8s.io/apiserver v0.22.1
 	k8s.io/component-base v0.22.1
-	k8s.io/klog/v2 v2.9.0
+	k8s.io/klog/v2 v2.60.1
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/go-logr/logr v0.4.0 // indirect
+	github.com/go-logr/logr v1.2.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
