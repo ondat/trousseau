@@ -29,12 +29,13 @@ func PrintVersion() (err error) {
 		GitCommit:    GitCommit,
 	}
 
-	var res []byte
-	if res, err = json.Marshal(pv); err != nil {
+	res, err := json.Marshal(pv)
+	if err != nil {
 		return
 	}
 
 	fmt.Printf(string(res) + "\n")
+
 	return
 }
 

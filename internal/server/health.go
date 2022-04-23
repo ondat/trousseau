@@ -31,6 +31,7 @@ type HealthZ struct {
 func (h *HealthZ) Serve() error {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
+
 	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("failed to start health check server: %w", err)
 	}
@@ -40,6 +41,7 @@ func (h *HealthZ) Serve() error {
 
 func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	klog.V(klogv).Infof("Started health check")
+
 	ctx, cancel := context.WithTimeout(context.Background(), h.RPCTimeout)
 	defer cancel()
 
@@ -51,8 +53,8 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	kmsClient := pb.NewKeyManagementServiceClient(conn)
-	err = h.checkRPC(ctx, kmsClient)
-	if err != nil {
+
+	if err = h.checkRPC(ctx, kmsClient); err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -62,21 +64,23 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	dec, err := h.Service.Decrypt(ctx, &pb.DecryptRequest{Cipher: enc.Cipher})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-	if string(dec.Plain) != healthCheckPlainText {
+	} else if string(dec.Plain) != healthCheckPlainText {
 		http.Error(w, "plain text mismatch after decryption", http.StatusInternalServerError)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("ok"))
-	if err != nil {
+
+	if _, err := w.Write([]byte("ok")); err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+
 	klog.V(klogv).Infof("Completed health check")
 }
 
@@ -87,9 +91,11 @@ func (h *HealthZ) checkRPC(ctx context.Context, client pb.KeyManagementServiceCl
 	if err != nil {
 		return fmt.Errorf("unable to get version: %w", err)
 	}
+
 	if v.Version != version.APIVersion || v.RuntimeName != version.Runtime || v.RuntimeVersion != version.BuildVersion {
 		return errors.New("failed to get correct version response")
 	}
+
 	return nil
 }
 
