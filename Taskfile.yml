@@ -137,9 +137,6 @@ tasks:
   go:integration-tests:
     cmds:
       - KUBECTL_CONTEXT=kind-{{.KIND_CLUSTER_NAME}} go test --tags=integration ./...
-  go:mod-tidy:
-    cmds:
-      - go mod tidy
   example:load:
     desc: load demo data
     cmds:
