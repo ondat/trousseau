@@ -4,6 +4,9 @@ go 1.17
 
 replace github.com/ondat/trousseau => ./
 
+// https://avd.aquasec.com/nvd/2022/cve-2022-27191/
+replace golang.org/x/crypto/ssh => golang.org/x/crypto/ssh v0.0.0-20220411220226-7b82a4e95df4
+
 require (
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/spf13/viper v1.8.1
