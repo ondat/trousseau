@@ -1,6 +1,6 @@
 module github.com/ondat/trousseau
 
-go 1.17
+go 1.18
 
 replace github.com/ondat/trousseau => ./
 

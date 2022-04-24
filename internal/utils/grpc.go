@@ -15,24 +15,31 @@ const (
 )
 
 // ParseEndpoint returns unix socket's protocol and address
-func ParseEndpoint(ep string) (string, string, error) {
+func ParseEndpoint(ep string) (proto, address string, err error) {
+	err = fmt.Errorf("invalid endpoint: %s", ep)
+
 	if strings.HasPrefix(strings.ToLower(ep), "unix://") {
 		s := strings.SplitN(ep, "://", splitin)
 		if s[1] != "" {
-			return s[0], s[1], nil
+			proto = s[0]
+			address = s[1]
+			err = nil
 		}
 	}
-	return "", "", fmt.Errorf("invalid endpoint: %s", ep)
+
+	return
 }
 
 // UnaryServerInterceptor provides metrics around Unary RPCs.
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	klog.V(klogv).Infof("GRPC call: %s", info.FullMethod)
+
 	resp, err := handler(ctx, req)
 	if err != nil {
 		klog.ErrorS(err, "GRPC request error")
 		err = fmt.Errorf("GRPC request error: %w", err)
 	}
+
 	return resp, err
 }
 

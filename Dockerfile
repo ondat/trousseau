@@ -1,4 +1,4 @@
-FROM golang@sha256:ec67c62f48ddfbca1ccaef18f9b3addccd707e1885fa28702a3954340786fcf6 as dependency
+FROM golang:1.18.1 as dependency
 WORKDIR /work
 ADD ./go.* ./
 RUN go mod download

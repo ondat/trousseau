@@ -24,7 +24,10 @@ import (
 )
 
 const (
-	healthPort = 8787
+	defaultHealthzTimeout = 20 * time.Second
+	hostPortFormatBase    = 10
+
+	healthPort  = 8787
 	metricsPort = "8095"
 )
 
@@ -34,7 +37,7 @@ var (
 	configFilePath = flag.String("config-file-path", "./config.yaml", "Path for Vault Provider config file")
 	healthzPort    = flag.Int("healthz-port", healthPort, "port for health check")
 	healthzPath    = flag.String("healthz-path", "/healthz", "path for health check")
-	healthzTimeout = flag.Duration("healthz-timeout", 20*time.Second, "RPC timeout for health check")
+	healthzTimeout = flag.Duration("healthz-timeout", defaultHealthzTimeout, "RPC timeout for health check")
 	metricsBackend = flag.String("metrics-backend", "prometheus", "Backend used for metrics")
 	metricsAddress = flag.String("metrics-addr", metricsPort, "The address the metric endpoint binds to")
 )
@@ -43,9 +46,11 @@ func main() {
 	klog.InitFlags(nil)
 
 	flag.Parse()
+
 	if *logFormatJSON {
 		klog.SetLogger(json.JSONLogger)
 	}
+
 	ctx := withShutdownSignal(context.Background())
 
 	// initialize metrics exporter
@@ -55,20 +60,24 @@ func main() {
 			klog.Errorln(err)
 			os.Exit(1)
 		}
+
 		klog.Fatalln("metrics service has stopped gracefully")
 	}()
 
 	klog.InfoS("Starting VaultEncryptionServiceServer service", "version", version.BuildVersion, "buildDate", version.BuildDate)
+
 	cfg, err := config.New(*configFilePath)
 	if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)
 	}
+
 	proto, addr, err := utils.ParseEndpoint(*listenAddr)
 	if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)
 	}
+
 	listener, err := net.Listen(proto, addr)
 	if err != nil {
 		klog.Errorln(err)
@@ -82,34 +91,39 @@ func main() {
 	s := grpc.NewServer(opts...)
 	kmsServer, err := server.New(ctx, cfg)
 	pb.RegisterKeyManagementServiceServer(s, kmsServer)
+
 	if err != nil {
 		klog.Errorln(fmt.Errorf("failed to listen: %w", err))
 		os.Exit(1)
 	}
+
 	klog.Infof("Listening for connections on address: %v", listener.Addr())
+
 	go func() {
-		err := s.Serve(listener)
-		if err != nil {
+		if err := s.Serve(listener); err != nil {
 			klog.Errorln(err)
 			os.Exit(1)
 		}
+
 		klog.Fatalln("GRPC service has stopped gracefully")
 	}()
+
 	healthz := &server.HealthZ{
 		Service: kmsServer,
 		HealthCheckURL: &url.URL{
-			Host: net.JoinHostPort("", strconv.FormatUint(uint64(*healthzPort), 10)),
+			Host: net.JoinHostPort("", strconv.FormatUint(uint64(*healthzPort), hostPortFormatBase)),
 			Path: *healthzPath,
 		},
 		UnixSocketPath: listener.Addr().String(),
 		RPCTimeout:     *healthzTimeout,
 	}
+
 	go func() {
-		err := healthz.Serve()
-		if err != nil {
+		if err := healthz.Serve(); err != nil {
 			klog.Errorln(err)
 			os.Exit(1)
 		}
+
 		klog.Fatalln("healtz service has stopped gracefully")
 	}()
 
@@ -135,5 +149,6 @@ func withShutdownSignal(ctx context.Context) context.Context {
 		klog.Info("received shutdown signal")
 		cancel()
 	}()
+
 	return nctx
 }
