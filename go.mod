@@ -14,7 +14,7 @@ require (
 	google.golang.org/grpc v1.46.0
 	k8s.io/apiserver v0.22.1
 	k8s.io/component-base v0.22.1
-	k8s.io/klog/v2 v2.9.0
+	k8s.io/klog/v2 v2.60.1
 )
 
 require (
