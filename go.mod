@@ -11,7 +11,7 @@ require (
 	go.opentelemetry.io/otel v1.6.3
 	go.opentelemetry.io/otel/exporters/metric/prometheus v0.20.0
 	go.opentelemetry.io/otel/metric v0.21.0
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.46.2
 	k8s.io/apiserver v0.22.1
 	k8s.io/component-base v0.22.1
 	k8s.io/klog/v2 v2.9.0
