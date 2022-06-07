@@ -3,6 +3,7 @@ package metrics
 import (
 	"context"
 
+	"github.com/ondat/trousseau/internal/logger"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
@@ -42,7 +43,7 @@ type StatsReporter interface {
 
 // NewStatsReporter instantiates otel reporter
 func NewStatsReporter() StatsReporter {
-	klog.V(4).Info("Initialize new stats reporter...")
+	klog.V(logger.Debug1).Info("Initialize new stats reporter...")
 
 	meter := global.Meter(instrumentationName)
 

@@ -11,6 +11,7 @@ import (
 
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/ondat/trousseau/internal/config"
+	"github.com/ondat/trousseau/internal/logger"
 	"k8s.io/klog/v2"
 )
 
@@ -31,7 +32,7 @@ type vaultWrapper struct {
 
 // Initialize a client wrapper for vault kms provider.
 func newClientWrapper(vaultConfig *config.VaultConfig) (*vaultWrapper, error) {
-	klog.V(4).Info("Initialize client wrapper...")
+	klog.V(logger.Debug1).Info("Initialize client wrapper...")
 
 	client, err := newVaultAPIClient(vaultConfig)
 	if err != nil {
@@ -61,11 +62,11 @@ func newClientWrapper(vaultConfig *config.VaultConfig) (*vaultWrapper, error) {
 
 	// Set token for the vaultapi.client.
 	if vaultConfig.Token != "" {
-		klog.V(5).InfoS("Set token", "token", secretToLog(vaultConfig.Token))
+		klog.V(logger.Debug2).InfoS("Set token", "token", secretToLog(vaultConfig.Token))
 
 		client.SetToken(vaultConfig.Token)
 	} else {
-		klog.V(5).InfoS("Get initial token...", "transit", transit, "auth", auth)
+		klog.V(logger.Debug2).InfoS("Get initial token...", "transit", transit, "auth", auth)
 
 		if err := wrapper.getInitialToken(vaultConfig); err != nil {
 			klog.ErrorS(err, "Unable to get initial token", "transit", transit, "auth", auth)
@@ -77,7 +78,7 @@ func newClientWrapper(vaultConfig *config.VaultConfig) (*vaultWrapper, error) {
 }
 
 func newVaultAPIClient(vaultConfig *config.VaultConfig) (*vaultapi.Client, error) {
-	klog.V(4).Info("Configuring TLS...")
+	klog.V(logger.Debug1).Info("Configuring TLS...")
 
 	defaultConfig := vaultapi.DefaultConfig()
 	defaultConfig.Address = vaultConfig.Address
@@ -92,7 +93,7 @@ func newVaultAPIClient(vaultConfig *config.VaultConfig) (*vaultapi.Client, error
 		return nil, fmt.Errorf("unable to configure TLS for %s: %w", vaultConfig.TLSServerName, err)
 	}
 
-	klog.V(5).InfoS("Initialize API client...", "config", *defaultConfig)
+	klog.V(logger.Debug2).InfoS("Initialize API client...", "config", *defaultConfig)
 
 	return vaultapi.NewClient(defaultConfig)
 }
@@ -100,7 +101,7 @@ func newVaultAPIClient(vaultConfig *config.VaultConfig) (*vaultapi.Client, error
 func (c *vaultWrapper) getInitialToken(vaultConfig *config.VaultConfig) error {
 	switch {
 	case vaultConfig.ClientCert != "" && vaultConfig.ClientKey != "":
-		klog.V(5).InfoS("Get initial token by", "cert", vaultConfig.ClientCert, "key", vaultConfig.ClientKey)
+		klog.V(logger.Debug2).InfoS("Get initial token by", "cert", vaultConfig.ClientCert, "key", vaultConfig.ClientKey)
 
 		token, err := c.tlsToken()
 		if err != nil {
@@ -109,7 +110,7 @@ func (c *vaultWrapper) getInitialToken(vaultConfig *config.VaultConfig) error {
 
 		c.client.SetToken(token)
 	case vaultConfig.RoleID != "":
-		klog.V(5).InfoS("Get initial token by", "role", vaultConfig.RoleID)
+		klog.V(logger.Debug2).InfoS("Get initial token by", "role", vaultConfig.RoleID)
 
 		token, err := c.appRoleToken(vaultConfig)
 		if err != nil {
@@ -128,7 +129,7 @@ func (c *vaultWrapper) getInitialToken(vaultConfig *config.VaultConfig) error {
 func (c *vaultWrapper) tlsToken() (string, error) {
 	loginPath := path.Join("/", c.authPath, "cert", "login")
 
-	klog.V(4).InfoS("Get TLS token...", "path", loginPath)
+	klog.V(logger.Debug1).InfoS("Get TLS token...", "path", loginPath)
 
 	resp, err := c.client.Logical().Write(loginPath, nil)
 	if err != nil {
@@ -147,7 +148,7 @@ func (c *vaultWrapper) appRoleToken(vaultConfig *config.VaultConfig) (string, er
 	}
 	loginPath := path.Join("/", c.authPath, "approle", "login")
 
-	klog.V(4).InfoS("Get role token...", "path", loginPath, "data", data)
+	klog.V(logger.Debug1).InfoS("Get role token...", "path", loginPath, "data", data)
 
 	resp, err := c.client.Logical().Write(loginPath, data)
 	if err != nil {
@@ -159,32 +160,32 @@ func (c *vaultWrapper) appRoleToken(vaultConfig *config.VaultConfig) (string, er
 	return resp.Auth.ClientToken, nil
 }
 func (c *vaultWrapper) Encrypt(data []byte) ([]byte, error) {
-	klog.V(5).InfoS("Encrypting data...", "key", c.config.KeyNames[0], "data", secretToLog(string(data)))
+	klog.V(logger.Debug2).InfoS("Encrypting data...", "key", c.config.KeyNames[0], "data", secretToLog(string(data)))
 
 	response, err := c.withRefreshToken(true, c.config.KeyNames[0], string(data))
 	if err != nil {
 		return nil, fmt.Errorf("unable to encrypt data: %w", err)
 	}
 
-	klog.V(5).InfoS("Encrypted data", "key", c.config.KeyNames[0])
+	klog.V(logger.Debug2).InfoS("Encrypted data", "key", c.config.KeyNames[0])
 
 	return []byte(response), nil
 }
 func (c *vaultWrapper) Decrypt(data []byte) ([]byte, error) {
-	klog.V(5).InfoS("Decrypting data...", "key", c.config.KeyNames[0])
+	klog.V(logger.Debug2).InfoS("Decrypting data...", "key", c.config.KeyNames[0])
 
 	response, err := c.withRefreshToken(false, c.config.KeyNames[0], string(data))
 	if err != nil {
 		return nil, fmt.Errorf("unable to decrypt data: %w", err)
 	}
 
-	klog.V(5).InfoS("decrypted data", "key", c.config.KeyNames[0], "data", secretToLog(response))
+	klog.V(logger.Debug2).InfoS("decrypted data", "key", c.config.KeyNames[0], "data", secretToLog(response))
 
 	return []byte(response), nil
 }
 
 func (c *vaultWrapper) request(requestPath string, data interface{}) (*vaultapi.Secret, error) {
-	klog.V(4).InfoS("Creating request...", "path", requestPath)
+	klog.V(logger.Debug1).InfoS("Creating request...", "path", requestPath)
 
 	req := c.client.NewRequest("POST", "/"+requestPath)
 	if err := req.SetJSONBody(data); err != nil {
@@ -214,7 +215,7 @@ func (c *vaultWrapper) request(requestPath string, data interface{}) (*vaultapi.
 		return nil, fmt.Errorf("unexpected response code: %v received for POST request to %v", resp.StatusCode, requestPath)
 	}
 
-	klog.V(5).Info("Parsing secret...")
+	klog.V(logger.Debug2).Info("Parsing secret...")
 
 	return vaultapi.ParseSecret(resp.Body)
 }
@@ -248,14 +249,14 @@ func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (strin
 	c.rwmutex.Lock()
 	defer c.rwmutex.Unlock()
 
-	klog.V(4).Info("refreshing token...")
-	err = c.refreshTokenLocked(c.config)
-	if err != nil {
+	klog.V(logger.Debug1).Info("Refreshing token...")
+
+	if err = c.refreshTokenLocked(c.config); err != nil {
 		klog.Error(err, "Failed to refresh token")
 		return result, fmt.Errorf("error refresh token request: %w", err)
 	}
 
-	klog.V(2).Info("Vault token refreshed")
+	klog.V(logger.Info1).Info("Vault token refreshed")
 
 	if isEncrypt {
 		result, err = c.encryptLocked(key, data)
@@ -275,7 +276,7 @@ func (c *vaultWrapper) refreshTokenLocked(vaultConfig *config.VaultConfig) error
 }
 
 func (c *vaultWrapper) encryptLocked(key, data string) (string, error) {
-	klog.V(5).Info("Encrypting locked...", "key", key)
+	klog.V(logger.Debug2).Info("Encrypting locked...", "key", key)
 
 	dataReq := map[string]string{"plaintext": data}
 
@@ -295,7 +296,7 @@ func (c *vaultWrapper) encryptLocked(key, data string) (string, error) {
 }
 
 func (c *vaultWrapper) decryptLocked(_, data string) (string, error) {
-	klog.V(5).Info("Decrypting locked...")
+	klog.V(logger.Debug2).Info("Decrypting locked...")
 
 	dataReq := map[string]string{"ciphertext": data}
 

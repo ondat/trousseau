@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/vault/api"
+	"github.com/ondat/trousseau/internal/logger"
 	"k8s.io/klog/v2"
 )
 
@@ -15,7 +16,7 @@ type AppRoleCredentials struct {
 func CreateVaultTransitKey(cli *api.Client, prefix, name string, params, configParams map[string]interface{}) error {
 	path := fmt.Sprintf("%s/keys/%s", prefix, name)
 
-	klog.V(3).InfoS("Creating Vault trasit key...", "path", path)
+	klog.V(logger.Info1).InfoS("Creating Vault trasit key...", "path", path)
 
 	if _, err := cli.Logical().Write(path, params); err != nil {
 		klog.ErrorS(err, "Unable to create params", "path", path)
@@ -37,7 +38,7 @@ func CreateVaultTransitKey(cli *api.Client, prefix, name string, params, configP
 func RotateVaultTransitKey(cli *api.Client, prefix, name string, params, configParams map[string]interface{}) error {
 	path := fmt.Sprintf("%s/keys/%s/rotate", prefix, name)
 
-	klog.V(3).InfoS("Rotating Vault trasit key...", "path", path)
+	klog.V(logger.Info1).InfoS("Rotating Vault trasit key...", "path", path)
 
 	if _, err := cli.Logical().Write(path, params); err != nil {
 		klog.ErrorS(err, "Unable to rotate params", "path", path)
@@ -50,7 +51,7 @@ func RotateVaultTransitKey(cli *api.Client, prefix, name string, params, configP
 func CreateVaultAppRole(cli *api.Client, prefix, name string, params map[string]interface{}) (*AppRoleCredentials, error) {
 	path := fmt.Sprintf("auth/%s/role/%s", prefix, name)
 
-	klog.V(3).InfoS("Creating Vault app role...", "path", path)
+	klog.V(logger.Info1).InfoS("Creating Vault app role...", "path", path)
 
 	if _, err := cli.Logical().Write(path, params); err != nil {
 		klog.ErrorS(err, "Unable to create role", "path", path)
@@ -87,7 +88,7 @@ func CreateVaultPolicy(client *api.Client, policyName, keyName string) error {
 
 	path := fmt.Sprintf("sys/policy/%s", policyName)
 
-	klog.V(3).InfoS("Creating Vault policy...", "path", path, "policy", policy)
+	klog.V(logger.Info1).InfoS("Creating Vault policy...", "path", path, "policy", policy)
 
 	_, err := client.Logical().Write(path, map[string]interface{}{
 		"policy": policy,

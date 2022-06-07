@@ -10,6 +10,7 @@ import (
 
 	"errors"
 
+	"github.com/ondat/trousseau/internal/logger"
 	"github.com/ondat/trousseau/internal/version"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
@@ -29,7 +30,7 @@ type HealthZ struct {
 
 // Serve creates the http handler for serving health requests
 func (h *HealthZ) Serve() error {
-	klog.V(3).Info("Initialize health check")
+	klog.V(logger.Info3).Info("Initialize health check")
 
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
@@ -43,7 +44,7 @@ func (h *HealthZ) Serve() error {
 }
 
 func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	klog.V(4).Info("Started health check...")
+	klog.V(logger.Debug1).Info("Started health check...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), h.RPCTimeout)
 	defer cancel()
@@ -52,6 +53,7 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		klog.Error(err, "Failed to call unix socket")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+
 		return
 	}
 	defer conn.Close()
@@ -61,6 +63,7 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err = h.checkRPC(ctx, kmsClient); err != nil {
 		klog.Error(err, "Failed to check RPC")
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+
 		return
 	}
 
@@ -68,6 +71,7 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		klog.Error(err, "Failed to encrypt", "data", healthCheckPlainText)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -75,10 +79,12 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		klog.Error(err, "Failed to decrypt encrypted data")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+
 		return
 	} else if string(dec.Plain) != healthCheckPlainText {
 		klog.ErrorS(errors.New("failed to properly decrypt encrypted data"), "Encryption failed", "original", healthCheckPlainText, "decrypted", string(dec.Plain))
 		http.Error(w, "plain text mismatch after decryption", http.StatusInternalServerError)
+
 		return
 	}
 
@@ -86,10 +92,11 @@ func (h *HealthZ) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write([]byte("ok")); err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
+
 		return
 	}
 
-	klog.V(4).Info("Completed health check")
+	klog.V(logger.Debug1).Info("Completed health check")
 }
 
 // checkRPC initiates a grpc request to validate the socket is responding

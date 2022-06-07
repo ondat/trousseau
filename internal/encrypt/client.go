@@ -16,6 +16,7 @@ func NewService(config cfg.ProviderConfig) (EncryptionClient, error) {
 	switch config.GetProvider() {
 	case "vault":
 		cfgVault := config.GetVaultConfig()
+
 		client, err := newClientWrapper(&cfgVault)
 		if err != nil {
 			klog.ErrorS(err, "Unable to create vault client", "server", cfgVault.TLSServerName)

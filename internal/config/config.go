@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ondat/trousseau/internal/logger"
 	"github.com/spf13/viper"
 	"k8s.io/klog/v2"
 )
@@ -16,7 +17,7 @@ type ProviderConfig interface {
 }
 
 func New(cfpPath string) (ProviderConfig, error) {
-	klog.V(2).InfoS("Populating AppConfig...", "path", cfpPath)
+	klog.V(logger.Info2).InfoS("Populating AppConfig...", "path", cfpPath)
 
 	viper.SetConfigType("yaml")
 
@@ -38,7 +39,7 @@ func New(cfpPath string) (ProviderConfig, error) {
 		return nil, fmt.Errorf("unable to unmarshal config file %s: %w", cfpPath, err)
 	}
 
-	klog.V(5).Info("Current config", "config", cfg)
+	klog.V(logger.Debug2).Info("Current config", "config", cfg)
 
 	return &cfg, nil
 }

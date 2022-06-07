@@ -12,15 +12,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-logr/logr"
-	"github.com/go-logr/zapr"
 	"github.com/ondat/trousseau/internal/config"
+	"github.com/ondat/trousseau/internal/logger"
 	"github.com/ondat/trousseau/internal/metrics"
 	"github.com/ondat/trousseau/internal/server"
 	"github.com/ondat/trousseau/internal/utils"
 	"github.com/ondat/trousseau/internal/version"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 
@@ -52,12 +49,13 @@ func main() {
 	flag.Parse()
 
 	v := flag.CommandLine.Lookup("v").Value.String()
+
 	logLevel, err := strconv.Atoi(v)
 	if err != nil {
 		klog.Fatalln("Invalid verbosity level", "level", v)
 	}
 
-	klog.SetLogger(setupLogger(logLevel, *logEncoder))
+	klog.SetLogger(logger.NewLogger(klog.Level(logLevel), *logEncoder))
 
 	ctx := withShutdownSignal(context.Background())
 
@@ -159,20 +157,4 @@ func withShutdownSignal(ctx context.Context) context.Context {
 	}()
 
 	return nctx
-}
-
-func setupLogger(logLevel int, logEncoder string) logr.Logger {
-	encConfig := zap.NewProductionEncoderConfig()
-	encConfig.TimeKey = "timestamp"
-	encConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
-
-	encoder := zapcore.NewConsoleEncoder(encConfig)
-	if logEncoder == "json" {
-		encoder = zapcore.NewJSONEncoder(encConfig)
-	}
-
-	core := zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zap.NewAtomicLevelAt(zapcore.Level(-logLevel)))
-	logger := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
-
-	return zapr.NewLogger(logger)
 }

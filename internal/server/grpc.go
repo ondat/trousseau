@@ -8,6 +8,7 @@ import (
 
 	"github.com/ondat/trousseau/internal/config"
 	"github.com/ondat/trousseau/internal/encrypt"
+	"github.com/ondat/trousseau/internal/logger"
 	"github.com/ondat/trousseau/internal/metrics"
 	"github.com/ondat/trousseau/internal/version"
 	"k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
@@ -26,7 +27,7 @@ type keyManagementServiceServer struct {
 
 // New creates an instance of the KMS Service Server.
 func New(ctx context.Context, cfg config.ProviderConfig) (KeyManagementService, error) {
-	klog.V(4).Info("Initialize new GRPC service")
+	klog.V(logger.Debug1).Info("Initialize new GRPC service")
 
 	kvClient, err := encrypt.NewService(cfg)
 	if err != nil {
@@ -40,7 +41,7 @@ func New(ctx context.Context, cfg config.ProviderConfig) (KeyManagementService, 
 }
 
 func (k *keyManagementServiceServer) Decrypt(ctx context.Context, data *v1beta1.DecryptRequest) (*v1beta1.DecryptResponse, error) {
-	klog.V(4).Info("Decrypt has been called...")
+	klog.V(logger.Debug1).Info("Decrypt has been called...")
 
 	start := time.Now()
 
@@ -56,7 +57,7 @@ func (k *keyManagementServiceServer) Decrypt(ctx context.Context, data *v1beta1.
 
 		k.reporter.ReportRequest(ctx, metrics.DecryptOperationTypeValue, status, time.Since(start).Seconds(), errors)
 	}()
-	klog.V(4).Info("Decrypt request starting...")
+	klog.V(logger.Debug1).Info("Decrypt request starting...")
 
 	r, err := k.kvClient.Decrypt(data.Cipher)
 	if err != nil {
@@ -70,13 +71,13 @@ func (k *keyManagementServiceServer) Decrypt(ctx context.Context, data *v1beta1.
 		return nil, fmt.Errorf("failed decode encrypted data: %w", err)
 	}
 
-	klog.V(4).Info("Decrypt request complete")
+	klog.V(logger.Debug1).Info("Decrypt request complete")
 
 	return &v1beta1.DecryptResponse{Plain: w}, nil
 }
 
 func (k *keyManagementServiceServer) Encrypt(ctx context.Context, data *v1beta1.EncryptRequest) (*v1beta1.EncryptResponse, error) {
-	klog.V(4).Info("Encrypt has been called...")
+	klog.V(logger.Debug1).Info("Encrypt has been called...")
 
 	start := time.Now()
 
@@ -92,7 +93,7 @@ func (k *keyManagementServiceServer) Encrypt(ctx context.Context, data *v1beta1.
 
 		k.reporter.ReportRequest(ctx, metrics.EncryptOperationTypeValue, status, time.Since(start).Seconds(), errors)
 	}()
-	klog.V(4).Info("Encrypt request starting...")
+	klog.V(logger.Debug1).Info("Encrypt request starting...")
 
 	plain := base64.StdEncoding.EncodeToString(data.Plain)
 
@@ -102,7 +103,7 @@ func (k *keyManagementServiceServer) Encrypt(ctx context.Context, data *v1beta1.
 		return nil, fmt.Errorf("failed to encrypt: %w", err)
 	}
 
-	klog.V(4).Info("Encrypt request complete")
+	klog.V(logger.Debug1).Info("Encrypt request complete")
 
 	return &v1beta1.EncryptResponse{Cipher: response}, nil
 }

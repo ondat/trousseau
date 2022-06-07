@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ondat/trousseau/internal/logger"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
 )
@@ -31,7 +32,7 @@ func ParseEndpoint(ep string) (proto, address string, err error) {
 
 // UnaryServerInterceptor provides metrics around Unary RPCs.
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	klog.V(4).InfoS("GRPC call", "method", info.FullMethod)
+	klog.V(logger.Debug1).InfoS("GRPC call", "method", info.FullMethod)
 
 	resp, err := handler(ctx, req)
 	if err != nil {
