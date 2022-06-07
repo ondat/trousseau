@@ -93,7 +93,7 @@ func newVaultAPIClient(vaultConfig *config.VaultConfig) (*vaultapi.Client, error
 		return nil, fmt.Errorf("unable to configure TLS for %s: %w", vaultConfig.TLSServerName, err)
 	}
 
-	klog.V(logger.Debug2).InfoS("Initialize API client...", "config", *defaultConfig)
+	klog.V(logger.Debug2).InfoS("Initialize API client...", "config", *vaultConfig)
 
 	return vaultapi.NewClient(defaultConfig)
 }

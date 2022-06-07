@@ -117,6 +117,7 @@ func (h *HealthZ) checkRPC(ctx context.Context, client pb.KeyManagementServiceCl
 func (h *HealthZ) dialUnixSocket() (*grpc.ClientConn, error) {
 	return grpc.Dial(
 		h.UnixSocketPath,
+		//nolint:staticcheck // we know WithInsecure is deprecated
 		grpc.WithInsecure(),
 		grpc.WithContextDialer(func(ctx context.Context, target string) (net.Conn, error) {
 			return (&net.Dialer{}).DialContext(ctx, "unix", target)

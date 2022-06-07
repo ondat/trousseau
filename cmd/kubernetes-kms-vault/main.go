@@ -61,6 +61,7 @@ func main() {
 
 	// initialize metrics exporter
 	go func() {
+		//nolint:govet // We know err is a shadow
 		err := metrics.Serve(*metricsBackend, *metricsAddress)
 		if err != nil {
 			klog.Errorln(err)
