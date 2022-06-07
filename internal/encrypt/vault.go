@@ -276,7 +276,7 @@ func (c *vaultWrapper) refreshTokenLocked(vaultConfig *config.VaultConfig) error
 }
 
 func (c *vaultWrapper) encryptLocked(key, data string) (string, error) {
-	klog.V(logger.Debug2).Info("Encrypting locked...", "key", key)
+	klog.V(logger.Debug2).InfoS("Encrypting locked...", "key", key)
 
 	dataReq := map[string]string{"plaintext": data}
 
