@@ -12,14 +12,19 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
 	"github.com/ondat/trousseau/internal/config"
 	"github.com/ondat/trousseau/internal/metrics"
 	"github.com/ondat/trousseau/internal/server"
 	"github.com/ondat/trousseau/internal/utils"
 	"github.com/ondat/trousseau/internal/version"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
-	json "k8s.io/component-base/logs/json"
+
+	// json "k8s.io/component-base/logs/json"
 	"k8s.io/klog/v2"
 )
 
@@ -33,7 +38,7 @@ const (
 
 var (
 	listenAddr     = flag.String("listen-addr", "unix:///opt/vaultkms.socket", "gRPC listen address")
-	logFormatJSON  = flag.Bool("log-format-json", false, "set log formatter to json")
+	logEncoder     = flag.String("zap-encoder", "console", "set log encoder [console, json]")
 	configFilePath = flag.String("config-file-path", "./config.yaml", "Path for Vault Provider config file")
 	healthzPort    = flag.Int("healthz-port", healthPort, "port for health check")
 	healthzPath    = flag.String("healthz-path", "/healthz", "path for health check")
@@ -44,12 +49,15 @@ var (
 
 func main() {
 	klog.InitFlags(nil)
-
 	flag.Parse()
 
-	if *logFormatJSON {
-		klog.SetLogger(json.JSONLogger)
+	v := flag.CommandLine.Lookup("v").Value.String()
+	logLevel, err := strconv.Atoi(v)
+	if err != nil {
+		klog.Fatalln("Invalid verbosity level", "level", v)
 	}
+
+	klog.SetLogger(setupLogger(logLevel, *logEncoder))
 
 	ctx := withShutdownSignal(context.Background())
 
@@ -97,7 +105,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	klog.Infof("Listening for connections on address: %v", listener.Addr())
+	klog.InfoS("Listening for connections", "address", listener.Addr())
 
 	go func() {
 		if err := s.Serve(listener); err != nil {
@@ -129,7 +137,7 @@ func main() {
 
 	<-ctx.Done()
 	// gracefully stop the grpc server
-	klog.Infof("terminating the server")
+	klog.Info("Terminating the server")
 	s.GracefulStop()
 	klog.Flush()
 	// using os.Exit skips running deferred functions
@@ -146,9 +154,25 @@ func withShutdownSignal(ctx context.Context) context.Context {
 
 	go func() {
 		<-signalChan
-		klog.Info("received shutdown signal")
+		klog.Info("Received shutdown signal")
 		cancel()
 	}()
 
 	return nctx
+}
+
+func setupLogger(logLevel int, logEncoder string) logr.Logger {
+	encConfig := zap.NewProductionEncoderConfig()
+	encConfig.TimeKey = "timestamp"
+	encConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
+
+	encoder := zapcore.NewConsoleEncoder(encConfig)
+	if logEncoder == "json" {
+		encoder = zapcore.NewJSONEncoder(encConfig)
+	}
+
+	core := zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zap.NewAtomicLevelAt(zapcore.Level(-logLevel)))
+	logger := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+
+	return zapr.NewLogger(logger)
 }

@@ -154,3 +154,16 @@ The project is using standard Go error handling with the following rules:
    }
    ```
    `package.IsCustomError(err)`
+
+### Logging standards
+
+The project is using `klog` on top of `zap` logging. The log engine is configured via command line arguments:
+ * `--v` verbosity of info logs, default value is 3, allowed values are 0-5.
+ * `--zap-encoder` log message encoder, default value is `console`, allowed values are `console`, `json`.
+
+Logging rules:
+ * Fatal: core component stopped to work, better to terminate the application
+ * Error: application doesn't work properly, operator has to wake up and fix the problem
+ * Info: must to know information, included recoverable errors, this level ignores `--v` settings
+ * V(1-3).Info: good to know information
+ * V(4-5).Info: debug logs, do not use in production, may contains sensitive information

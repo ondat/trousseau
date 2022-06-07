@@ -31,7 +31,8 @@ spec:
             - -v=5
             - --config-file-path=/opt/vault-kms/config.yaml
             - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
-            - --log-format-json=false
+            - --zap-encoder=json
+            - --v=3
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
