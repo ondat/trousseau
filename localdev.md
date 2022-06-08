@@ -27,8 +27,13 @@ docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' -p 820
 You can validate your Vault instance by performing a login:
 
 ```bash
-docker exec -it dev-vault vault login -address=http://localhost:8200      
+docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault login     
 Token (will be hidden): vault-kms-demo
+```
+
+Enable transit engine:
+```bash
+docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault secrets enable transit
 ```
 
 ## Run Trousseau
@@ -36,7 +41,7 @@ Token (will be hidden): vault-kms-demo
 Use command line or our favorite IDE to start Trousseau on your machine:
 
 ```bash
-go run cmd/kubernetes-kms-vault/main.go --config-file-path scripts/hcvault/archives/localdev/config.yaml --listen-addr unix://vaultkms.socket --log-format-json=false
+go run cmd/kubernetes-kms-vault/main.go --config-file-path scripts/hcvault/archives/localdev/config.yaml --listen-addr unix://vaultkms.socket --v=5
 ```
 
 ## Start cluster with encryption support

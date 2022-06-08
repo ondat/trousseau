@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	cfg "github.com/ondat/trousseau/internal/config"
+	"k8s.io/klog/v2"
 )
 
 type EncryptionClient interface {
@@ -15,7 +16,13 @@ func NewService(config cfg.ProviderConfig) (EncryptionClient, error) {
 	switch config.GetProvider() {
 	case "vault":
 		cfgVault := config.GetVaultConfig()
-		return newClientWrapper(&cfgVault)
+
+		client, err := newClientWrapper(&cfgVault)
+		if err != nil {
+			klog.ErrorS(err, "Unable to create vault client", "server", cfgVault.TLSServerName)
+		}
+
+		return client, err
 	default:
 		return nil, errors.New("unknown provider")
 	}

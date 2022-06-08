@@ -6,11 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ondat/trousseau/internal/logger"
 	"github.com/spf13/viper"
 	"k8s.io/klog/v2"
 )
-
-const klogv = 5
 
 type ProviderConfig interface {
 	GetProvider() string
@@ -18,23 +17,29 @@ type ProviderConfig interface {
 }
 
 func New(cfpPath string) (ProviderConfig, error) {
-	klog.V(klogv).Infof("Populating AppConfig from %s", cfpPath)
+	klog.V(logger.Info2).InfoS("Populating AppConfig...", "path", cfpPath)
+
 	viper.SetConfigType("yaml")
 
 	file, err := os.ReadFile(filepath.Clean(cfpPath))
 	if err != nil {
+		klog.ErrorS(err, "Unable to open config file", "path", cfpPath)
 		return nil, fmt.Errorf("unable to open config file %s: %w", cfpPath, err)
 	}
 
 	err = viper.ReadConfig(bytes.NewBuffer(file))
 	if err != nil {
+		klog.ErrorS(err, "Unable to read config file", "path", cfpPath)
 		return nil, fmt.Errorf("unable to read config file %s: %w", cfpPath, err)
 	}
 
 	var cfg appConfig
 	if err = viper.Unmarshal(&cfg); err != nil {
+		klog.ErrorS(err, "Unable to unmarshal config file", "path", cfpPath)
 		return nil, fmt.Errorf("unable to unmarshal config file %s: %w", cfpPath, err)
 	}
+
+	klog.V(logger.Debug2).Info("Current config", "config", cfg)
 
 	return &cfg, nil
 }

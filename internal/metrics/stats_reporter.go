@@ -3,9 +3,11 @@ package metrics
 import (
 	"context"
 
+	"github.com/ondat/trousseau/internal/logger"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/metric/global"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -41,6 +43,8 @@ type StatsReporter interface {
 
 // NewStatsReporter instantiates otel reporter
 func NewStatsReporter() StatsReporter {
+	klog.V(logger.Debug1).Info("Initialize new stats reporter...")
+
 	meter := global.Meter(instrumentationName)
 
 	kmsRequest = metric.Must(meter).NewFloat64ValueRecorder(kmsRequestMetricName, metric.WithDescription("Distribution of how long it took for an operation"))

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ondat/trousseau/internal/logger"
 	"google.golang.org/grpc"
 	"k8s.io/klog/v2"
 )
 
 const (
-	klogv   = 2
 	splitin = 2
 )
 
@@ -32,23 +32,13 @@ func ParseEndpoint(ep string) (proto, address string, err error) {
 
 // UnaryServerInterceptor provides metrics around Unary RPCs.
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	klog.V(klogv).Infof("GRPC call: %s", info.FullMethod)
+	klog.V(logger.Debug1).InfoS("GRPC call", "method", info.FullMethod)
 
 	resp, err := handler(ctx, req)
 	if err != nil {
-		klog.ErrorS(err, "GRPC request error")
-		err = fmt.Errorf("GRPC request error: %w", err)
+		klog.InfoS("GRPC request error", "method", info.FullMethod, "error", err.Error())
+		return nil, fmt.Errorf("GRPC request error: %w", err)
 	}
 
-	return resp, err
+	return resp, nil
 }
-
-// func getGRPCMethodName(fullMethodName string) string {
-// 	fullMethodName = strings.TrimPrefix(fullMethodName, "/")
-// 	methodNames := strings.Split(fullMethodName, "/")
-// 	if len(methodNames) >= 2 {
-// 		return strings.ToLower(methodNames[1])
-// 	}
-
-// 	return "unknown"
-// }
