@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [[ -n "$(git status --short)" ]]; then
+    git stash
+    function unstash() {
+        git reset --hard
+        git stash pop
+    }
+    trap unstash EXIT
+fi
+
+go fmt ./...
+go vet ./...
+golangci-lint run -c .golangci.yaml
+
+git diff --exit-code --quiet || (git status && exit 1)
