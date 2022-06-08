@@ -66,9 +66,23 @@ tasks:
       - bin-dir:init
     desc: install kubectl
     cmds:
-      - curl -Lo ./bin/kubectl  https://storage.googleapis.com/kubernetes-release/release/v{{.KUBECTL_VERSION}}/bin/{{OS}}/{{ARCH}}/kubectl  && chmod +x ./bin/kubectl
+      - curl -Lo ./bin/kubectl  https://storage.googleapis.com/kubernetes-release/release/v{{.KUBECTL_VERSION}}/bin/{{OS}}/{{ARCH}}/kubectl
+      - chmod +x ./bin/kubectl
     status:
       - test -f ./bin/kubectl
+  fetch:husky:
+    deps:
+      - bin-dir:init
+    desc: install husky
+    cmds:
+      - cd bin ; curl -L https://github.com/automation-co/husky/releases/download/v0.2.8/husky_0.2.8_{{.CAP_ARCH}}_x86_64.tar.gz | tar -xz husky
+      - chmod +x ./bin/husky
+      - ./bin/husky install
+    vars:
+      CAP_ARCH:
+        sh: uname
+    status:
+      - test -f ./bin/husky
   fetch:all:
     desc: fetch all tools
     cmds:
