@@ -4,14 +4,14 @@
 </p>
 <p align="center">
         <a href="https://lgtm.com/projects/g/ondat/trousseau/alerts/"><img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/ondat/trousseau.svg?logo=lgtm&logoWidth=18"/></a>
-      <a href="https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml" alt="gosec">
-        <img src="https://github.com/Trousseau-io/trousseau/actions/workflows/gosec-scanner-on-pull_request.yaml/badge.svg?branch=main" /></a>
       <a href="https://github.com/Trousseau-io/trousseau/actions/workflows/codeql-analysis.yml" alt="codeql">
         <img src="https://github.com/Trousseau-io/trousseau/actions/workflows/codeql-analysis.yml/badge.svg" /></a>
-      <a href="https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml" alt="golangci-lint">
-        <img src="https://github.com/Trousseau-io/trousseau/actions/workflows/go-lint-scan-pull_request.yaml/badge.svg" /></a>
-      <a href="https://bestpractices.coreinfrastructure.org/projects/5460" alt="CII Best Practices">
+    <a href="https://github.com/ondat/trousseau/actions/workflows/e2e-on-pr.yml" alt="end-2-end build">
+        <img src="https://github.com/ondat/trousseau/actions/workflows/e2e-on-pr.yml/badge.svg" /></a>
+    <a href="https://bestpractices.coreinfrastructure.org/projects/5460" alt="CII Best Practices">
         <img src="https://bestpractices.coreinfrastructure.org/projects/5460/badge" /></a>
+    <a href="https://github.com/ondat/trousseau/pkgs/container/trousseau" alt="pulled images">
+        <img src="https://img.shields.io/badge/pulled%20images-14.7k-brightgreen" /></a>
 </p>
 
 -----
@@ -47,18 +47,18 @@ How? By using using the [Kubernetes KMS provider](https://kubernetes.io/docs/tas
 ## About the name
 The name ***trousseau*** comes from the French language and is usually associated with keys like in ***trousseau de clés*** meaning ***keyring***.
 
+## Roadmap
+The roadmap items are described within [user story 50](https://github.com/ondat/trousseau/issues/50)  
+Trousseau's roadmap milestone for v2 [here](https://github.com/orgs/ondat/projects/1/views/4](https://github.com/ondat/trousseau/milestone/2).
+
 ## Contributing Guidelines
 We love your input! We want to make contributing to this project as easy and transparent as possible. You can find the full guidelines [here](https://github.com/ondat/trousseau/blob/main/CONTRIBUTING.md).
 
 ## Community
-Please reach out for any questions or issues via our [Github Discussions](https://github.com/ondat/trousseau/discussions).
-
-Alternatively you can:
-* Raise an issue or PR on this repo
+Please reach out for any questions or issues via one the following channels:  
+* Raise an [issue or PR](https://github.com/ondat/trousseau/issues)
+* Join us on [Slack](https://storageos.slack.com/archives/C03CPK9EHJR) 
 * Follow us on Twitter [@ondat_io](https://twitter.com/ondat_io)
-
-## Roadmap
-You can view our project board [here](https://github.com/orgs/ondat/projects/1/views/4).
 
 ## License
 Trousseau is under the Apache 2.0 license. See [LICENSE](https://github.com/ondat/trousseau/blob/main/LICENSE) file for details.
