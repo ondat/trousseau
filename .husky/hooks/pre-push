@@ -11,8 +11,6 @@ if [[ -n "$(git status --short)" ]]; then
     trap unstash EXIT
 fi
 
-go fmt ./...
-go vet ./...
-golangci-lint run -c .golangci.yaml
+task go:fmt go:vet go:gosec go:golangci go:unit-tests
 
 git diff --exit-code --quiet || (git status && exit 1)

@@ -8,8 +8,8 @@ nodes:
     hostPath: scripts/hcvault/archives/localdev/encryption-config.yaml
     readOnly: true
     propagation: None
-  - containerPath: /opt/vault-kms/vaultkms.socket
-    hostPath: vaultkms.socket
+  - containerPath: /opt/vault-kms/proxy.socket
+    hostPath: bin/proxy.socket
     readOnly: true
     propagation: None
   kubeadmConfigPatches:

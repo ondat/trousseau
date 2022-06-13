@@ -6,7 +6,7 @@ RUN go mod download
 FROM base AS worker
 WORKDIR /work
 ADD . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kubernetes-kms-vault cmd/kubernetes-kms-vault/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o kubernetes-kms-vault trousseau/main.go
 
 FROM ubuntu@sha256:31cd7bbfd36421dfd338bceb36d803b3663c1bfa87dfe6af7ba764b5bf34de05 
 LABEL org.opencontainers.image.source https://github.com/Trousseau-io/trousseau
