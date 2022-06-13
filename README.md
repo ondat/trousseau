@@ -47,6 +47,10 @@ How? By using using the [Kubernetes KMS provider](https://kubernetes.io/docs/tas
 ## About the name
 The name ***trousseau*** comes from the French language and is usually associated with keys like in ***trousseau de clés*** meaning ***keyring***.
 
+## Production reference
+The following blog post provides an overview of a production use case for a Hong Kong based Service Provider leveraging Suse, RKE2, HashiCorp Vault and Trousseau to secure their workload hosted for Government agencies:
+* https://www.ondat.io/news/trousseau-open-source-project-made-available-to-add-security-in-kubernetes 
+
 ## Roadmap
 The roadmap items are described within [user story 50](https://github.com/ondat/trousseau/issues/50)  
 Trousseau's roadmap milestone for v2 [here](https://github.com/orgs/ondat/projects/1/views/4](https://github.com/ondat/trousseau/milestone/2).
