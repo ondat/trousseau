@@ -2,7 +2,9 @@ FROM golang@sha256:5b75b529da0f2196ee8561a90e5b99aceee56e125c6ef09a3da4e32cf3cc6
 ADD . /work
 WORKDIR /work
 RUN (cd proxy ; go mod download)
+RUN (cd providers/debug ; go mod download)
 RUN (cd providers/vault ; go mod download)
+RUN (cd providers/awskms ; go mod download)
 RUN (cd trousseau ; go mod download)
 
 FROM base AS worker

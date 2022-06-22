@@ -1,0 +1,7 @@
+---
+profile: profile
+keyArn: keyArn
+roleArn: roleArn
+mfaToken: token
+encryptionContext:
+  foo: bar

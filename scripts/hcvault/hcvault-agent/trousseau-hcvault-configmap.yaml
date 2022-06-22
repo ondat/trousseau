@@ -27,7 +27,7 @@ data:
     contents = <<EOT
     {{- with secret "secret/data/trousseau/config" }}
     ---
-    keynames:
+    keyNames:
     - {{ .Data.data.transitkeyname }} 
     address: {{ .Data.data.vaultaddress }} 
     token: {{ .Data.data.vaulttoken }} 

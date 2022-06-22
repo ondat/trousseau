@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"path"
@@ -12,8 +13,9 @@ import (
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/ondat/trousseau/pkg/logger"
 	"github.com/ondat/trousseau/pkg/providers"
+	"github.com/ondat/trousseau/pkg/utils"
 	"github.com/ondat/trousseau/pkg/version"
-	"k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
+	pb "k8s.io/apiserver/pkg/storage/value/encrypt/envelope/v1beta1"
 	"k8s.io/klog/v2"
 )
 
@@ -77,7 +79,7 @@ func newClientWrapper(vaultConfig *Config) (*vaultWrapper, error) {
 
 	// Set token for the vaultapi.client.
 	if vaultConfig.Token != "" {
-		klog.V(logger.Debug2).InfoS("Set token", "token", secretToLog(vaultConfig.Token))
+		klog.V(logger.Debug2).InfoS("Set token", "token", utils.SecretToLog(vaultConfig.Token))
 
 		client.SetToken(vaultConfig.Token)
 	} else {
@@ -177,32 +179,34 @@ func (c *vaultWrapper) appRoleToken(vaultConfig *Config) (string, error) {
 
 // Encrypt encrypts input.
 func (c *vaultWrapper) Encrypt(data []byte) ([]byte, error) {
-	klog.V(logger.Debug2).InfoS("Encrypting data...", "key", c.config.KeyNames[0], "data", secretToLog(string(data)))
-
 	klog.V(logger.Info3).InfoS("Encrypting...")
 
-	response, err := c.withRefreshToken(true, c.config.KeyNames[0], string(data))
+	klog.V(logger.Debug2).InfoS("Encrypting data", "key", c.config.KeyNames[0], "data", utils.SecretToLog(string(data)))
+
+	response, err := c.withRefreshToken(true, c.config.KeyNames[0], data)
 	if err != nil {
+		klog.InfoS("Unable to encrypt data", "error", err.Error())
 		return nil, fmt.Errorf("unable to encrypt data: %w", err)
 	}
 
-	klog.V(logger.Debug2).InfoS("Encrypted data", "key", c.config.KeyNames[0])
+	klog.V(logger.Debug2).InfoS("Encrypted data", "key", c.config.KeyNames[0], "data", utils.SecretToLog(response))
 
 	return []byte(response), nil
 }
 
 // Decrypt decrypts input.
 func (c *vaultWrapper) Decrypt(data []byte) ([]byte, error) {
-	klog.V(logger.Debug2).InfoS("Decrypting data...", "key", c.config.KeyNames[0])
-
 	klog.V(logger.Info3).InfoS("Decrypting...")
 
-	response, err := c.withRefreshToken(false, c.config.KeyNames[0], string(data))
+	klog.V(logger.Debug2).InfoS("Decrypting data", "key", c.config.KeyNames[0], "data", utils.SecretToLog(string(data)))
+
+	response, err := c.withRefreshToken(false, c.config.KeyNames[0], data)
 	if err != nil {
+		klog.InfoS("Unable to decrypt data", "error", err.Error())
 		return nil, fmt.Errorf("unable to decrypt data: %w", err)
 	}
 
-	klog.V(logger.Debug2).InfoS("decrypted data", "key", c.config.KeyNames[0], "data", secretToLog(response))
+	klog.V(logger.Debug2).InfoS("Decrypted data", "key", c.config.KeyNames[0], "data", utils.SecretToLog(response))
 
 	return []byte(response), nil
 }
@@ -244,11 +248,11 @@ func (c *vaultWrapper) request(requestPath string, data interface{}) (*vaultapi.
 	return vaultapi.ParseSecret(resp.Body)
 }
 
-func (c *vaultWrapper) Version() *v1beta1.VersionResponse {
-	return &v1beta1.VersionResponse{Version: version.APIVersion, RuntimeName: version.Runtime, RuntimeVersion: version.BuildVersion}
+func (c *vaultWrapper) Version() *pb.VersionResponse {
+	return &pb.VersionResponse{Version: version.APIVersion, RuntimeName: version.Runtime, RuntimeVersion: version.BuildVersion}
 }
 
-func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key, data string) (string, error) {
+func (c *vaultWrapper) withRefreshToken(isEncrypt bool, key string, data []byte) (string, error) {
 	// Execute operation first time.
 	var (
 		result string
@@ -304,10 +308,10 @@ func (c *vaultWrapper) refreshTokenLocked(vaultConfig *Config) error {
 	return c.getInitialToken(vaultConfig)
 }
 
-func (c *vaultWrapper) encryptLocked(key, data string) (string, error) {
+func (c *vaultWrapper) encryptLocked(key string, data []byte) (string, error) {
 	klog.V(logger.Debug2).InfoS("Encrypting locked...", "key", key)
 
-	dataReq := map[string]string{"plaintext": data}
+	dataReq := map[string]string{"plaintext": base64.StdEncoding.EncodeToString(data)}
 
 	resp, err := c.request(path.Join(c.encryptPath, key), dataReq)
 	if err != nil {
@@ -321,13 +325,19 @@ func (c *vaultWrapper) encryptLocked(key, data string) (string, error) {
 		return result, fmt.Errorf("failed type assertion of vault encrypt response type for %s: %v to string", key, reflect.TypeOf(resp.Data["ciphertext"]))
 	}
 
-	return result, nil
+	return base64.StdEncoding.EncodeToString([]byte(result)), nil
 }
 
-func (c *vaultWrapper) decryptLocked(_, data string) (string, error) {
+func (c *vaultWrapper) decryptLocked(_ string, data []byte) (string, error) {
 	klog.V(logger.Debug2).Info("Decrypting locked...")
 
-	dataReq := map[string]string{"ciphertext": data}
+	chiphertext, err := base64.StdEncoding.DecodeString(string(data))
+	if err != nil {
+		klog.InfoS("Failed decode encrypted data", "error", err.Error())
+		return "", fmt.Errorf("failed decode encrypted data: %w", err)
+	}
+
+	dataReq := map[string]string{"ciphertext": string(chiphertext)}
 
 	resp, err := c.request(path.Join(c.decryptPath, c.config.KeyNames[0]), dataReq)
 	if err != nil {
@@ -338,13 +348,14 @@ func (c *vaultWrapper) decryptLocked(_, data string) (string, error) {
 	result, ok := resp.Data["plaintext"].(string)
 	if !ok {
 		klog.InfoS("Failed to find plaintext representation")
-		return result, fmt.Errorf("failed type assertion of vault decrypt response type: %v to string", reflect.TypeOf(resp.Data["plaintext"]))
+		return "", fmt.Errorf("failed type assertion of vault decrypt response type: %v to string", reflect.TypeOf(resp.Data["plaintext"]))
 	}
 
-	return result, nil
-}
+	decoded, err := base64.StdEncoding.DecodeString(result)
+	if err != nil {
+		klog.InfoS("Failed decode encrypted data", "error", err.Error())
+		return "", fmt.Errorf("failed decode encrypted data: %w", err)
+	}
 
-func secretToLog(s string) string {
-	b := []byte(s)
-	return string(b[:len(b)/2]) + "..."
+	return string(decoded), nil
 }

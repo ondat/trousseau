@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -89,8 +88,6 @@ func New(socketLocation string, enabledProviders []string, timeout time.Duration
 func (k *providersService) Encrypt(ctx context.Context, data *pb.EncryptRequest) (*pb.EncryptResponse, error) {
 	klog.V(logger.Debug1).Info("Encrypt has been called...")
 
-	encoded := []byte(base64.StdEncoding.EncodeToString(data.Plain))
-
 	encrypted := map[string][]byte{}
 
 	for name := range k.providers {
@@ -102,7 +99,7 @@ func (k *providersService) Encrypt(ctx context.Context, data *pb.EncryptRequest)
 
 		r, err := provider(&pb.EncryptRequest{
 			Version: data.Version,
-			Plain:   encoded,
+			Plain:   data.Plain,
 		}, nil)
 		if err != nil {
 			klog.InfoS("Failed to encrypt", "name", name, "error", err.Error())
@@ -167,16 +164,9 @@ func (k *providersService) Decrypt(ctx context.Context, data *pb.DecryptRequest)
 
 		k.metricsReporter.ReportRequest(ctx, parts[0], metrics.EncryptOperationTypeValue, metrics.SuccessStatusTypeValue, time.Since(start).Seconds())
 
-		decoded, err := base64.StdEncoding.DecodeString(string(response))
-		if err != nil {
-			klog.InfoS("Failed decode decrypted data", "name", parts[0], "error", err.Error())
-
-			continue
-		}
-
 		klog.V(logger.Debug1).Info("Decrypt request complete")
 
-		return &pb.DecryptResponse{Plain: decoded}, nil
+		return &pb.DecryptResponse{Plain: response}, nil
 	}
 
 	klog.InfoS("Failed to decrypt with all providers")

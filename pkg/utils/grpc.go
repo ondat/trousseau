@@ -49,7 +49,7 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 func DialUnixSocket(unixSocketPath string) (*grpc.ClientConn, error) {
 	return grpc.Dial(
 		unixSocketPath,
-		//nolint:staticcheck // we know WithInsecure is deprecated
+		//nolint:staticcheck // We know WithInsecure is deprecated
 		grpc.WithInsecure(),
 		grpc.WithContextDialer(func(ctx context.Context, target string) (net.Conn, error) {
 			return (&net.Dialer{}).DialContext(ctx, "unix", target)
