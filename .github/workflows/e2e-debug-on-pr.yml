@@ -1,4 +1,4 @@
-name: AWS KMS e2e on pr
+name: Debug e2e on pr
 
 on:
   pull_request:

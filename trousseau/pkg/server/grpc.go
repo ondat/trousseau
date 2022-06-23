@@ -20,16 +20,28 @@ import (
 
 const separator = ":-:"
 
+type registeredProviders map[string]func(*pb.EncryptRequest, *pb.DecryptRequest) ([]byte, error)
+
 type providersService struct {
-	providers       map[string]func(*pb.EncryptRequest, *pb.DecryptRequest) ([]byte, error)
+	providers       registeredProviders
+	sortProviders   func() []string
 	metricsReporter metrics.StatsReporter
 }
 
 // New creates an instance of the KMS Service Server.
-func New(socketLocation string, enabledProviders []string, timeout time.Duration) (providers.KeyManagementService, error) {
+func New(decryptPreference, socketLocation string, enabledProviders []string, timeout time.Duration) (providers.KeyManagementService, error) {
 	klog.V(logger.Debug1).Info("Initialize new providers service")
 
-	enabled := map[string]func(*pb.EncryptRequest, *pb.DecryptRequest) ([]byte, error){}
+	var providerSort func() []string
+
+	switch decryptPreference {
+	case "roundrobin":
+		providerSort = NewRoundrobin(enabledProviders).Next
+	default:
+		return nil, fmt.Errorf("selected decryption preference isn't supported: %s", decryptPreference)
+	}
+
+	registered := registeredProviders{}
 
 	for _, provider := range enabledProviders {
 		provider := provider
@@ -40,7 +52,7 @@ func New(socketLocation string, enabledProviders []string, timeout time.Duration
 			return nil, fmt.Errorf("unable to find socket at %s: %w", socket, err)
 		}
 
-		enabled[provider] = func(encReq *pb.EncryptRequest, decReq *pb.DecryptRequest) ([]byte, error) {
+		registered[provider] = func(encReq *pb.EncryptRequest, decReq *pb.DecryptRequest) ([]byte, error) {
 			klog.V(logger.Debug1).InfoS("Calling provider", "name", provider, "socket", socket, "encryption", encReq != nil, "decryption", decReq != nil)
 
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -79,7 +91,8 @@ func New(socketLocation string, enabledProviders []string, timeout time.Duration
 	}
 
 	return &providersService{
-		providers:       enabled,
+		providers:       registered,
+		sortProviders:   providerSort,
 		metricsReporter: metrics.NewStatsReporter(),
 	}, nil
 }
@@ -133,6 +146,8 @@ func (k *providersService) Decrypt(ctx context.Context, data *pb.DecryptRequest)
 
 	const nParts = 2
 
+	secrets := map[string]string{}
+
 	for _, line := range strings.Split(string(data.Cipher), "\n") {
 		parts := strings.Split(line, separator)
 		if len(parts) != nParts {
@@ -140,29 +155,40 @@ func (k *providersService) Decrypt(ctx context.Context, data *pb.DecryptRequest)
 			continue
 		}
 
-		provider, ok := k.providers[parts[0]]
+		secrets[parts[0]] = parts[1]
+	}
+
+	for _, name := range k.sortProviders() {
+		secret, ok := secrets[name]
 		if !ok {
-			klog.InfoS("Failed to find provider", "name", parts[0])
+			klog.InfoS("Failed to find encrypted for provider", "name", name)
 
 			continue
 		}
 
-		klog.V(logger.Info3).InfoS("Decrypting...", "name", parts[0])
+		klog.V(logger.Info3).InfoS("Decrypting...", "name", name)
 
 		start := time.Now()
 
-		response, err := provider(nil, &pb.DecryptRequest{
-			Version: data.Version,
-			Cipher:  []byte(parts[1]),
-		})
-		if err != nil {
-			klog.InfoS("Failed to decrypt", "name", parts[0], "error", err.Error())
-			k.metricsReporter.ReportRequest(ctx, parts[0], metrics.EncryptOperationTypeValue, metrics.ErrorStatusTypeValue, time.Since(start).Seconds(), err.Error())
+		provider, ok := k.providers[name]
+		if !ok {
+			klog.InfoS("Failed to find provider", "name", name)
 
 			continue
 		}
 
-		k.metricsReporter.ReportRequest(ctx, parts[0], metrics.EncryptOperationTypeValue, metrics.SuccessStatusTypeValue, time.Since(start).Seconds())
+		response, err := provider(nil, &pb.DecryptRequest{
+			Version: data.Version,
+			Cipher:  []byte(secret),
+		})
+		if err != nil {
+			klog.InfoS("Failed to decrypt", "name", name, "error", err.Error())
+			k.metricsReporter.ReportRequest(ctx, name, metrics.EncryptOperationTypeValue, metrics.ErrorStatusTypeValue, time.Since(start).Seconds(), err.Error())
+
+			continue
+		}
+
+		k.metricsReporter.ReportRequest(ctx, name, metrics.EncryptOperationTypeValue, metrics.SuccessStatusTypeValue, time.Since(start).Seconds())
 
 		klog.V(logger.Debug1).Info("Decrypt request complete")
 
