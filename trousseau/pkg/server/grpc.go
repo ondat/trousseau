@@ -23,20 +23,27 @@ const separator = ":-:"
 type registeredProviders map[string]func(*pb.EncryptRequest, *pb.DecryptRequest) ([]byte, error)
 
 type providersService struct {
-	providers       registeredProviders
-	sortProviders   func() []string
-	metricsReporter metrics.StatsReporter
+	providers          registeredProviders
+	sortProviders      func() []string
+	fastestMetricsChan chan<- Metric
+	metricsReporter    metrics.StatsReporter
 }
 
 // New creates an instance of the KMS Service Server.
 func New(decryptPreference, socketLocation string, enabledProviders []string, timeout time.Duration) (providers.KeyManagementService, error) {
 	klog.V(logger.Debug1).Info("Initialize new providers service")
 
-	var providerSort func() []string
+	service := providersService{
+		metricsReporter: metrics.NewStatsReporter(),
+	}
 
 	switch decryptPreference {
 	case "roundrobin":
-		providerSort = NewRoundrobin(enabledProviders).Next
+		service.sortProviders = NewRoundrobin(enabledProviders).Next
+	case "fastest":
+		fastest := NewFastest(enabledProviders)
+		service.sortProviders = fastest.Fastest
+		service.fastestMetricsChan = fastest.C()
 	default:
 		return nil, fmt.Errorf("selected decryption preference isn't supported: %s", decryptPreference)
 	}
@@ -90,11 +97,9 @@ func New(decryptPreference, socketLocation string, enabledProviders []string, ti
 		}
 	}
 
-	return &providersService{
-		providers:       registered,
-		sortProviders:   providerSort,
-		metricsReporter: metrics.NewStatsReporter(),
-	}, nil
+	service.providers = registered
+
+	return &service, nil
 }
 
 // Encrypt encryption requet handler.
@@ -185,10 +190,24 @@ func (k *providersService) Decrypt(ctx context.Context, data *pb.DecryptRequest)
 			klog.InfoS("Failed to decrypt", "name", name, "error", err.Error())
 			k.metricsReporter.ReportRequest(ctx, name, metrics.EncryptOperationTypeValue, metrics.ErrorStatusTypeValue, time.Since(start).Seconds(), err.Error())
 
+			if k.fastestMetricsChan != nil {
+				k.fastestMetricsChan <- Metric{
+					Provider:    name,
+					ReponseTime: time.Minute,
+				}
+			}
+
 			continue
 		}
 
 		k.metricsReporter.ReportRequest(ctx, name, metrics.EncryptOperationTypeValue, metrics.SuccessStatusTypeValue, time.Since(start).Seconds())
+
+		if k.fastestMetricsChan != nil {
+			k.fastestMetricsChan <- Metric{
+				Provider:    name,
+				ReponseTime: time.Since(start),
+			}
+		}
 
 		klog.V(logger.Debug1).Info("Decrypt request complete")
 

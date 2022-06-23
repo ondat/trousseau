@@ -60,7 +60,7 @@ func main() {
 	healthzTimeout := flag.Duration("healthz-timeout", defaultHealthzTimeout, "RPC timeout for health check")
 	metricsBackend := flag.String("metrics-backend", "prometheus", "Backend used for metrics")
 	metricsAddress := flag.String("metrics-addr", defaultMetricsPort, "The address the metric endpoint binds to")
-	decryptPreference := flag.String("decrypt-preference", defaultDecryptPreference, "The decrypt provider preference [roundrobin]")
+	decryptPreference := flag.String("decrypt-preference", defaultDecryptPreference, "The decrypt provider preference [roundrobin, fastest]")
 
 	flag.Parse()
 
