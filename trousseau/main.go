@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -24,13 +25,15 @@ import (
 	"k8s.io/klog/v2"
 )
 
-const (
-	defaultHealthzTimeout = 10 * time.Second
-	defaultSocketTimeout  = 20 * time.Second
-	hostPortFormatBase    = 10
+const hostPortFormatBase = 10
 
-	healthPort  = 8787
-	metricsPort = "8095"
+const (
+	maxAllowedProviders      = 2
+	defaultHealthzTimeout    = 10 * time.Second
+	defaultSocketTimeout     = 20 * time.Second
+	defaultHealthPort        = 8787
+	defaultMetricsPort       = "8095"
+	defaultDecryptPreference = "roundrobin"
 )
 
 type arrayFlags []string
@@ -52,17 +55,23 @@ func main() {
 	socketTimeout := flag.Duration("socket-timeout", defaultSocketTimeout, "RPC timeout for provider socket")
 	listenAddr := flag.String("listen-addr", "unix:///opt/vault-kms/trousseau.socket", "gRPC listen address")
 	logEncoder := flag.String("zap-encoder", "console", "set log encoder [console, json]")
-	healthzPort := flag.Int("healthz-port", healthPort, "port for health check")
+	healthzPort := flag.Int("healthz-port", defaultHealthPort, "port for health check")
 	healthzPath := flag.String("healthz-path", "/healthz", "path for health check")
 	healthzTimeout := flag.Duration("healthz-timeout", defaultHealthzTimeout, "RPC timeout for health check")
 	metricsBackend := flag.String("metrics-backend", "prometheus", "Backend used for metrics")
-	metricsAddress := flag.String("metrics-addr", metricsPort, "The address the metric endpoint binds to")
+	metricsAddress := flag.String("metrics-addr", defaultMetricsPort, "The address the metric endpoint binds to")
+	decryptPreference := flag.String("decrypt-preference", defaultDecryptPreference, "The decrypt provider preference [roundrobin]")
 
 	flag.Parse()
 
 	err := logger.InitializeLogging(*logEncoder)
 	if err != nil {
 		klog.Errorln(err)
+		os.Exit(1)
+	}
+
+	if len(enabledProviders) > maxAllowedProviders {
+		klog.Errorln(fmt.Errorf("max allowed providers: %d", maxAllowedProviders))
 		os.Exit(1)
 	}
 
@@ -94,7 +103,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	kmsServer, err := server.New(*socketLocation, enabledProviders, *socketTimeout)
+	kmsServer, err := server.New(*decryptPreference, *socketLocation, enabledProviders, *socketTimeout)
 	if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)
