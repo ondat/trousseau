@@ -154,9 +154,15 @@ func (k *providersService) Decrypt(ctx context.Context, data *pb.DecryptRequest)
 	secrets := map[string]string{}
 
 	for _, line := range strings.Split(string(data.Cipher), "\n") {
+		if line == "" {
+			continue
+		}
+
 		parts := strings.Split(line, separator)
 		if len(parts) != nParts {
 			klog.InfoS("Failed to find proper decryption")
+			klog.V(logger.Debug2).InfoS("Invalid encrypted input", "line", utils.SecretToLog(line))
+
 			continue
 		}
 
