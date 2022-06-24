@@ -39,6 +39,8 @@ func (r *Roundrobin) Next() []string {
 	}
 
 	if r.index == 0 {
+		klog.V(logger.Debug1).InfoS("Next Round-robin state", "providers", r.names)
+
 		return r.names
 	}
 
