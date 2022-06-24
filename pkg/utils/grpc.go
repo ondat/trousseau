@@ -19,13 +19,15 @@ const (
 func ParseEndpoint(ep string) (proto, address string, err error) {
 	err = fmt.Errorf("invalid endpoint: %s", ep)
 
-	if strings.HasPrefix(strings.ToLower(ep), "unix://") {
-		s := strings.SplitN(ep, "://", splitin)
-		if s[1] != "" {
-			proto = s[0]
-			address = s[1]
-			err = nil
-		}
+	if !strings.HasPrefix(strings.ToLower(ep), "unix://") {
+		return
+	}
+
+	parts := strings.SplitN(ep, "://", splitin)
+	if parts[1] != "" {
+		proto = parts[0]
+		address = parts[1]
+		err = nil
 	}
 
 	return
