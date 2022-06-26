@@ -1,3 +1,12 @@
+---
+name: Defect
+about: Defect or Support issues
+title: "[DEFECT] "
+labels: bug
+assignees: ''
+
+---
+
 ## Issue template is used for reporting defects or support issues.
 
 <!--- Provide a general summary of the issue in the Title above -->
