@@ -1,6 +1,8 @@
 apiVersion: kuttl.dev/v1beta1
 kind: TestStep
 commands:
-  - command: docker restart trousseau-debug
+  - command: docker restart trousseau-debug || true
+  - command: docker restart trousseau-vault || true
+  - command: docker restart trousseau-awskms || true
   - command: docker restart trousseau-core
   - command: sleep 10

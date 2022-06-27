@@ -18,10 +18,9 @@ task fetch:all
 ## Run Trousseau components
 
 ```bash
-mkdir bin/debug
-(cd proxy ; go mod tidy && go run main.go --listen-addr unix://../bin/proxy.socket --trousseau-addr ../bin/trousseau.socket)
-(cd providers/debug ; go mod tidy && go run main.go --listen-addr unix://../../bin/debug/debug.socket)
-(cd trousseau ; go mod tidy && go run main.go --enabled-providers debug --socket-location ../bin --listen-addr unix://../bin/trousseau.socket --zap-encoder=console --v=5)
+task go:run:proxy
+task go:run:debug
+task go:run:trousseau
 ```
 
 ## Start cluster with encryption support

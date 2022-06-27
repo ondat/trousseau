@@ -19,12 +19,12 @@ docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' -p 820
 You can validate your Vault instance by performing a login:
 
 ```bash
-docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault login vault-kms-demo  
+docker exec -e VAULT_ADDR=http://127.0.0.1:8200 dev-vault vault login vault-kms-demo  
 ```
 
 Enable transit engine:
 ```bash
-docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault secrets enable transit
+docker exec -e VAULT_ADDR=http://127.0.0.1:8200 dev-vault vault secrets enable transit
 ```
 
 ## Run Trousseau components
@@ -32,8 +32,7 @@ docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault secrets enab
 Use command line or our favorite IDE to start Trousseau components on your machine:
 
 ```bash
-mkdir bin/vault
-(cd proxy ; go mod tidy && go run main.go --listen-addr unix://../bin/proxy.socket --trousseau-addr ../bin/trousseau.socket)
-(cd providers/vault ; go mod tidy && go run main.go --config-file-path ../../scripts/hcvault/archives/localdev/vault.yaml --listen-addr unix://../../bin/vault/vault.socket --zap-encoder=console --v=5)
-(cd trousseau ; go mod tidy && go run main.go --enabled-providers vault --socket-location ../bin --listen-addr unix://../bin/trousseau.socket --zap-encoder=console --v=5)
+task go:run:proxy
+rask go:run:vault
+ENABLED_PROVIDERS="--enabled-providers vault" task go:run:trousseau
 ```

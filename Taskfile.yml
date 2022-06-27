@@ -24,9 +24,17 @@ tasks:
     desc: create bin directory
     cmds:
       - mkdir -p ./bin
+      - mkdir -m 777 bin/run
+      - mkdir -m 777 bin/run/debug
+      - mkdir -m 777 bin/run/vault
+      - mkdir -m 777 bin/run/awskms
       - mkdir -p tests/e2e/generated_manifests
     status:
       - test -d ./bin
+      - test -d ./bin/run
+      - test -d ./bin/run/debug
+      - test -d ./bin/run/vault
+      - test -d ./bin/run/awskms
       - test -d tests/e2e/generated_manifests
   fetch:golangci:
     deps:
@@ -219,34 +227,41 @@ tasks:
       - task: docker:run:awskms
       - task: docker:run:trousseau
   docker:run:proxy:
+    deps:
+      - bin-dir:init
     cmds:
       - rm -rf bin/run/proxy.socket
       - docker rm -f trousseau-proxy || true
       - docker run -d --name trousseau-proxy --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION
   docker:run:debug:
+    deps:
+      - bin-dir:init
     cmds:
-      - mkdir -m 777 -p bin/run/debug
       - rm -rf bin/run/debug/debug.socket
       - docker rm -f trousseau-debug || true
       - docker run -d --name trousseau-debug --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION
   docker:run:vault:
+    deps:
+      - bin-dir:init
     cmds:
-      - mkdir -m 777 -p bin/run/vault
       - rm -rf bin/run/vault/vault.socket
       - docker rm -f dev-vault || true
-      - docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' -p 8200:8200 -d --name=dev-vault vault
+      - docker run -d --name=dev-vault --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' vault
       - sleep 5
-      - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault login vault-kms-demo
-      - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault secrets enable transit
+      - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 dev-vault vault login vault-kms-demo
+      - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 dev-vault vault secrets enable transit
       - docker rm -f trousseau-vault || true
       - docker run -d --name trousseau-vault --rm --network=container:dev-vault -v $PWD/tests/e2e/kuttl/kube-v1.23/vault.yaml:/opt/vault-kms/vault/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION
   docker:run:awskms:
+    deps:
+      - bin-dir:init
     cmds:
-      - mkdir -m 777 -p bin/run/awskms
       - rm -rf bin/run/awskms/awskms.socket
       - docker rm -f trousseau-awskms || true
       - docker run -d --name trousseau-awskms --rm -v $HOME/.aws/credentials:/.aws/credentials -v $PWD/scripts/hcvault/archives/localdev/awskms.yaml:/opt/vault-kms/awskms/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION
   docker:run:trousseau:
+    deps:
+      - bin-dir:init
     cmds:
       - rm -rf bin/run/trousseau.socket
       - docker rm -f trousseau-core || true
@@ -398,34 +413,78 @@ tasks:
       - task: go:unit-tests:debug
       - task: go:unit-tests:vault
       - task: go:unit-tests:awskms
-      - task: go:trousseau:unit-tests
+      - task: go:unit-tests:trousseau
   go:unit-tests:proxy:
     dir: proxy
     cmds:
-      - go test -race -timeout 30s ./...
+      - go test -coverprofile cover.out -race -timeout 30s ./...
   go:unit-tests:debug:
     dir: providers/debug
     cmds:
-      - go test -race -timeout 30s ./...
+      - go test -coverprofile cover.out -race -timeout 30s ./...
   go:unit-tests:vault:
     dir: providers/vault
     cmds:
-      - go test -race -timeout 30s ./...
+      - go test -coverprofile cover.out -race -timeout 30s ./...
   go:unit-tests:awskms:
     dir: providers/awskms
     cmds:
-      - go test -race -timeout 30s ./...
-  go:trousseau:unit-tests:
+      - go test -coverprofile cover.out -race -timeout 30s ./...
+  go:unit-tests:trousseau:
     dir: trousseau
     cmds:
-      - go test -race -timeout 30s ./...
-  go:integration-tests:
+      - go test -coverprofile cover.out -race -timeout 30s ./...
+  go:run:
+    desc: go run
     cmds:
-      - KUBECTL_CONTEXT=kind-{{.KIND_CLUSTER_NAME}} go test --tags=integration ./...
+      - task: go:run:proxy
+      - task: go:run:debug
+      - task: go:run:vault
+      - task: go:run:awskms
+      - task: go:run:trousseau
+  go:run:proxy:
+    dir: proxy
+    deps:
+      - bin-dir:init
+      - go:tidy:proxy
+    cmds:
+      - rm -rf ../bin/run/proxy.socket
+      - go run main.go --listen-addr unix://../bin/run/proxy.socket --trousseau-addr ../bin/run/trousseau.socket
+  go:run:debug:
+    dir: providers/debug
+    deps:
+      - bin-dir:init
+      - go:tidy:debug
+    cmds:
+      - rm -rf ../../bin/run/debug/debug.socket
+      - go run main.go --listen-addr unix://../../bin/run/debug/debug.socket
+  go:run:vault:
+    dir: providers/vault
+    deps:
+      - bin-dir:init
+      - go:tidy:vault
+    cmds:
+      - rm -rf ../../bin/run/vault/vault.socket
+      - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../scripts/hcvault/archives/localdev/vault.yaml --listen-addr unix://../../bin/run/vault/vault.socket --zap-encoder=console --v=5
+  go:run:awskms:
+    dir: providers/awskms
+    deps:
+      - bin-dir:init
+      - go:tidy:awskms
+    cmds:
+      - rm -rf ../../bin/run/awskms/awskms.socket
+      - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../scripts/hcvault/archives/localdev/awskms.yaml --listen-addr unix://../../bin/run/awskms/awskms.socket --zap-encoder=console --v=5
+  go:run:trousseau:
+    dir: trousseau
+    deps:
+      - bin-dir:init
+      - go:tidy:trousseau
+    cmds:
+      - rm -rf ../bin/run/trousseau.socket
+      - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go {{.ENABLED_PROVIDERS}} --socket-location ../bin/run --listen-addr unix://../bin/run/trousseau.socket --zap-encoder=console --v=5
   go:e2e-tests:
     desc: e2e tests
     cmds:
-      - rm -rf bin/run ; mkdir -m 777 bin/run
       - task: docker:build:proxy
       - task: docker:build:debug
       - task: docker:build:trousseau
