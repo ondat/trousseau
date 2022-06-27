@@ -56,3 +56,10 @@ After you have finished fun on Trousseau you should terminate the cluster with t
 task cluster:delete
 ```
 
+## Run end to end tests
+
+Test are found in tests/e2e/kuttl directory. To run full test please execute the command below:
+
+```bash
+task go:e2e-tests
+```

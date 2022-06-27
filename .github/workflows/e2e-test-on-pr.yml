@@ -1,0 +1,33 @@
+name: e2e test on pr
+
+on:
+  pull_request:
+    branches: [ main, v2* ]
+  
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  security-events: write
+  packages: write
+
+concurrency:
+  group: ci-e2e-test-${{ github.ref }}-1
+  cancel-in-progress: true
+
+env:
+  DOCKER_REGISTRY: local
+  IMAGE_NAME: trousseau
+  IMAGE_VERSION: e2e
+jobs:
+  e2e:
+    name: kuttl e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install Taskfile
+        run: mkdir bin ; cd bin ; curl -Ls https://github.com/go-task/task/releases/download/v3.13.0/task_linux_amd64.tar.gz | tar -xz task
+      - name: fetch dependencies
+        run: ./bin/task fetch:kind fetch:kuttl
+      - name: run e2e tests
+        run: ./bin/task go:e2e-tests

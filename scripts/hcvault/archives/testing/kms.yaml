@@ -27,7 +27,7 @@ spec:
           drop:
           - ALL
         readOnlyRootFilesystem: true
-        runAsUser: 0
+        runAsUser: 10123
       ports:
         - containerPort: 8787
           protocol: TCP
