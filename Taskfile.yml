@@ -8,6 +8,12 @@ vars:
   HELM_VERSION: 3.6.3
   VAULT_VERSION: 1.8.1
   KUBECTL_VERSION: 1.21.1
+  KUTTL_VERSION: 0.12.1
+  HUSKY_VERSION: 0.2.8
+  BASE_IMAGE:
+    sh: '([ -z $BASE_IMAGE ] && head -1  Dockerfile | cut -d= -f2) || echo $BASE_IMAGE'
+  ENABLED_PROVIDERS:
+    sh: '([ -z $ENABLED_PROVIDERS ] && echo --enabled-providers debug) || echo $ENABLED_PROVIDERS'
   SCRIPT: scripts/hcvault/archives/testing
 silent: true
 tasks:
@@ -82,12 +88,20 @@ tasks:
       - chmod +x ./bin/kubectl
     status:
       - test -f ./bin/kubectl
+  fetch:kuttl:
+    deps:
+      - bin-dir:init
+    desc: install kuttl
+    cmds:
+      - cd bin ; curl -L https://github.com/kudobuilder/kuttl/releases/download/v{{.KUTTL_VERSION}}/kuttl_{{.KUTTL_VERSION}}_{{OS}}_x86_64.tar.gz | tar -xz kubectl-kuttl
+    status:
+      - test -f ./bin/kuttl
   fetch:husky:
     deps:
       - bin-dir:init
     desc: install husky
     cmds:
-      - cd bin ; curl -L https://github.com/automation-co/husky/releases/download/v0.2.8/husky_0.2.8_{{.CAP_ARCH}}_x86_64.tar.gz | tar -xz husky
+      - cd bin ; curl -L https://github.com/automation-co/husky/releases/download/v{{.HUSKY_VERSION}}/husky_{{.HUSKY_VERSION}}_{{.CAP_ARCH}}_x86_64.tar.gz | tar -xz husky
       - chmod +x ./bin/husky
       - ./bin/husky install
     vars:
@@ -100,6 +114,7 @@ tasks:
     cmds:
       - task: fetch:kubectl
       - task: fetch:kind
+      - task: fetch:kuttl
   cluster:create:
     deps:
       - task: generate:manifests
@@ -159,19 +174,19 @@ tasks:
       - task: docker:build:trousseau
   docker:build:proxy:
     cmds:
-      - docker build --build-arg PROJECT=proxy -t $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION .
+      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=proxy -t $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION .
   docker:build:debug:
     cmds:
-      - docker build --build-arg PROJECT=providers/debug -t $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION .
+      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/debug -t $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION .
   docker:build:vault:
     cmds:
-      - docker build --build-arg PROJECT=providers/vault -t $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION .
+      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/vault -t $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION .
   docker:build:awskms:
     cmds:
-      - docker build --build-arg PROJECT=providers/awskms -t $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION .
+      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/awskms -t $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION .
   docker:build:trousseau:
     cmds:
-      - docker build --build-arg PROJECT=trousseau -t $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION .
+      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=trousseau -t $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION .
   docker:push:
     desc: push docker image
     cmds:
@@ -195,6 +210,47 @@ tasks:
   docker:push:trousseau:
     cmds:
       - docker push $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION
+  docker:run:
+    desc: run docker image
+    cmds:
+      - task: docker:run:proxy
+      - task: docker:run:debug
+      - task: docker:run:vault
+      - task: docker:run:awskms
+      - task: docker:run:trousseau
+  docker:run:proxy:
+    cmds:
+      - rm -rf bin/run/proxy.socket
+      - docker rm -f trousseau-proxy || true
+      - docker run -d --name trousseau-proxy --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION
+  docker:run:debug:
+    cmds:
+      - mkdir -m 777 -p bin/run/debug
+      - rm -rf bin/run/debug/debug.socket
+      - docker rm -f trousseau-debug || true
+      - docker run -d --name trousseau-debug --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION
+  docker:run:vault:
+    cmds:
+      - mkdir -m 777 -p bin/run/vault
+      - rm -rf bin/run/vault/vault.socket
+      - docker rm -f dev-vault || true
+      - docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' -p 8200:8200 -d --name=dev-vault vault
+      - sleep 5
+      - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault login vault-kms-demo
+      - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -it dev-vault vault secrets enable transit
+      - docker rm -f trousseau-vault || true
+      - docker run -d --name trousseau-vault --rm --network=container:dev-vault -v $PWD/tests/e2e/kuttl/kube-v1.23/vault.yaml:/opt/vault-kms/vault/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION
+  docker:run:awskms:
+    cmds:
+      - mkdir -m 777 -p bin/run/awskms
+      - rm -rf bin/run/awskms/awskms.socket
+      - docker rm -f trousseau-awskms || true
+      - docker run -d --name trousseau-awskms --rm -v $HOME/.aws/credentials:/.aws/credentials -v $PWD/scripts/hcvault/archives/localdev/awskms.yaml:/opt/vault-kms/awskms/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION
+  docker:run:trousseau:
+    cmds:
+      - rm -rf bin/run/trousseau.socket
+      - docker rm -f trousseau-core || true
+      - docker run -d --name trousseau-core --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION {{.ENABLED_PROVIDERS}}
   go:tidy:
     desc: go tidy
     cmds:
@@ -366,6 +422,17 @@ tasks:
   go:integration-tests:
     cmds:
       - KUBECTL_CONTEXT=kind-{{.KIND_CLUSTER_NAME}} go test --tags=integration ./...
+  go:e2e-tests:
+    desc: e2e tests
+    cmds:
+      - rm -rf bin/run ; mkdir -m 777 bin/run
+      - task: docker:build:proxy
+      - task: docker:build:debug
+      - task: docker:build:trousseau
+      - task: docker:run:proxy
+      - task: docker:run:debug
+      - task: docker:run:trousseau
+      - kubectl-kuttl test --config tests/e2e/kuttl/kube-v1.23/kuttl.yaml
   example:load:
     desc: load demo data
     cmds:

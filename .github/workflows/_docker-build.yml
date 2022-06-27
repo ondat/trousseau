@@ -9,12 +9,20 @@ on:
       imageName:
         required: true
         type: string
-      imageTagPrefix:
-        required: true
-        type: string
       project:
         required: true
         type: string
+      imageTagPrefix:
+        required: true
+        type: string
+      imageTagSuffix:
+        required: false
+        default: ${{ github.sha }}
+        type: string
+      push:
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   build-and-push:
@@ -43,6 +51,6 @@ jobs:
       uses: docker/build-push-action@9472e9021074a3cb3279ba431598b8836d40433f
       with:
         context: .
-        push: true
+        push: ${{ inputs.push }}
         build-args: PROJECT=${{ inputs.project }}
-        tags: ${{ inputs.registry }}/${{ inputs.imageName }}:${{ inputs.imageTagPrefix }}-${{ github.sha }}
+        tags: ${{ inputs.registry }}/${{ inputs.imageName }}:${{ inputs.imageTagPrefix }}-${{ inputs.imageTagSuffix }}
