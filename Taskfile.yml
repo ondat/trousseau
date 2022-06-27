@@ -432,7 +432,7 @@ tasks:
       - task: docker:run:proxy
       - task: docker:run:debug
       - task: docker:run:trousseau
-      - kubectl-kuttl test --config tests/e2e/kuttl/kube-v1.23/kuttl.yaml
+      - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v1.23/kuttl.yaml
   example:load:
     desc: load demo data
     cmds:
