@@ -35,6 +35,12 @@ jobs:
       project: providers/awskms
     needs: gosec-scanning
 
+  e2e:
+    uses: ./.github/workflows/_e2e-test.yml
+    with:
+      provider: awskms
+    needs: image-build
+
   image-vulnerability-scan:
     uses: ./.github/workflows/_trivy.yml
     with:

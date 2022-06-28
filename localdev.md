@@ -60,5 +60,5 @@ task cluster:delete
 Test are found in tests/e2e/kuttl directory. To run full test please execute the command below:
 
 ```bash
-task go:e2e-tests
+task go:e2e-tests:debug
 ```

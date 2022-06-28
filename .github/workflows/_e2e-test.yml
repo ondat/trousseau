@@ -23,17 +23,6 @@ jobs:
         run: mkdir bin && cd bin ; curl -Ls https://github.com/go-task/task/releases/download/v3.13.0/task_linux_amd64.tar.gz | tar -xz task
       - name: fetch dependencies
         run: ./bin/task fetch:kind fetch:kuttl
-      - name: build and start proxy
-        run: ./bin/task docker:build:proxy docker:run:proxy
-      - name: build and start components for debug
-        if: ${{ inputs.provider == 'debug' }}
-        run: ./bin/task docker:build:debug docker:run:debug docker:build:trousseau docker:run:trousseau
-        env:
-          ENABLED_PROVIDERS: --enabled-providers debug
-      - name: build and start components for vault
-        if: ${{ inputs.provider == 'vault' }}
-        run: ./bin/task docker:build:vault docker:run:vault docker:build:trousseau docker:run:trousseau
-        env:
-          ENABLED_PROVIDERS: --enabled-providers vault
-      - name: run e2e tests
-        run: ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v1.23/kuttl.yaml
+      - name: e2e test
+        run: PATH=./bin:$PATH ./bin/task go:e2e-tests:${{ inputs.provider }}
+

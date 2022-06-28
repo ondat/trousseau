@@ -6,25 +6,25 @@ Please follow base documentation at [localdev.md](../localdev.md)
 
 Requirements:
 
-* `vault.loc` hostname needs to be resolved to your local machine, or alternatively tou have to change `scripts/hcvault/archives/localdev/config.yaml` to point to a working Vault instance
+* `vault.loc` hostname needs to be resolved to your local machine, or alternatively tou have to change [awskms.yaml](../scripts/hcvault/archives/localdev/vault.yaml) to point to a working Vault instance
 
 ## Create Vault in developer mode
 
 To spin up a Vault localy please execute the following command:
 
 ```bash
-docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' -p 8200:8200 -d --name=dev-vault vault
+docker run --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' -p 8200:8200 -d --name=trousseau-local-vault vault
 ```
 
 You can validate your Vault instance by performing a login:
 
 ```bash
-docker exec -e VAULT_ADDR=http://127.0.0.1:8200 dev-vault vault login vault-kms-demo  
+docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault login vault-kms-demo  
 ```
 
 Enable transit engine:
 ```bash
-docker exec -e VAULT_ADDR=http://127.0.0.1:8200 dev-vault vault secrets enable transit
+docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault secrets enable transit
 ```
 
 ## Run Trousseau components
@@ -33,6 +33,6 @@ Use command line or our favorite IDE to start Trousseau components on your machi
 
 ```bash
 task go:run:proxy
-rask go:run:vault
+task go:run:vault
 ENABLED_PROVIDERS="--enabled-providers vault" task go:run:trousseau
 ```
