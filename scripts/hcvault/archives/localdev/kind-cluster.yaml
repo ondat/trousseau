@@ -9,7 +9,7 @@ nodes:
     readOnly: true
     propagation: None
   - containerPath: /opt/vault-kms/proxy.socket
-    hostPath: bin/proxy.socket
+    hostPath: bin/run/proxy.socket
     readOnly: true
     propagation: None
   kubeadmConfigPatches:

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -27,9 +28,10 @@ var (
 
 // Handle all communication with AWS KMS server.
 type awsKmsWrapper struct {
-	config   *Config
-	hostname string
-	region   string
+	config      *Config
+	sessionOpts session.Options
+	hostname    string
+	region      string
 }
 
 // New creates an instance of the KMS client.
@@ -40,10 +42,38 @@ func New(config *Config, hostname string) (providers.EncryptionClient, error) {
 		return nil, fmt.Errorf("no valid ARN found in %s", config.KeyArn)
 	}
 
+	opts := session.Options{
+		Profile: config.Profile,
+		Config: aws.Config{
+			Region:                        aws.String(matches[1]),
+			CredentialsChainVerboseErrors: aws.Bool(true),
+		},
+		SharedConfigState: session.SharedConfigEnable,
+	}
+
+	if config.Endpoint != "" {
+		var resolver endpoints.ResolverFunc = func(_, _ string, _ ...func(*endpoints.Options)) (endpoints.ResolvedEndpoint, error) {
+			return endpoints.ResolvedEndpoint{
+				URL: config.Endpoint,
+			}, nil
+		}
+
+		opts.Config.Endpoint = aws.String(config.Endpoint)
+		opts.Config.EndpointResolver = resolver
+		opts.Config.DisableEndpointHostPrefix = aws.Bool(true)
+	}
+
+	if config.AssumeRoleMFAToken != "" {
+		opts.AssumeRoleTokenProvider = func() (string, error) {
+			return config.AssumeRoleMFAToken, nil
+		}
+	}
+
 	return &awsKmsWrapper{
-		config:   config,
-		hostname: hostnameCleanupRegexp.ReplaceAllString(hostname, ""),
-		region:   matches[1],
+		config:      config,
+		sessionOpts: opts,
+		hostname:    hostnameCleanupRegexp.ReplaceAllString(hostname, ""),
+		region:      matches[1],
 	}, nil
 }
 
@@ -59,7 +89,7 @@ func (c *awsKmsWrapper) Encrypt(data []byte) ([]byte, error) {
 
 	klog.V(logger.Debug2).InfoS("Encrypting data", "data", utils.SecretToLog(string(data)))
 
-	response, err := kms.New(sess).Encrypt(&kms.EncryptInput{Plaintext: data, KeyId: &c.config.KeyArn, EncryptionContext: c.config.EncryptionContext})
+	response, err := kms.New(sess, &c.sessionOpts.Config).Encrypt(&kms.EncryptInput{Plaintext: data, KeyId: &c.config.KeyArn, EncryptionContext: c.config.EncryptionContext})
 	if err != nil {
 		klog.InfoS("Unable to encrypt data", "error", err.Error())
 		return nil, fmt.Errorf("unable to encrypt data: %w", err)
@@ -88,7 +118,7 @@ func (c *awsKmsWrapper) Decrypt(data []byte) ([]byte, error) {
 
 	klog.V(logger.Debug2).InfoS("Decrypting data", "data", utils.SecretToLog(string(data)))
 
-	response, err := kms.New(sess).Decrypt(&kms.DecryptInput{CiphertextBlob: decoded, EncryptionContext: c.config.EncryptionContext})
+	response, err := kms.New(sess, &c.sessionOpts.Config).Decrypt(&kms.DecryptInput{CiphertextBlob: decoded, EncryptionContext: c.config.EncryptionContext})
 	if err != nil {
 		klog.InfoS("Unable to decrypt data", "error", err.Error())
 		return nil, fmt.Errorf("unable to decrypt data: %w", err)
@@ -104,35 +134,23 @@ func (c *awsKmsWrapper) Version() *pb.VersionResponse {
 }
 
 func (c *awsKmsWrapper) createSession() (*session.Session, error) {
-	opts := session.Options{
-		Profile:           c.config.Profile,
-		Config:            aws.Config{Region: aws.String(c.region)},
-		SharedConfigState: session.SharedConfigEnable,
-	}
-
-	if c.config.AssumeRoleMFAToken != "" {
-		opts.AssumeRoleTokenProvider = func() (string, error) {
-			return c.config.AssumeRoleMFAToken, nil
-		}
-	}
-
 	klog.V(logger.Info3).InfoS("Creating new session...")
-	klog.V(logger.Debug1).InfoS("Creating new session", "options", opts)
+	klog.V(logger.Debug1).InfoS("Creating new session", "options", c.sessionOpts)
 
-	sess, err := session.NewSessionWithOptions(opts)
+	sess, err := session.NewSessionWithOptions(c.sessionOpts)
 	if err != nil {
 		klog.InfoS("Unable to create new session", "error", err.Error())
 		return nil, fmt.Errorf("unable to create new session: %w", err)
 	}
 
 	if c.config.RoleArn != "" {
-		return c.createStsSession(&opts.Config, sess)
+		return c.createStsSession(sess)
 	}
 
 	return sess, nil
 }
 
-func (c *awsKmsWrapper) createStsSession(config *aws.Config, sess *session.Session) (*session.Session, error) {
+func (c *awsKmsWrapper) createStsSession(sess *session.Session) (*session.Session, error) {
 	hostname := c.hostname
 	if len(hostname) >= maxRoleSessionNameLength {
 		hostname = hostname[:maxRoleSessionNameLength]
@@ -151,10 +169,7 @@ func (c *awsKmsWrapper) createStsSession(config *aws.Config, sess *session.Sessi
 		return nil, fmt.Errorf("unable to assume role: %w", err)
 	}
 
-	config.Credentials = credentials.NewStaticCredentials(*out.Credentials.AccessKeyId,
-		*out.Credentials.SecretAccessKey, *out.Credentials.SessionToken)
-
-	sess, err = session.NewSession(config)
+	sess, err = session.NewSession(&c.sessionOpts.Config, &aws.Config{Credentials: credentials.NewStaticCredentials(*out.Credentials.AccessKeyId, *out.Credentials.SecretAccessKey, *out.Credentials.SessionToken)})
 	if err != nil {
 		klog.InfoS("Unable to create new session", "error", err.Error())
 		return nil, fmt.Errorf("unable to create new session: %w", err)

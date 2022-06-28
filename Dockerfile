@@ -15,6 +15,9 @@ ADD . /work
 WORKDIR /work/${PROJECT}
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o endpoint main.go
 
+FROM alpine:3.16.0 as certs
+RUN apk --update add ca-certificates
+
 FROM ${BASE_IMAGE}
 ARG PROJECT=required
 LABEL org.opencontainers.image.title "Trousseau - ${PROJECT}" 
@@ -23,7 +26,9 @@ LABEL org.opencontainers.image.licenses "Apache-2.0 License"
 LABEL org.opencontainers.image.source "https://github.com/ondat/trousseau" 
 LABEL org.opencontainers.image.description "Trousseau, an open-source project leveraging the Kubernetes KMS provider framework to connect any Key Management Service the Kubernetes native way" 
 LABEL org.opencontainers.image.documentation "https://github.com/ondat/trousseau/wiki" 
-    
+
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
 COPY --from=worker /work/${PROJECT}/endpoint /bin/
 
 USER 10123
