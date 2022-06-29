@@ -2,13 +2,13 @@
 
 This document describes how to develop Trousseau AWS KMS provider on your local machine.
 
-Please follow base documentation at [localdev.md](../localdev.md)
+Please follow base documentation at [localdev.md](/../../localdev.md)
 
 ## Login to AWS
 
 Log in and create profile file at `~/.aws/credentials`.
 
-Edit config file at [awskms.yaml](../scripts/hcvault/archives/localdev/awskms.yaml):
+Edit config file at [awskms.yaml](/../../tests/e2e/kuttl/kube-v1.23/awskms.yaml):
 
 ```yaml
 profile: profile
@@ -61,7 +61,7 @@ Output:
 }
 ```
 
-Edit config file based on output at [awskms.yaml](../scripts/hcvault/archives/localdev/awskms.yaml):
+Edit config file based on output at [awskms.yaml](/../../tests/e2e/kuttl/kube-v1.23/awskms.yaml):
 
 ```yaml
 endpoint: https://localhost.localstack.cloud:4566

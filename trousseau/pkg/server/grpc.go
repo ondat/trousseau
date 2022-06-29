@@ -59,6 +59,8 @@ func New(decryptPreference, socketLocation string, enabledProviders []string, ti
 			return nil, fmt.Errorf("unable to find socket at %s: %w", socket, err)
 		}
 
+		klog.InfoS("Registered provider", "provider", provider)
+
 		registered[provider] = func(encReq *pb.EncryptRequest, decReq *pb.DecryptRequest) ([]byte, error) {
 			klog.V(logger.Debug1).InfoS("Calling provider", "name", provider, "socket", socket, "encryption", encReq != nil, "decryption", decReq != nil)
 

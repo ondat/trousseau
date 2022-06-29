@@ -1,5 +1,4 @@
 bin
-tests/e2e/generated_manifests
 *.socket
 cover.out
 kind-logs-*/

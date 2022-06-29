@@ -2,11 +2,7 @@
 
 This document describes how to develop Trousseau Vault provider on your local machine.
 
-Please follow base documentation at [localdev.md](../localdev.md)
-
-Requirements:
-
-* `vault.loc` hostname needs to be resolved to your local machine, or alternatively tou have to change [awskms.yaml](../scripts/hcvault/archives/localdev/vault.yaml) to point to a working Vault instance
+Please follow base documentation at [localdev.md](/../../localdev.md)
 
 ## Create Vault in developer mode
 
