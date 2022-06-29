@@ -1,10 +1,11 @@
 version: 3
 vars:
   KIND_CLUSTER_NAME: kms-vault
+  # 1.24 is not supported by Kuttl
+  KIND_CLUSTER_VERSION: 1.23
+  KIND_VERSION: 0.14.0
   GOSEC_VERSION: 2.11.0
   GOLANGCI_VERSION: 1.46.2
-  KIND_VERSION: 0.11.1
-  KUBERNETES_VERSION: 1.21.2
   HELM_VERSION: 3.6.3
   VAULT_VERSION: 1.8.1
   KUBECTL_VERSION: 1.21.1
@@ -24,18 +25,16 @@ tasks:
     desc: create bin directory
     cmds:
       - mkdir -p ./bin
-      - mkdir -m 777 bin/run
-      - mkdir -m 777 bin/run/debug
-      - mkdir -m 777 bin/run/vault
-      - mkdir -m 777 bin/run/awskms
-      - mkdir -p tests/e2e/generated_manifests
+      - mkdir -pm 777 bin/run
+      - mkdir -pm 777 bin/run/debug
+      - mkdir -pm 777 bin/run/vault
+      - mkdir -pm 777 bin/run/awskms
     status:
       - test -d ./bin
       - test -d ./bin/run
       - test -d ./bin/run/debug
       - test -d ./bin/run/vault
       - test -d ./bin/run/awskms
-      - test -d tests/e2e/generated_manifests
   fetch:golangci:
     deps:
       - bin-dir:init
@@ -124,25 +123,13 @@ tasks:
       - task: fetch:kind
       - task: fetch:kuttl
   cluster:create:
-    deps:
-      - task: generate:manifests
     desc: create kind cluster
     cmds:
-      - ./bin/kind create cluster --retain --image kindest/node:"v{{.KUBERNETES_VERSION}}" --name "{{.KIND_CLUSTER_NAME}}" --wait 2m --config ./{{.SCRIPT}}/kind-cluster.yaml
+      - ./bin/kind create cluster --retain --name "{{.KIND_CLUSTER_NAME}}" --wait 2m --config ./tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kind.yaml
   cluster:delete:
     desc: destroy kind cluster
     cmds:
       - ./bin/kind delete cluster --name "{{.KIND_CLUSTER_NAME}}"
-  vault:deploy:
-    desc: install vault on cluster
-    cmds:
-      - ./bin/helm repo add banzaicloud-stable https://kubernetes-charts.banzaicloud.com
-      - ./bin/helm upgrade --install vault-operator banzaicloud-stable/vault-operator --wait
-      - ./bin/kubectl apply -f {{.SCRIPT}}/vault.yaml
-  vault:port-forward:
-    desc: port forwarding for vault
-    cmds:
-      - ./bin/kubectl port-forward svc/vault 8200:8200
   prometheus:deploy:
     deps:
       - task: fetch:helm
@@ -165,13 +152,6 @@ tasks:
     desc: open grafana (admin/prom-operator)
     cmds:
       - ./bin/kubectl port-forward svc/prometheus-grafana 8300:80
-  generate:manifests:
-    desc: generate manifests
-    deps:
-      - bin-dir:init
-    cmds:
-      - envsubst < {{.SCRIPT}}/kms.yaml > tests/e2e/generated_manifests/kms.yaml
-      - chmod 644 tests/e2e/generated_manifests/*
   docker:build:
     desc: build docker image
     cmds:
@@ -251,7 +231,7 @@ tasks:
       - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault login vault-kms-demo
       - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault secrets enable transit
       - docker rm -f trousseau-vault || true
-      - docker run -d --name trousseau-vault --rm --network=container:trousseau-local-vault -v $PWD/tests/e2e/kuttl/kube-v1.23/vault.yaml:/opt/vault-kms/vault/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION -v=5
+      - docker run -d --name trousseau-vault --rm --network=container:trousseau-local-vault -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml:/opt/vault-kms/vault/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION -v=3
   docker:run:awskms:
     deps:
       - bin-dir:init
@@ -260,16 +240,16 @@ tasks:
       - docker rm -f trousseau-local-aws || true
       - docker run --name trousseau-local-aws --rm --hostname localhost.localstack.cloud -d -e SERVICES=kms -e HOSTNAME=localhost.localstack.cloud -e HOSTNAME_EXTERNAL=localhost.localstack.cloud -e DEFAULT_REGION=eu-west-1 -e KMS_PROVIDER=kms-local -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack:0.14.4
       - sleep 5
-      - 'printf %"s\n" "endpoint: https://localhost.localstack.cloud:4566" "profile: trousseau-local-aws" "keyArn: $(docker exec trousseau-local-aws awslocal kms create-key | grep Arn | cut -d''"'' -f4)" > scripts/hcvault/archives/localdev/awskms.yaml'
+      - 'printf %"s\n" "endpoint: https://localhost.localstack.cloud:4566" "profile: trousseau-local-aws" "keyArn: $(docker exec trousseau-local-aws awslocal kms create-key | grep Arn | cut -d''"'' -f4)" > tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml'
       - docker rm -f trousseau-awskms || true
-      - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/scripts/hcvault/archives/localdev/aws-credentials.ini:/.aws/credentials -v $PWD/scripts/hcvault/archives/localdev/awskms.yaml:/opt/vault-kms/awskms/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION -v=5
+      - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/opt/vault-kms/awskms/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION -v=3
   docker:run:trousseau:
     deps:
       - bin-dir:init
     cmds:
       - rm -rf bin/run/trousseau.socket
       - docker rm -f trousseau-core || true
-      - docker run -d --name trousseau-core --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION {{.ENABLED_PROVIDERS}} -v=5
+      - docker run -d --name trousseau-core --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION {{.ENABLED_PROVIDERS}} -v=3
   go:tidy:
     desc: go tidy
     cmds:
@@ -438,14 +418,6 @@ tasks:
     dir: trousseau
     cmds:
       - go test -coverprofile cover.out -race -timeout 30s ./...
-  go:run:
-    desc: go run
-    cmds:
-      - task: go:run:proxy
-      - task: go:run:debug
-      - task: go:run:vault
-      - task: go:run:awskms
-      - task: go:run:trousseau
   go:run:proxy:
     dir: proxy
     deps:
@@ -469,7 +441,7 @@ tasks:
       - go:tidy:vault
     cmds:
       - rm -rf ../../bin/run/vault/vault.socket
-      - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../scripts/hcvault/archives/localdev/vault.yaml --listen-addr unix://../../bin/run/vault/vault.socket --zap-encoder=console --v=5
+      - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml --listen-addr unix://../../bin/run/vault/vault.socket --zap-encoder=console --v=5
   go:run:awskms:
     dir: providers/awskms
     deps:
@@ -477,7 +449,7 @@ tasks:
       - go:tidy:awskms
     cmds:
       - rm -rf ../../bin/run/awskms/awskms.socket
-      - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../scripts/hcvault/archives/localdev/awskms.yaml --listen-addr unix://../../bin/run/awskms/awskms.socket --zap-encoder=console --v=5
+      - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml --listen-addr unix://../../bin/run/awskms/awskms.socket --zap-encoder=console --v=5
   go:run:trousseau:
     dir: trousseau
     deps:
@@ -489,36 +461,39 @@ tasks:
   go:e2e-tests:
     desc: e2e tests
     cmds:
+      - task: go:e2e-tests:debug
       - task: go:e2e-tests:vault
       - task: go:e2e-tests:awskms
-      - task: go:e2e-tests:debug
   go:e2e-tests:vault:
+    deps:
+      - docker:build:proxy
+      - docker:build:vault
+      - docker:build:trousseau
     cmds:
-      - task: docker:build:proxy
-      - task: docker:build:vault
-      - task: docker:build:trousseau
       - task: docker:run:proxy
       - task: docker:run:vault
       - ENABLED_PROVIDERS="--enabled-providers vault" task docker:run:trousseau
-      - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v1.23/kuttl.yaml
+      - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
   go:e2e-tests:awskms:
+    deps:
+      - docker:build:proxy
+      - docker:build:awskms
+      - docker:build:trousseau
     cmds:
-      - task: docker:build:proxy
-      - task: docker:build:awskms
-      - task: docker:build:trousseau
       - task: docker:run:proxy
       - task: docker:run:awskms
       - ENABLED_PROVIDERS="--enabled-providers awskms" task docker:run:trousseau
-      - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v1.23/kuttl.yaml
+      - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
   go:e2e-tests:debug:
+    deps:
+      - docker:build:proxy
+      - docker:build:debug
+      - docker:build:trousseau
     cmds:
-      - task: docker:build:proxy
-      - task: docker:build:debug
-      - task: docker:build:trousseau
       - task: docker:run:proxy
       - task: docker:run:debug
       - task: docker:run:trousseau
-      - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v1.23/kuttl.yaml
+      - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
   example:load:
     desc: load demo data
     cmds:

@@ -35,10 +35,18 @@ jobs:
       project: trousseau
     needs: gosec-scanning
 
-  e2e:
+  e2e-1.20:
     uses: ./.github/workflows/_e2e-test.yml
     with:
       provider: debug
+      kubever: 1.20
+    needs: image-build
+
+  e2e-1.23:
+    uses: ./.github/workflows/_e2e-test.yml
+    with:
+      provider: debug
+      kubever: 1.23
     needs: image-build
 
   image-vulnerability-scan:

@@ -28,7 +28,7 @@ task go:run:trousseau
 For local testing we suggest to use Kind to create a cluster. Everything is configured for you so please run the command below:
 
 ```bash
-task cluster:create SCRIPT=scripts/hcvault/archives/localdev
+task cluster:create
 ```
 
 You are ready for create secrets!
