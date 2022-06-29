@@ -1,7 +1,0 @@
----
-provider: vault
-vault:
-  keynames:
-  -  vault-kms-demo
-  address: http://vault.loc:8200
-  token: vault-kms-demo

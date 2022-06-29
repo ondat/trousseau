@@ -1,0 +1,9 @@
+go 1.18
+
+use (
+	./providers/awskms
+	./providers/debug
+	./providers/vault
+	./proxy
+	./trousseau
+)

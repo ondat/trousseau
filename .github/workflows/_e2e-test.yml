@@ -1,0 +1,32 @@
+name: e2e test on pr
+
+on:
+  workflow_call:
+    inputs:
+      provider:
+        required: true
+        default: "debug"
+        type: string
+      kubever:
+        required: true
+        default: "1.23"
+        type: string
+
+env:
+  DOCKER_REGISTRY: local
+  IMAGE_NAME: trousseau
+  IMAGE_VERSION: e2e
+
+jobs:
+  e2e:
+    name: kuttl e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install Taskfile
+        run: mkdir bin && cd bin ; curl -Ls https://github.com/go-task/task/releases/download/v3.13.0/task_linux_amd64.tar.gz | tar -xz task
+      - name: fetch dependencies
+        run: ./bin/task fetch:kuttl
+      - name: e2e test
+        run: PATH=./bin:$PATH ./bin/task go:e2e-tests:${{ inputs.provider }} KIND_CLUSTER_VERSION=${{ inputs.kubever }}
+

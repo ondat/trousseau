@@ -1,10 +1,21 @@
 name: docker build
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      registry:
+        required: true
+        type: string
+      imageName:
+        required: true
+        type: string
+      imageTagPrefix:
+        required: true
+        type: string
+      project:
+        required: true
+        type: string
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -24,7 +35,7 @@ jobs:
     - name: log in to ghrc.io 
       uses: docker/login-action@1edf6180e07d2ffb423fc48a1a552855c0a1f508
       with: 
-        registry: ${{ env.REGISTRY }}
+        registry: ${{ inputs.registry }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
   
@@ -33,4 +44,5 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        build-args: PROJECT=${{ inputs.project }}
+        tags: ${{ inputs.registry }}/${{ inputs.imageName }}:${{ inputs.imageTagPrefix }}-${{ github.sha }}

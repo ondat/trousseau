@@ -5,8 +5,18 @@
 
 version: 2
 updates:
-  - package-ecosystem: "gomod" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "gomod"
+    directory: "/proxy"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "gomod"
+    directory: "/providers/vault"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "gomod"
+    directory: "/trousseau"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10

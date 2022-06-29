@@ -1,17 +1,27 @@
 name: Vulnerability Scanning 
 
-on: workflow_call 
+on:
+  workflow_call:
+    inputs:
+      registry:
+        required: true
+        type: string
+      imageName:
+        required: true
+        type: string
+      imageTagPrefix:
+        required: true
+        type: string
 
 jobs:
   build:
     name: Build
     runs-on: "ubuntu-latest"
     steps:
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@f39d29766a1eb7432c47f6bb7b64ed70b2241524
         with:
-          image-ref: ghcr.io/ondat/trousseau:${{ github.sha }}
+          image-ref: ${{ inputs.registry }}/${{ inputs.imageName }}:${{ inputs.imageTagPrefix }}-${{ github.sha }}
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
