@@ -1,6 +1,11 @@
 name: golangci-lint
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      project:
+        required: true
+        type: string
 
 permissions: 
   contents: read
@@ -17,3 +22,4 @@ jobs:
         uses: golangci/golangci-lint-action@c3ef0c370269e2a25b67c7f8e03d37e6cb106cb9
         with:
           version: latest
+          working-directory: ${{ inputs.project }}
