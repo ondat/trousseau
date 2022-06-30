@@ -1,8 +1,9 @@
 version: 3
 vars:
+  NOW:
+    sh: date +'%s'
   KIND_CLUSTER_NAME: kms-vault
-  # 1.24 is not supported by Kuttl
-  KIND_CLUSTER_VERSION: 1.23
+  KIND_CLUSTER_VERSION: 1.24
   KIND_VERSION: 0.14.0
   GOSEC_VERSION: 2.11.0
   GOLANGCI_VERSION: 1.46.2
@@ -35,6 +36,12 @@ tasks:
       - test -d ./bin/run/debug
       - test -d ./bin/run/vault
       - test -d ./bin/run/awskms
+  fetch:all:
+    desc: fetch all tools
+    cmds:
+      - task: fetch:kubectl
+      - task: fetch:kind
+      - task: fetch:kuttl
   fetch:golangci:
     deps:
       - bin-dir:init
@@ -116,14 +123,10 @@ tasks:
         sh: uname
     status:
       - test -f ./bin/husky
-  fetch:all:
-    desc: fetch all tools
-    cmds:
-      - task: fetch:kubectl
-      - task: fetch:kind
-      - task: fetch:kuttl
   cluster:create:
     desc: create kind cluster
+    deps:
+      - cluster:delete
     cmds:
       - ./bin/kind create cluster --retain --name "{{.KIND_CLUSTER_NAME}}" --wait 2m --config ./tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kind.yaml
   cluster:delete:
@@ -153,7 +156,7 @@ tasks:
     cmds:
       - ./bin/kubectl port-forward svc/prometheus-grafana 8300:80
   docker:build:
-    desc: build docker image
+    desc: build docker images
     cmds:
       - task: docker:build:proxy
       - task: docker:build:debug
@@ -162,19 +165,29 @@ tasks:
       - task: docker:build:trousseau
   docker:build:proxy:
     cmds:
-      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=proxy -t $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION .
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=proxy -t $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION .
+    status:
+       - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
   docker:build:debug:
     cmds:
-      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/debug -t $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION .
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/debug -t $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
   docker:build:vault:
     cmds:
-      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/vault -t $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION .
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/vault -t $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
   docker:build:awskms:
     cmds:
-      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/awskms -t $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION .
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/awskms -t $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
   docker:build:trousseau:
     cmds:
-      - docker build --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=trousseau -t $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION .
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=trousseau -t $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
   docker:push:
     desc: push docker image
     cmds:
@@ -473,7 +486,9 @@ tasks:
       - task: docker:run:proxy
       - task: docker:run:vault
       - ENABLED_PROVIDERS="--enabled-providers vault" task docker:run:trousseau
+      - task: cluster:create
       - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
+      - task: cluster:delete
   go:e2e-tests:awskms:
     deps:
       - docker:build:proxy
@@ -483,7 +498,9 @@ tasks:
       - task: docker:run:proxy
       - task: docker:run:awskms
       - ENABLED_PROVIDERS="--enabled-providers awskms" task docker:run:trousseau
+      - task: cluster:create
       - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
+      - task: cluster:delete
   go:e2e-tests:debug:
     deps:
       - docker:build:proxy
@@ -493,7 +510,9 @@ tasks:
       - task: docker:run:proxy
       - task: docker:run:debug
       - task: docker:run:trousseau
+      - task: cluster:create
       - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
+      - task: cluster:delete
   example:load:
     desc: load demo data
     cmds:

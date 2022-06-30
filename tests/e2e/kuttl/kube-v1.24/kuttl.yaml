@@ -3,6 +3,6 @@ apiVersion: kuttl.dev/v1beta1
 kind: TestSuite
 testDirs:
 - ./tests/e2e/kuttl/tests
-kindConfig: tests/e2e/kuttl/kube-v1.20/kind.yaml
-startKIND: true
+kindConfig: tests/e2e/kuttl/kube-v1.24/kind.yaml
+startKIND: false
 timeout: 300

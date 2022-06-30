@@ -3,10 +3,10 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
-  image: kindest/node:v1.20.15
+  image: kindest/node:v1.24.2
   extraMounts:
   - containerPath: /etc/kubernetes/encryption-config.yaml
-    hostPath: tests/e2e/kuttl/kube-v1.20/encryption-config.yaml
+    hostPath: tests/e2e/kuttl/kube-v1.24/encryption-config.yaml
     readOnly: true
     propagation: None
   - containerPath: /opt/vault-kms/proxy.socket
