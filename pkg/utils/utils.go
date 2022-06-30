@@ -1,6 +1,11 @@
 package utils
 
-import "strconv"
+import (
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+)
 
 var (
 	// -X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1
@@ -28,4 +33,32 @@ func SecretToLog(s string) string {
 	}
 
 	return string(b[:len(b)/secretLogDivider]) + suffix
+}
+
+// RemoveFile removes given file.
+func RemoveFile(path string) error {
+	path = filepath.Clean(path)
+
+	if _, err := os.Stat(path); err != nil {
+		return nil
+	}
+
+	return os.Remove(path)
+}
+
+func WatchFile(path string) <-chan error {
+	errChan := make(chan error)
+	ticker := time.NewTicker(time.Second)
+
+	go func() {
+		for {
+			<-ticker.C
+
+			if _, err := os.Stat(path); err != nil {
+				errChan <- err
+			}
+		}
+	}()
+
+	return errChan
 }

@@ -210,44 +210,39 @@ tasks:
     deps:
       - bin-dir:init
     cmds:
-      - rm -rf bin/run/proxy.socket
       - docker rm -f trousseau-proxy || true
       - docker run -d --name trousseau-proxy --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION
   docker:run:debug:
     deps:
       - bin-dir:init
     cmds:
-      - rm -rf bin/run/debug/debug.socket
       - docker rm -f trousseau-debug || true
       - docker run -d --name trousseau-debug --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION
   docker:run:vault:
     deps:
       - bin-dir:init
     cmds:
-      - rm -rf bin/run/vault/vault.socket
       - docker rm -f trousseau-local-vault || true
       - docker run -d --name=trousseau-local-vault --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' vault
       - sleep 5
       - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault login vault-kms-demo
       - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault secrets enable transit
       - docker rm -f trousseau-vault || true
-      - docker run -d --name trousseau-vault --rm --network=container:trousseau-local-vault -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml:/opt/vault-kms/vault/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION -v=3
+      - docker run -d --name trousseau-vault --rm --network=container:trousseau-local-vault -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
   docker:run:awskms:
     deps:
       - bin-dir:init
     cmds:
-      - rm -rf bin/run/awskms/awskms.socket
       - docker rm -f trousseau-local-aws || true
       - docker run --name trousseau-local-aws --rm --hostname localhost.localstack.cloud -d -e SERVICES=kms -e HOSTNAME=localhost.localstack.cloud -e HOSTNAME_EXTERNAL=localhost.localstack.cloud -e DEFAULT_REGION=eu-west-1 -e KMS_PROVIDER=kms-local -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack:0.14.4
       - sleep 5
       - 'printf %"s\n" "endpoint: https://localhost.localstack.cloud:4566" "profile: trousseau-local-aws" "keyArn: $(docker exec trousseau-local-aws awslocal kms create-key | grep Arn | cut -d''"'' -f4)" > tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml'
       - docker rm -f trousseau-awskms || true
-      - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/opt/vault-kms/awskms/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION -v=3
+      - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
   docker:run:trousseau:
     deps:
       - bin-dir:init
     cmds:
-      - rm -rf bin/run/trousseau.socket
       - docker rm -f trousseau-core || true
       - docker run -d --name trousseau-core --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION {{.ENABLED_PROVIDERS}} -v=3
   go:tidy:
@@ -424,7 +419,6 @@ tasks:
       - bin-dir:init
       - go:tidy:proxy
     cmds:
-      - rm -rf ../bin/run/proxy.socket
       - go run main.go --listen-addr unix://../bin/run/proxy.socket --trousseau-addr ../bin/run/trousseau.socket
   go:run:debug:
     dir: providers/debug
@@ -432,7 +426,6 @@ tasks:
       - bin-dir:init
       - go:tidy:debug
     cmds:
-      - rm -rf ../../bin/run/debug/debug.socket
       - go run main.go --listen-addr unix://../../bin/run/debug/debug.socket
   go:run:vault:
     dir: providers/vault
@@ -440,7 +433,6 @@ tasks:
       - bin-dir:init
       - go:tidy:vault
     cmds:
-      - rm -rf ../../bin/run/vault/vault.socket
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml --listen-addr unix://../../bin/run/vault/vault.socket --zap-encoder=console --v=5
   go:run:awskms:
     dir: providers/awskms
@@ -448,7 +440,6 @@ tasks:
       - bin-dir:init
       - go:tidy:awskms
     cmds:
-      - rm -rf ../../bin/run/awskms/awskms.socket
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml --listen-addr unix://../../bin/run/awskms/awskms.socket --zap-encoder=console --v=5
   go:run:trousseau:
     dir: trousseau
@@ -456,7 +447,6 @@ tasks:
       - bin-dir:init
       - go:tidy:trousseau
     cmds:
-      - rm -rf ../bin/run/trousseau.socket
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go {{.ENABLED_PROVIDERS}} --socket-location ../bin/run --listen-addr unix://../bin/run/trousseau.socket --zap-encoder=console --v=5
   go:e2e-tests:
     desc: e2e tests
