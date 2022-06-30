@@ -30,6 +30,10 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	if err = utils.RemoveFile(addr); err != nil {
+		log.Printf("Unable to delete socket file: %s: %s\n", addr, err.Error())
+	}
+
 	listener, err := net.Listen(proto, addr)
 	if err != nil {
 		log.Fatal(err.Error())

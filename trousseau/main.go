@@ -97,11 +97,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = utils.RemoveFile(addr); err != nil {
+		klog.ErrorS(err, "unable to delete socket file", "file", addr)
+	}
+
 	listener, err := net.Listen(proto, addr)
 	if err != nil {
 		klog.Errorln(err)
 		os.Exit(1)
 	}
+
+	klog.InfoS("Listening for connections", "address", listener.Addr())
+
+	go func() {
+		klog.Errorln(<-utils.WatchFile(addr))
+		os.Exit(1)
+	}()
 
 	kmsServer, err := server.New(*decryptPreference, *socketLocation, enabledProviders, *socketTimeout)
 	if err != nil {
