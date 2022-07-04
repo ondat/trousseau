@@ -1,0 +1,98 @@
+version: 3
+vars:
+  KIND_VERSION: 0.14.0
+  GOSEC_VERSION: 2.11.0
+  GOLANGCI_VERSION: 1.46.2
+  HELM_VERSION: 3.6.3
+  VAULT_VERSION: 1.8.1
+  KUBECTL_VERSION: 1.21.1
+  KUTTL_VERSION: 0.12.1
+  HUSKY_VERSION: 0.2.8
+tasks:
+  all:
+    desc: fetch all tools
+    cmds:
+      - task: kubectl
+      - task: kind
+      - task: kuttl
+  golangci:
+    deps:
+      - :bin-dir:init
+    desc: install golanci
+    cmds:
+      - curl -L https://github.com/golangci/golangci-lint/releases/download/v{{.GOLANGCI_VERSION}}/golangci-lint-{{.GOLANGCI_VERSION}}-{{OS}}-{{ARCH}}.tar.gz | tar xvz --one-top-level=golangcitmp
+      - mv golangcitmp/golangci-lint-{{.GOLANGCI_VERSION}}-{{OS}}-{{ARCH}}/golangci-lint ./bin/golangci-lint
+      - chmod 755 bin/golangci-lint
+      - rm -rf golangcitmp
+    status:
+      - test -f ./bin/golangci-lint
+  gosec:
+    deps:
+      - :bin-dir:init
+    desc: install gosec
+    cmds:
+      - curl -L https://github.com/securego/gosec/releases/download/v{{.GOSEC_VERSION}}/gosec_{{.GOSEC_VERSION}}_{{OS}}_{{ARCH}}.tar.gz | tar xvz --one-top-level=gosectmp
+      - mv gosectmp/gosec ./bin/gosec
+      - chmod 755 bin/gosec
+      - rm -rf gosectmp
+    status:
+      - test -f ./bin/gosec
+  kind:
+    deps:
+      - :bin-dir:init
+    desc: install kind
+    cmds:
+      - curl -L https://github.com/kubernetes-sigs/kind/releases/download/v{{.KIND_VERSION}}/kind-{{OS}}-{{ARCH}} --output ./bin/kind && chmod +x ./bin/kind
+    status:
+      - test -f ./bin/kind
+  helm:
+    deps:
+      - :bin-dir:init
+    desc: install helm
+    cmds:
+      - curl -L https://get.helm.sh/helm-v{{.HELM_VERSION}}-{{OS}}-{{ARCH}}.tar.gz | tar xvz -C ./
+      - mv {{OS}}-{{ARCH}}/helm ./bin/helm
+      - chmod 755 bin/helm
+      - rm -rf {{OS}}-{{ARCH}}
+    status:
+      - test -f ./bin/helm
+  vault:
+    desc: install vault
+    cmds:
+      - curl "https://releases.hashicorp.com/vault/{{.VAULT_VERSION}}/vault_{{.VAULT_VERSION}}_{{OS}}_{{ARCH}}.zip" -o "vault.zip"
+      - unzip vault.zip
+      - mv vault bin/vault
+      - chmod 755 bin/vault
+      - rm vault.zip
+    status:
+      - test -f bin/vault
+  kubectl:
+    deps:
+      - :bin-dir:init
+    desc: install kubectl
+    cmds:
+      - curl -Lo ./bin/kubectl  https://storage.googleapis.com/kubernetes-release/release/v{{.KUBECTL_VERSION}}/bin/{{OS}}/{{ARCH}}/kubectl
+      - chmod +x ./bin/kubectl
+    status:
+      - test -f ./bin/kubectl
+  kuttl:
+    deps:
+      - :bin-dir:init
+    desc: install kuttl
+    cmds:
+      - cd bin ; curl -L https://github.com/kudobuilder/kuttl/releases/download/v{{.KUTTL_VERSION}}/kuttl_{{.KUTTL_VERSION}}_{{OS}}_x86_64.tar.gz | tar -xz kubectl-kuttl
+    status:
+      - test -f ./bin/kuttl
+  husky:
+    deps:
+      - :bin-dir:init
+    desc: install husky
+    cmds:
+      - cd bin ; curl -L https://github.com/automation-co/husky/releases/download/v{{.HUSKY_VERSION}}/husky_{{.HUSKY_VERSION}}_{{.CAP_ARCH}}_x86_64.tar.gz | tar -xz husky
+      - chmod +x ./bin/husky
+      - ./bin/husky install
+    vars:
+      CAP_ARCH:
+        sh: uname
+    status:
+      - test -f ./bin/husky
