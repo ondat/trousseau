@@ -1,0 +1,12 @@
+version: 3
+tasks:
+  create:
+    desc: create kind cluster
+    deps:
+      - delete
+    cmds:
+      - ./bin/kind create cluster --retain --name "{{.KIND_CLUSTER_NAME}}" --wait 2m --config ./tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kind.yaml
+  delete:
+    desc: destroy kind cluster
+    cmds:
+      - ./bin/kind delete cluster --name "{{.KIND_CLUSTER_NAME}}"
