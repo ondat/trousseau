@@ -36,8 +36,8 @@ jobs:
             TR_VAULT_IMAGE=ondat/trousseau:vault-develop
             TR_TROUSSEAU_IMAGE=ondat/trousseau:trousseau-develop
             TR_AWSKMS_CREDENTIALS=${HOME}/.aws/credentials
-            TR_AWSKMS_CONFIG=tests/e2e/kuttl/kube-v1.24/awskms.yaml
-            TR_VAULT_CONFIG=tests/e2e/kuttl/kube-v1.24/vault.yaml
+            TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/awskms.yaml
+            TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
       - name: generate services
         run: PATH=./bin:$PATH ./bin/task prod:generate:docker-compose ENV_LOCATION=trousseau-env
       - name: validate compose files
@@ -60,15 +60,15 @@ jobs:
           FILE_DATA: |
             TR_VERBOSE_LEVEL=3
             TR_ENABLED_PROVIDERS="--enabled-providers=awskms --enabled-providers=vault"
-            TR_SOCKET_LOCATION=bin/run
+            TR_SOCKET_LOCATION=${PWD}/bin/run
             TR_PROXY_IMAGE=ondat/trousseau:proxy-develop
             TR_AWSKMS_IMAGE=ondat/trousseau:awskms-develop
             TR_VAULT_IMAGE=ondat/trousseau:vault-develop
             TR_TROUSSEAU_IMAGE=ondat/trousseau:trousseau-develop
-            TR_AWSKMS_CREDENTIALS=.aws/credentials
-            TR_AWSKMS_CONFIG=tests/e2e/kuttl/kube-v1.24awskms.yaml
+            TR_AWSKMS_CREDENTIALS=${HOME}/.aws/credentials
+            TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24awskms.yaml
             TR_VAULT_ADDRESS=http://127.0.0.1:8200
-            TR_VAULT_CONFIG=tests/e2e/kuttl/kube-v1.24/vault.yaml
+            TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
       - name: generate services
         run: PATH=./bin:$PATH ./bin/task prod:generate:kustomize ENV_LOCATION=trousseau-env
       - uses: karancode/kustomize-github-action@master
