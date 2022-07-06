@@ -19,12 +19,16 @@ tasks:
     desc: create bin directory
     cmds:
       - mkdir -p ./bin
+    status:
+      - test -d ./bin
+  run-dir:init:
+    desc: create bin directory
+    cmds:
       - mkdir -pm 777 bin/run
       - mkdir -pm 777 bin/run/debug
       - mkdir -pm 777 bin/run/vault
       - mkdir -pm 777 bin/run/awskms
     status:
-      - test -d ./bin
       - test -d ./bin/run
       - test -d ./bin/run/debug
       - test -d ./bin/run/vault

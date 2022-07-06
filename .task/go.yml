@@ -190,35 +190,35 @@ tasks:
   run:proxy:
     dir: proxy
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:proxy
     cmds:
       - go run main.go --listen-addr unix://../bin/run/proxy.socket --trousseau-addr ../bin/run/trousseau.socket
   run:debug:
     dir: providers/debug
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:debug
     cmds:
       - go run main.go --listen-addr unix://../../bin/run/debug/debug.socket
   run:vault:
     dir: providers/vault
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:vault
     cmds:
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml --listen-addr unix://../../bin/run/vault/vault.socket --zap-encoder=console --v=5
   run:awskms:
     dir: providers/awskms
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:awskms
     cmds:
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml --listen-addr unix://../../bin/run/awskms/awskms.socket --zap-encoder=console --v=5
   run:trousseau:
     dir: trousseau
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:trousseau
     cmds:
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go {{.ENABLED_PROVIDERS}} --socket-location ../bin/run --listen-addr unix://../bin/run/trousseau.socket --zap-encoder=console --v=5

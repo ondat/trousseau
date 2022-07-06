@@ -65,8 +65,8 @@ TR_AWSKMS_IMAGE=ghcr.io/ondat/trousseau:awskms-${TR_VERSION}
 TR_AWSKMS_CONFIG=awskms.yaml # For Kubernetes, file must exists only for generation
 TR_AWSKMS_CREDENTIALS=.aws/credentials
 TR_VAULT_IMAGE=ghcr.io/ondat/trousseau:vault-${TR_VERSION}
-TR_VAULT_ADDRESS=https://127.0.0.1:8200 # For Kubernetes only
-TR_VAULT_CONFIG=vault.yaml # For non Kubernetes only
+TR_VAULT_ADDRESS=https://127.0.0.1:8200
+TR_VAULT_CONFIG=vault.yaml
 ```
 
 Create shared items on target host:
@@ -74,6 +74,8 @@ Create shared items on target host:
 mkdir -p $TR_SOCKET_LOCATION
 sudo chown 10123:10123 $TR_SOCKET_LOCATION
 sudo chown 10123:10123 $TR_AWSKMS_CREDENTIALS
+# On case you disabled Vault agen config generation
+sudo chown 10123:10123 $TR_VAULT_CONFIG
 ```
 
 Create your config files:

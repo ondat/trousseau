@@ -71,19 +71,19 @@ tasks:
       - task: run:trousseau
   run:proxy:
     deps:
-      - :bin-dir:init
+      - :run-dir:init
     cmds:
       - docker rm -f trousseau-proxy || true
       - docker run -d --name trousseau-proxy --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION
   run:debug:
     deps:
-      - :bin-dir:init
+      - :run-dir:init
     cmds:
       - docker rm -f trousseau-debug || true
       - docker run -d --name trousseau-debug --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION
   run:vault:
     deps:
-      - :bin-dir:init
+      - :run-dir:init
     cmds:
       - docker rm -f trousseau-local-vault || true
       - docker run -d --name=trousseau-local-vault --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' vault
@@ -94,7 +94,7 @@ tasks:
       - docker run -d --name trousseau-vault --rm --network=container:trousseau-local-vault -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
   run:awskms:
     deps:
-      - :bin-dir:init
+      - :run-dir:init
     cmds:
       - docker rm -f trousseau-local-aws || true
       - docker run --name trousseau-local-aws --rm --hostname localhost.localstack.cloud -d -e SERVICES=kms -e HOSTNAME=localhost.localstack.cloud -e HOSTNAME_EXTERNAL=localhost.localstack.cloud -e DEFAULT_REGION=eu-west-1 -e KMS_PROVIDER=kms-local -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack:0.14.4
@@ -104,7 +104,7 @@ tasks:
       - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
   run:trousseau:
     deps:
-      - :bin-dir:init
+      - :run-dir:init
     cmds:
       - docker rm -f trousseau-core || true
       - docker run -d --name trousseau-core --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION {{.ENABLED_PROVIDERS}} -v=3

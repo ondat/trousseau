@@ -10,3 +10,4 @@ resources:
 patchesStrategicMerge:
 - sidecar-awskms.yaml
 - sidecar-vault.yaml
+- configmap-vault-generator.yaml

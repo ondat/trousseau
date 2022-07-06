@@ -21,7 +21,7 @@ data:
     }
 
     template {
-    destination = "/mnt/shared/vault.yaml"
+    destination = "${TR_VAULT_CONFIG}"
     contents = <<EOT
     {{- with secret "secret/data/trousseau/config" }}
     --- 
