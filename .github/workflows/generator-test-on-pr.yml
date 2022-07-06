@@ -66,9 +66,9 @@ jobs:
             TR_VAULT_IMAGE=ondat/trousseau:vault-develop
             TR_TROUSSEAU_IMAGE=ondat/trousseau:trousseau-develop
             TR_AWSKMS_CREDENTIALS=${HOME}/.aws/credentials
-            TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24awskms.yaml
-            TR_VAULT_ADDRESS=http://127.0.0.1:8200
+            TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/awskms.yaml
             TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
+            TR_VAULT_ADDRESS=http://127.0.0.1:8200
       - name: generate services
         run: PATH=./bin:$PATH ./bin/task prod:generate:kustomize ENV_LOCATION=trousseau-env
       - uses: karancode/kustomize-github-action@master
