@@ -1,0 +1,10 @@
+services:
+  vault:
+    image: ${TR_VAULT_IMAGE}
+    command: --listen-addr=unix:///sockets/vault/vault.socket --config-file-path=/etc/config.yaml -v=${TR_VERBOSE_LEVEL}
+    volumes:
+      - sockets:/sockets:rw
+      - ${TR_VAULT_CONFIG}:/etc/config.yaml:r
+    restart: always
+    depends_on:
+      - init

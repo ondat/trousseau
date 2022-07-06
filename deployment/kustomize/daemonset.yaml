@@ -1,0 +1,102 @@
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trousseau-kms-provider
+spec:
+  selector:
+    matchLabels:
+      name: trousseau-kms-provider
+  template:
+    metadata:
+      labels:
+        name: trousseau-kms-provider
+    spec:
+      serviceAccountName: trousseau-auth
+      priorityClassName: system-cluster-critical
+      initContainers:
+        - name: trousseau-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/trousseau ; chown 10123:10123 /mnt/shared/trousseau' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+      containers:
+        - name: proxy
+          image: ${TR_PROXY_IMAGE}
+          args:
+            - --listen-addr=unix:///opt/trousseau-kms/proxy.socket
+            - --trousseau-addr=/mnt/shared/trousseau/trousseau.socket
+          volumeMounts:
+            - name: trousseau-kms
+              mountPath: /opt/trousseau-kms
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsUser: 10123
+            runAsGroup: 10123
+        - name: trousseau
+          image: ${TR_TROUSSEAU_IMAGE}
+          args:
+            - --listen-addr=unix:///mnt/shared/trousseau/trousseau.socket
+            - --socket-location=/mnt/shared
+            - ${TR_ENABLED_PROVIDERS}
+            - -v=${TR_VERBOSE_LEVEL}
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsUser: 10123
+            runAsGroup: 10123
+          ports:
+            - containerPort: 8787
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8787
+            failureThreshold: 3
+            periodSeconds: 10
+      volumes:
+        - name: trousseau-kms
+          hostPath:
+            path: ${TR_SOCKET_LOCATION}
+            type: Directory
+        - emptyDir: {}
+          name: shared-data
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/etcd
+          operator: Exists
+          effect: NoExecute

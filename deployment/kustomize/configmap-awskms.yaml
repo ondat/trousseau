@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trousseau-awskms-config
+data:
+  config.yaml: |
+${TR_AWSKMS_CONFIG}

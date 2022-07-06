@@ -1,0 +1,61 @@
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trousseau-kms-provider
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: vault-agent
+          image: vault
+          args:
+            - agent
+            - -config=/etc/vault/vault-agent-config.hcl
+            - -log-level=debug
+          env:
+            - name: VAULT_ADDR
+              value: ${TR_VAULT_ADDRESS}
+          volumeMounts:
+            - name: vault-agent-config
+              mountPath: /etc/vault
+              readOnly: true
+            - name: shared-data
+              mountPath: /mnt/shared
+        - name: vault-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/vault ; chown 10123:10123 /mnt/shared/vault' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+      containers:
+        - name: vault
+          image: ${TR_VAULT_IMAGE}
+          args:
+            - --listen-addr=unix:///mnt/shared/vault/vault.socket
+            - --config-file-path=/mnt/shared/vault.yaml
+            - -v=${TR_VERBOSE_LEVEL}
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsUser: 10123
+            runAsGroup: 10123
+      volumes:
+        - configMap:
+            items:
+              - key: vault-agent-config.hcl
+                path: vault-agent-config.hcl
+            name: trousseau-vault-agent-config
+          name: vault-agent-config

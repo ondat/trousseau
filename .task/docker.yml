@@ -74,13 +74,13 @@ tasks:
       - :bin-dir:init
     cmds:
       - docker rm -f trousseau-proxy || true
-      - docker run -d --name trousseau-proxy --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION
+      - docker run -d --name trousseau-proxy --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION
   run:debug:
     deps:
       - :bin-dir:init
     cmds:
       - docker rm -f trousseau-debug || true
-      - docker run -d --name trousseau-debug --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION
+      - docker run -d --name trousseau-debug --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION
   run:vault:
     deps:
       - :bin-dir:init
@@ -91,7 +91,7 @@ tasks:
       - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault login vault-kms-demo
       - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault secrets enable transit
       - docker rm -f trousseau-vault || true
-      - docker run -d --name trousseau-vault --rm --network=container:trousseau-local-vault -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
+      - docker run -d --name trousseau-vault --rm --network=container:trousseau-local-vault -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
   run:awskms:
     deps:
       - :bin-dir:init
@@ -101,10 +101,10 @@ tasks:
       - sleep 5
       - 'printf %"s\n" "endpoint: https://localhost.localstack.cloud:4566" "profile: trousseau-local-aws" "keyArn: $(docker exec trousseau-local-aws awslocal kms create-key | grep Arn | cut -d''"'' -f4)" > tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml'
       - docker rm -f trousseau-awskms || true
-      - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
+      - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
   run:trousseau:
     deps:
       - :bin-dir:init
     cmds:
       - docker rm -f trousseau-core || true
-      - docker run -d --name trousseau-core --rm -v $PWD/bin/run:/opt/vault-kms $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION {{.ENABLED_PROVIDERS}} -v=3
+      - docker run -d --name trousseau-core --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION {{.ENABLED_PROVIDERS}} -v=3

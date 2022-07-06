@@ -9,7 +9,7 @@ nodes:
     hostPath: tests/e2e/kuttl/kube-v1.24/encryption-config.yaml
     readOnly: true
     propagation: None
-  - containerPath: /opt/vault-kms/proxy.socket
+  - containerPath: /opt/trousseau-kms/proxy.socket
     hostPath: bin/run/proxy.socket
     readOnly: true
     propagation: None

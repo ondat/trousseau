@@ -1,0 +1,12 @@
+namespace: kube-system
+commonLabels:
+  tier: control-plane
+  app: trousseau-kms-provider
+resources:
+- rbac.yaml
+- daemonset.yaml
+- configmap-awskms.yaml
+- configmap-vault.yaml
+patchesStrategicMerge:
+- sidecar-awskms.yaml
+- sidecar-vault.yaml

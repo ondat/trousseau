@@ -1,0 +1,18 @@
+[Unit]
+Description=Trousseau service
+After=trousseau-vault.service
+After=trousseau-awskms.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=trousseau-env
+TimeoutStartSec=0
+Restart=always
+PreExecStart=/bin/mkdir -p ${TR_SOCKET_LOCATION}
+PreExecStart=/bin/chown 10123:10123 ${TR_SOCKET_LOCATION}
+ExecStart=/usr/bin/docker run -d --name %n --rm -v ${TR_SOCKET_LOCATION}:/opt/trousseau-kms ${TR_TROUSSEAU_IMAGE} ${TR_ENABLED_PROVIDERS} -v=${TR_VERBOSE_LEVEL}
+ExecStop=/usr/bin/docker stop %n
+ExecStopPost=/usr/bin/docker rm %n
+
+[Install]
+WantedBy=multi-user.target

@@ -3,14 +3,14 @@ vars:
   KIND_CLUSTER_NAME: kms-vault
   KIND_CLUSTER_VERSION: 1.24
   ENABLED_PROVIDERS:
-    sh: '([ -z "$ENABLED_PROVIDERS" ] && echo --enabled-providers debug) || echo $ENABLED_PROVIDERS'
-  SCRIPT: scripts/hcvault/archives/testing
+    sh: '([ -z "$ENABLED_PROVIDERS" ] && echo --enabled-providers=debug) || echo $ENABLED_PROVIDERS'
 silent: true
 includes:
   cluster: .task/cluster.yml
   docker: .task/docker.yml
   fetch: .task/fetch.yml
   go: .task/go.yml
+  prod: .task/prod.yml
 tasks:
   default:
     cmds:
@@ -29,28 +29,6 @@ tasks:
       - test -d ./bin/run/debug
       - test -d ./bin/run/vault
       - test -d ./bin/run/awskms
-  prometheus:deploy:
-    deps:
-      - task: fetch:helm
-      - task: fetch:kubectl
-    desc: install prometheus and grafana on cluster
-    cmds:
-      - ./bin/helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-      - ./bin/helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --wait
-      - ./bin/kubectl apply -f {{.SCRIPT}}/prometheus.yaml --wait
-      - ./bin/kubectl apply -f {{.SCRIPT}}/grafana-dashboard.yaml --wait
-  prometheus:port-forward:
-    deps:
-      - task: fetch:kubectl
-    desc: port forwarding for prometheus
-    cmds:
-      - ./bin/kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090
-  grafana:port-forward:
-    deps:
-      - task: fetch:kubectl
-    desc: open grafana (admin/prom-operator)
-    cmds:
-      - ./bin/kubectl port-forward svc/prometheus-grafana 8300:80
   example:load:
     desc: load demo data
     cmds:

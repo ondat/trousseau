@@ -26,7 +26,7 @@ spec:
     - --enable-admission-plugins=NodeRestriction
     - --enable-aggregator-routing=False
     - --enable-bootstrap-token-auth=true
-    - --encryption-provider-config=/opt/vault-kms/encryption_config.yaml # Add this line
+    - --encryption-provider-config=/opt/trousseau-kms/encryption_config.yaml # Add this line
     - --endpoint-reconciler-type=lease
     - --etcd-cafile=/etc/ssl/etcd/ssl/ca.pem
     - --etcd-certfile=/etc/ssl/etcd/ssl/node-development-ha-master-0.pem
@@ -109,7 +109,7 @@ spec:
     - mountPath: /usr/share/ca-certificates
       name: usr-share-ca-certificates
       readOnly: true
-    - mountPath: /opt/vault-kms                   # Add this section
+    - mountPath: /opt/trousseau-kms                   # Add this section
       name: vaultkms
       readOnly: true
   hostNetwork: true
@@ -140,7 +140,7 @@ spec:
       type: ""
     name: usr-share-ca-certificates
   - hostPath:
-      path: /opt/vault-kms                      # Add this section
+      path: /opt/trousseau-kms                      # Add this section
       type: ""
     name: vaultkms
 status: {}
