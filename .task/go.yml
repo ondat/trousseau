@@ -95,22 +95,32 @@ tasks:
       - task: gosec:trousseau
   gosec:proxy:
     dir: proxy
+    deps:
+      - :fetch:gosec
     cmds:
       - gosec ./...
   gosec:debug:
     dir: providers/debug
+    deps:
+      - :fetch:gosec
     cmds:
       - gosec ./...
   gosec:vault:
     dir: providers/vault
+    deps:
+      - :fetch:gosec
     cmds:
       - gosec ./...
   gosec:awskms:
     dir: providers/awskms
+    deps:
+      - :fetch:gosec
     cmds:
       - gosec ./...
   gosec:trousseau:
     dir: trousseau
+    deps:
+      - :fetch:gosec
     cmds:
       - gosec ./...
   golangci:
@@ -123,14 +133,20 @@ tasks:
       - task: golangci:trousseau
   golangci:proxy:
     dir: proxy
+    deps:
+      - :fetch:golangci
     cmds:
       - golangci-lint run -c ../.golangci.yaml
   golangci:debug:
     dir: providers/debug
+    deps:
+      - :fetch:golangci
     cmds:
       - golangci-lint run -c ../../.golangci.yaml
   golangci:vault:
     dir: providers/vault
+    deps:
+      - :fetch:golangci
     cmds:
       - golangci-lint run -c ../../.golangci.yaml
   golangci:awskms:
@@ -139,6 +155,8 @@ tasks:
       - golangci-lint run -c ../../.golangci.yaml
   golangci:trousseau:
     dir: trousseau
+    deps:
+      - :fetch:golangci
     cmds:
       - golangci-lint run -c ../.golangci.yaml
   unit-tests:
@@ -172,35 +190,35 @@ tasks:
   run:proxy:
     dir: proxy
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:proxy
     cmds:
       - go run main.go --listen-addr unix://../bin/run/proxy.socket --trousseau-addr ../bin/run/trousseau.socket
   run:debug:
     dir: providers/debug
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:debug
     cmds:
       - go run main.go --listen-addr unix://../../bin/run/debug/debug.socket
   run:vault:
     dir: providers/vault
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:vault
     cmds:
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml --listen-addr unix://../../bin/run/vault/vault.socket --zap-encoder=console --v=5
   run:awskms:
     dir: providers/awskms
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:awskms
     cmds:
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml --listen-addr unix://../../bin/run/awskms/awskms.socket --zap-encoder=console --v=5
   run:trousseau:
     dir: trousseau
     deps:
-      - :bin-dir:init
+      - :run-dir:init
       - tidy:trousseau
     cmds:
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go {{.ENABLED_PROVIDERS}} --socket-location ../bin/run --listen-addr unix://../bin/run/trousseau.socket --zap-encoder=console --v=5
@@ -212,30 +230,36 @@ tasks:
       - task: e2e-tests:awskms
   e2e-tests:vault:
     deps:
+      - :fetch:kuttl
+      - :fetch:kind
       - :docker:build:proxy
       - :docker:build:vault
       - :docker:build:trousseau
     cmds:
       - task: :docker:run:proxy
       - task: :docker:run:vault
-      - ENABLED_PROVIDERS="--enabled-providers vault" task docker:run:trousseau
+      - ENABLED_PROVIDERS="--enabled-providers=vault" task docker:run:trousseau
       - task: :cluster:create
       - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
       - task: :cluster:delete
   e2e-tests:awskms:
     deps:
+      - :fetch:kuttl
+      - :fetch:kind
       - :docker:build:proxy
       - :docker:build:awskms
       - :docker:build:trousseau
     cmds:
       - task: :docker:run:proxy
       - task: :docker:run:awskms
-      - ENABLED_PROVIDERS="--enabled-providers awskms" task docker:run:trousseau
+      - ENABLED_PROVIDERS="--enabled-providers=awskms" task docker:run:trousseau
       - task: :cluster:create
       - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
       - task: :cluster:delete
   e2e-tests:debug:
     deps:
+      - :fetch:kuttl
+      - :fetch:kind
       - :docker:build:proxy
       - :docker:build:debug
       - :docker:build:trousseau

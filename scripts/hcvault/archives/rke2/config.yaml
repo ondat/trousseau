@@ -3,4 +3,4 @@
 kube-apiserver-arg:
   - "--encryption-provider-config=/var/lib/rancher/rke2/server/cred/vault-kms-encryption-config.yaml" 
 kube-apiserver-extra-mount:
-  - "/opt/vault-kms:/opt/vault-kms"
+  - "/opt/trousseau-kms:/opt/trousseau-kms"

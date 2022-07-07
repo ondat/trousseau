@@ -51,9 +51,9 @@ func main() {
 	var enabledProviders arrayFlags
 
 	flag.Var(&enabledProviders, "enabled-providers", "list of enabled providers")
-	socketLocation := flag.String("socket-location", "/opt/vault-kms", "location of provider sockets")
+	socketLocation := flag.String("socket-location", "/opt/trousseau-kms", "location of provider sockets")
 	socketTimeout := flag.Duration("socket-timeout", defaultSocketTimeout, "RPC timeout for provider socket")
-	listenAddr := flag.String("listen-addr", "unix:///opt/vault-kms/trousseau.socket", "gRPC listen address")
+	listenAddr := flag.String("listen-addr", "unix:///opt/trousseau-kms/trousseau.socket", "gRPC listen address")
 	logEncoder := flag.String("zap-encoder", "console", "set log encoder [console, json]")
 	healthzPort := flag.Int("healthz-port", defaultHealthPort, "port for health check")
 	healthzPath := flag.String("healthz-path", "/healthz", "path for health check")
@@ -126,8 +126,6 @@ func main() {
 
 	s := grpc.NewServer(opts...)
 	pb.RegisterKeyManagementServiceServer(s, kmsServer)
-
-	klog.InfoS("Listening for connections", "address", listener.Addr())
 
 	go func() {
 		if err := s.Serve(listener); err != nil {

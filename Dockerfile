@@ -22,5 +22,6 @@ COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifica
 
 COPY --from=build /work/${PROJECT}/endpoint /bin/
 
-USER 10123
+USER 10123:10123
+
 ENTRYPOINT ["/bin/endpoint"]

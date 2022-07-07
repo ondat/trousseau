@@ -3,3 +3,4 @@ bin
 cover.out
 kind-logs-*/
 kubeconfig
+generated_manifests/

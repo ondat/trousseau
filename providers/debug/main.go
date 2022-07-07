@@ -18,7 +18,7 @@ import (
 const logEncoder = "console"
 
 var (
-	listenAddr = flag.String("listen-addr", "unix:///opt/vault-kms/debug/debug.socket", "gRPC listen address")
+	listenAddr = flag.String("listen-addr", "unix:///opt/trousseau-kms/debug/debug.socket", "gRPC listen address")
 )
 
 func main() {

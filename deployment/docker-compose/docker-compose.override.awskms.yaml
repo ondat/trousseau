@@ -1,0 +1,11 @@
+services:
+  awskms:
+    image: ${TR_AWSKMS_IMAGE}
+    command: --listen-addr=unix:///sockets/awskms/awskms.socket --config-file-path=/etc/config.yaml -v=${TR_VERBOSE_LEVEL}
+    volumes:
+      - sockets:/sockets:rw
+      - ${TR_AWSKMS_CREDENTIALS}:/.aws/credentials:r
+      - ${TR_AWSKMS_CONFIG}:/etc/config.yaml:r
+    restart: always
+    depends_on:
+      - init

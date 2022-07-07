@@ -30,5 +30,5 @@ Use command line or our favorite IDE to start Trousseau components on your machi
 ```bash
 task go:run:proxy
 task go:run:vault
-ENABLED_PROVIDERS="--enabled-providers vault" task go:run:trousseau
+ENABLED_PROVIDERS="--enabled-providers=vault" task go:run:trousseau
 ```

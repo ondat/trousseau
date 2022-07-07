@@ -1,0 +1,15 @@
+namespace: kube-system
+commonLabels:
+  tier: control-plane
+  app: trousseau-kms-provider
+resources:
+- rbac.yaml
+- daemonset.yaml
+- configmap-awskms.yaml
+# Disable if you have the Vault config on your host
+- configmap-vault.yaml
+patchesStrategicMerge:
+- sidecar-awskms.yaml
+- sidecar-vault.yaml
+# Disable if you have the Vault config on your host
+- configmap-vault-generator.yaml
