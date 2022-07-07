@@ -7,6 +7,6 @@ resources:
     providers:
       - kms:
           name: vaultprovider
-          endpoint: unix:///opt/vault-kms/proxy.socket
+          endpoint: unix:///opt/trousseau-kms/proxy.socket
           cachesize: 1
       - identity: {}

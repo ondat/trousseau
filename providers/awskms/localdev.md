@@ -15,7 +15,6 @@ profile: profile
 keyArn: keyArn
 # Optional fields
 roleArn: roleArn
-mfaToken: token
 encryptionContext:
   foo: bar
 ```
@@ -76,5 +75,5 @@ Use command line or our favorite IDE to start Trousseau components on your machi
 ```bash
 task go:run:proxy
 task go:run:awskms
-ENABLED_PROVIDERS="--enabled-providers awskms" task go:run:trousseau
+ENABLED_PROVIDERS="--enabled-providers=awskms" task go:run:trousseau
 ```

@@ -52,6 +52,100 @@ The name ***trousseau*** comes from the French language and is usually associate
 The following blog post provides an overview of a production use case for a Hong Kong based Service Provider leveraging Suse, RKE2, HashiCorp Vault and Trousseau to secure their workload hosted for Government agencies:
 * https://www.ondat.io/news/trousseau-open-source-project-made-available-to-add-security-in-kubernetes 
 
+### Run Trousseau in production
+Clone the repo and create your environment file:
+```bash
+TR_VERSION=31b93747fc4fd438a6b30de70ff16d4a45271366
+TR_VERBOSE_LEVEL=1
+TR_SOCKET_LOCATION=/opt/trousseau-kms
+TR_PROXY_IMAGE=ghcr.io/ondat/trousseau:proxy-${TR_VERSION}
+TR_TROUSSEAU_IMAGE=ghcr.io/ondat/trousseau:trousseau-${TR_VERSION}
+# Please configure your KMS plugins
+TR_ENABLED_PROVIDERS="--enabled-providers=awskms --enabled-providers=vault"
+TR_AWSKMS_IMAGE=ghcr.io/ondat/trousseau:awskms-${TR_VERSION}
+TR_AWSKMS_CONFIG=awskms.yaml # For Kubernetes, file must exists only for generation
+TR_AWSKMS_CREDENTIALS=.aws/credentials
+TR_VAULT_IMAGE=ghcr.io/ondat/trousseau:vault-${TR_VERSION}
+TR_VAULT_ADDRESS=https://127.0.0.1:8200
+TR_VAULT_CONFIG=vault.yaml
+```
+
+Create shared items on target host:
+```bash
+mkdir -p $TR_SOCKET_LOCATION
+sudo chown 10123:10123 $TR_SOCKET_LOCATION
+sudo chown 10123:10123 $TR_AWSKMS_CREDENTIALS
+# On case you disabled Vault agen config generation
+sudo chown 10123:10123 $TR_VAULT_CONFIG
+```
+
+Create your config files:
+```yaml
+# awskms.yaml
+profile: profile
+keyArn: keyArn
+# Optional fields
+roleArn: roleArn
+encryptionContext:
+  foo: bar
+```
+```yaml
+# vault.yaml
+keyNames:
+-  keyNames
+address: address
+token: token
+```
+
+Generate service files or manifests:
+```bash
+task prod:generate:systemd ENV_LOCATION=./bin/trousseau-env
+task prod:generate:docker-compose ENV_LOCATION=./bin/trousseau-env
+task prod:generate:kubernetes ENV_LOCATION=./bin/trousseau-env
+```
+
+Verify output:
+```bash
+ls -l generated_manifests/systemd
+ls -l generated_manifests/docker-compose
+ls -l generated_manifests/kubernetes
+```
+
+Deploy the application and configure encryption:
+```
+kind: EncryptionConfiguration
+apiVersion: apiserver.config.k8s.io/v1
+resources:
+  - resources:
+      - secrets
+    providers:
+      - kms:
+          name: vaultprovider
+          endpoint: unix:///opt/trousseau-kms/proxy.socket
+          cachesize: 1000
+      - identity: {}
+```
+
+Reconfigure Kubernetes API server:
+```
+kind: ClusterConfiguration
+apiServer:
+  extraArgs:
+    encryption-provider-config: "/etc/kubernetes/encryption-config.yaml"
+  extraVolumes:
+  - name: encryption-config
+    hostPath: "/etc/kubernetes/encryption-config.yaml"
+    mountPath: "/etc/kubernetes/encryption-config.yaml"
+    readOnly: true
+    pathType: File
+  - name: sock-path
+    hostPath: "/opt/trousseau-kms"
+    mountPath: "/opt/trousseau-kms"
+```
+
+Finally restart Kubernetes API server.
+
+
 ## Roadmap
 The roadmap items are described within [user story 50](https://github.com/ondat/trousseau/issues/50)  
 Trousseau's roadmap milestone for v2 [here](https://github.com/orgs/ondat/projects/1/views/4](https://github.com/ondat/trousseau/milestone/2).

@@ -1,0 +1,59 @@
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trousseau-kms-provider
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: awskms-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/awskms ; chown 10123:10123 /mnt/shared/awskms' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+      containers:
+        - name: awskms
+          image: ${TR_AWSKMS_IMAGE}
+          env:
+            - name: AWS_SHARED_CREDENTIALS_FILE
+              value: ${TR_AWSKMS_CREDENTIALS}
+          args:
+            - --listen-addr=unix:///mnt/shared/awskms/awskms.socket
+            - --config-file-path=/etc/aws/config.yaml
+            - -v=${TR_VERBOSE_LEVEL}
+          volumeMounts:
+            - name: awskms-config
+              mountPath: /etc/aws
+              readOnly: true
+            - name: awskms-credentials
+              mountPath: ${TR_AWSKMS_CREDENTIALS}
+              readOnly: true
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsUser: 10123
+            runAsGroup: 10123
+      volumes:
+        - configMap:
+            items:
+              - key: config.yaml
+                path: config.yaml
+            name: trousseau-awskms-config
+          name: awskms-config
+        - hostPath:
+            path: ${TR_AWSKMS_CREDENTIALS}
+            type: File
+          name: awskms-credentials

@@ -7,14 +7,6 @@ Requirements:
 * install and set up Docker
 * install taskfile https://taskfile.dev/#/installation
 
-## Fetch dependencies
-
-Trousseau development environment has some binary dependencies. To download them all please execute the task below:
-
-```bash
-task fetch:all
-```
-
 ## Run Trousseau components
 
 ```bash

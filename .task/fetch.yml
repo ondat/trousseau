@@ -7,14 +7,11 @@ vars:
   VAULT_VERSION: 1.8.1
   KUBECTL_VERSION: 1.21.1
   KUTTL_VERSION: 0.12.1
+  ENVSUBST_VERSION: 1.2.0
   HUSKY_VERSION: 0.2.8
+  CAP_ARCH:
+    sh: uname
 tasks:
-  all:
-    desc: fetch all tools
-    cmds:
-      - task: kubectl
-      - task: kind
-      - task: kuttl
   golangci:
     deps:
       - :bin-dir:init
@@ -83,6 +80,15 @@ tasks:
       - cd bin ; curl -L https://github.com/kudobuilder/kuttl/releases/download/v{{.KUTTL_VERSION}}/kuttl_{{.KUTTL_VERSION}}_{{OS}}_x86_64.tar.gz | tar -xz kubectl-kuttl
     status:
       - test -f ./bin/kuttl
+  envsubst:
+    deps:
+      - :bin-dir:init
+    desc: install envsubst
+    cmds:
+      - cd bin ; curl -o envsubst -L https://github.com/a8m/envsubst/releases/download/v{{.ENVSUBST_VERSION}}/envsubst-{{.CAP_ARCH}}-x86_64
+      - chmod +x ./bin/envsubst
+    status:
+      - test -f ./bin/envsubst
   husky:
     deps:
       - :bin-dir:init
@@ -91,8 +97,5 @@ tasks:
       - cd bin ; curl -L https://github.com/automation-co/husky/releases/download/v{{.HUSKY_VERSION}}/husky_{{.HUSKY_VERSION}}_{{.CAP_ARCH}}_x86_64.tar.gz | tar -xz husky
       - chmod +x ./bin/husky
       - ./bin/husky install
-    vars:
-      CAP_ARCH:
-        sh: uname
     status:
       - test -f ./bin/husky

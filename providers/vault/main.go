@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	listenAddr     = flag.String("listen-addr", "unix:///opt/vault-kms/vault/vault.socket", "gRPC listen address")
-	configFilePath = flag.String("config-file-path", "/opt/vault-kms/vault/config.yaml", "Path for Vault Provider config file")
+	listenAddr     = flag.String("listen-addr", "unix:///opt/trousseau-kms/vault/vault.socket", "gRPC listen address")
+	configFilePath = flag.String("config-file-path", "/opt/trousseau-kms/vault/config.yaml", "Path for Vault Provider config file")
 	logEncoder     = flag.String("zap-encoder", "console", "set log encoder [console, json]")
 )
 

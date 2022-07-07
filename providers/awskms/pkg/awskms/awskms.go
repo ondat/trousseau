@@ -63,12 +63,6 @@ func New(config *Config, hostname string) (providers.EncryptionClient, error) {
 		opts.Config.DisableEndpointHostPrefix = aws.Bool(true)
 	}
 
-	if config.AssumeRoleMFAToken != "" {
-		opts.AssumeRoleTokenProvider = func() (string, error) {
-			return config.AssumeRoleMFAToken, nil
-		}
-	}
-
 	return &awsKmsWrapper{
 		config:      config,
 		sessionOpts: opts,

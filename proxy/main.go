@@ -17,8 +17,8 @@ const (
 )
 
 var (
-	listenAddr    = flag.String("listen-addr", "unix:///opt/vault-kms/proxy.socket", "gRPC listen address")
-	trousseauAddr = flag.String("trousseau-addr", "/opt/vault-kms/trousseau.socket", "gRPC listen address")
+	listenAddr    = flag.String("listen-addr", "unix:///opt/trousseau-kms/proxy.socket", "gRPC listen address")
+	trousseauAddr = flag.String("trousseau-addr", "/opt/trousseau-kms/trousseau.socket", "gRPC listen address")
 	socketTimeout = flag.Duration("socket-timeout", defaultSocketTimeout, "RPC timeout for Trousseau socket")
 )
 
