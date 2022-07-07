@@ -23,8 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: install Taskfile
-        run: mkdir bin && cd bin ; curl -Ls https://github.com/go-task/task/releases/download/v3.13.0/task_linux_amd64.tar.gz | tar -xz task
       - name: e2e test
-        run: PATH=./bin:$PATH ./bin/task go:e2e-tests:${{ inputs.provider }} KIND_CLUSTER_VERSION=${{ inputs.kubever }}
+        run: make go:e2e-tests:${{ inputs.provider }} KIND_CLUSTER_VERSION=${{ inputs.kubever }}
 

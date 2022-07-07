@@ -1,0 +1,196 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trousseau-kms-provider
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.commonLabels | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      name: trousseau-kms-provider
+  template:
+    metadata:
+      labels:
+        name: trousseau-kms-provider
+        {{- toYaml .Values.commonLabels | nindent 8 }}
+    spec:
+{{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+      serviceAccountName: trousseau-auth
+      priorityClassName: system-cluster-critical
+      initContainers:
+        - name: trousseau-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/trousseau ; chown 10123:10123 /mnt/shared/trousseau' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+{{- if .Values.awskms.enabled }}
+        - name: awskms-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/awskms ; chown 10123:10123 /mnt/shared/awskms' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+{{- end }}
+{{- if .Values.vault.enabled }}
+        - name: vault-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/vault ; chown 10123:10123 /mnt/shared/vault' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+{{- if .Values.vault.withConfigGenerator }}
+        - name: vault-agent
+          image: vault
+          args:
+            - agent
+            - -config=/etc/vault/vault-agent-config.hcl
+            - -log-level=debug
+          env:
+            - name: VAULT_ADDR
+              value: {{ .Values.vault.address }}
+          volumeMounts:
+            - name: vault-agent-config
+              mountPath: /etc/vault
+              readOnly: true
+            - name: vault-config
+              mountPath: {{ .Values.vault.configPath }}
+{{- end }}
+{{- end }}
+      containers:
+        - name: proxy
+          image: {{ .Values.proxy.image }}
+          args:
+            - --listen-addr=unix:///opt/trousseau-kms/proxy.socket
+            - --trousseau-addr=/mnt/shared/trousseau/trousseau.socket
+          volumeMounts:
+            - name: trousseau-kms
+              mountPath: /opt/trousseau-kms
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+        - name: trousseau
+          image: {{ .Values.trousseau.image }}
+          args:
+            - --listen-addr=unix:///mnt/shared/trousseau/trousseau.socket
+            - --socket-location=/mnt/shared
+{{- with .Values.trousseau.enabledProviders }}
+            {{- toYaml . | nindent 12 }}
+{{- end }}
+            - -v={{ .Values.verbose_level }}
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          ports:
+            - containerPort: 8787
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8787
+            failureThreshold: 3
+            periodSeconds: 10
+{{- if .Values.awskms.enabled }}
+        - name: awskms
+          image: {{ .Values.awskms.image }}
+          env:
+            - name: AWS_SHARED_CREDENTIALS_FILE
+              value: {{ .Values.awskms.credentialsPath }}
+          args:
+            - --listen-addr=unix:///mnt/shared/awskms/awskms.socket
+            - --config-file-path=/etc/aws/config.yaml
+            - -v={{ .Values.verbose_level }}
+          volumeMounts:
+            - name: awskms-config
+              mountPath: /etc/aws
+              readOnly: true
+            - name: awskms-credentials
+              mountPath: {{ .Values.awskms.credentialsPath }}
+              readOnly: true
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+{{- end }}
+{{- if .Values.vault.enabled }}
+        - name: vault
+          image: {{ .Values.vault.image }}
+          args:
+            - --listen-addr=unix:///mnt/shared/vault/vault.socket
+            - --config-file-path={{ .Values.vault.configPath }}
+            - -v={{ .Values.verbose_level }}
+          volumeMounts:
+            - name: vault-config
+              mountPath: {{ .Values.vault.configPath }}
+              readOnly: true
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+{{- end }}
+      volumes:
+        - name: trousseau-kms
+          hostPath:
+            path: {{ .Values.socketLocation }}
+            type: Directory
+        - emptyDir: {}
+          name: shared-data
+{{- if .Values.awskms.enabled }}
+        - configMap:
+            items:
+              - key: config.yaml
+                path: config.yaml
+            name: trousseau-awskms-config
+          name: awskms-config
+        - hostPath:
+            path: {{ .Values.awskms.credentialsPath }}
+            type: File
+          name: awskms-credentials
+{{- end }}
+{{- if .Values.vault.enabled }}
+{{- if .Values.vault.withConfigGenerator }}
+        - configMap:
+            items:
+              - key: vault-agent-config.hcl
+                path: vault-agent-config.hcl
+            name: trousseau-vault-agent-config
+          name: vault-agent-config
+        - emptyDir: {}
+          hostPath:
+          name: vault-config
+{{- else }}
+        - hostPath:
+            path: {{ .Values.vault.configPath }}
+            type: File
+          name: vault-config
+{{- end }}
+{{- end }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/etcd
+          operator: Exists
+          effect: NoExecute

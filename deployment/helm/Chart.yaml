@@ -1,0 +1,15 @@
+apiVersion: v2
+name: Trousseau
+description: A Helm chart for Trousseau, an open-source project leveraging the Kubernetes KMS provider framework to connect with Key Management Services the Kubernetes native way!
+type: application
+version: 0.0.1
+appVersion: "2.0.0"
+keywords:
+- secret
+- kms
+- envelop encryption
+- encryption at rest
+home: https://trousseau.io
+icon: https://www.ondat.io/hs-fs/hubfs/signature-mono.png
+sources:
+- https://github.com/ondat/trousseau
