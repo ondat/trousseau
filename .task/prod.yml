@@ -46,19 +46,36 @@ tasks:
       - gen-dir:init
       - :fetch:envsubst
     cmds:
-      - mkdir -p generated_manifests/docker-compose ; rm -rf generated_manifests/docker-compose/*
+      - rm -rf generated_manifests/docker-compose/* ; mkdir -p generated_manifests/docker-compose
       - source {{.ENV_LOCATION}} ;
         export $(echo "${!TR_*}") ;
-        for f in `cd deployment ; find docker-compose -type f`; do ./bin/envsubst -no-empty -i deployment/$f -o generated_manifests/$f; done
+        for f in `cd deployment ; find docker-compose -type f`; do ./bin/envsubst -no-empty -i deployment/$f -o generated_manifests/$f; done ;
+        (cd generated_manifests/docker-compose ; docker compose -f docker-compose.yaml -f docker-compose.override.awskms.yaml -f docker-compose.override.vault.yaml config 1>/dev/null)
   generate:kustomize:
     desc: generate kustomize manifests
     deps:
       - gen-dir:init
       - :fetch:envsubst
     cmds:
-      - mkdir -p generated_manifests/kustomize ; rm -rf generated_manifests/kustomize/*
+      - rm -rf generated_manifests/kustomize/* ; mkdir -p generated_manifests/kustomize
       - source {{.ENV_LOCATION}} ;
         TR_ENABLED_PROVIDERS=$(echo ${TR_ENABLED_PROVIDERS} | sed "s/ --/\n            - --/") ;
         test -n "${TR_AWSKMS_CONFIG}" && TR_AWSKMS_CONFIG=$(cat ${TR_AWSKMS_CONFIG} 2>/dev/null | sed 's/^/    /') ;
         export $(echo "${!TR_*}") ;
-        for f in `cd deployment ; find kustomize -type f`; do ./bin/envsubst -no-empty -i deployment/$f -o generated_manifests/$f; done
+        for f in `cd deployment ; find kustomize -type f`; do ./bin/envsubst -no-empty -i deployment/$f -o generated_manifests/$f; done ;
+        docker run --rm -v $PWD/generated_manifests/kustomize:/work -w /work nixery.dev/shell/kustomize/kubeval sh -c 'kustomize build | kubeval'
+  generate:helm:
+    desc: generate docker compose services
+    deps:
+      - gen-dir:init
+      - :fetch:envsubst
+    cmds:
+      - rm -rf generated_manifests/helm/*
+      - cp -rf deployment/helm generated_manifests
+      - source {{.ENV_LOCATION}} ;
+        test -n "${TR_AWSKMS_CONFIG}" && cat ${TR_AWSKMS_CONFIG} | sed 's/^/    /' > generated_manifests/helm/awsconfig.yaml ;
+        TR_AWSKMS_CONFIG=awsconfig.yaml;
+        TR_ENABLED_PROVIDERS=$(echo ${TR_ENABLED_PROVIDERS} | sed "s/ --/\n    - --/") ;
+        export $(echo "${!TR_*}") ;
+        ./bin/envsubst -no-empty -i deployment/helm/values.yaml -o generated_manifests/helm/values.yaml ;
+        docker run --rm -v $PWD/generated_manifests/helm:/work -w /work nixery.dev/shell/kubernetes-helm sh -c 'helm lint && helm template ../work 1>/dev/null'

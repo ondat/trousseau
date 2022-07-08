@@ -74,7 +74,7 @@ Create shared items on target host:
 mkdir -p $TR_SOCKET_LOCATION
 sudo chown 10123:10123 $TR_SOCKET_LOCATION
 sudo chown 10123:10123 $TR_AWSKMS_CREDENTIALS
-# On case you disabled Vault agen config generation
+# On case you haven't enable Vault agen config generation
 sudo chown 10123:10123 $TR_VAULT_CONFIG
 ```
 
@@ -98,16 +98,18 @@ token: token
 
 Generate service files or manifests:
 ```bash
-task prod:generate:systemd ENV_LOCATION=./bin/trousseau-env
-task prod:generate:docker-compose ENV_LOCATION=./bin/trousseau-env
-task prod:generate:kubernetes ENV_LOCATION=./bin/trousseau-env
+make prod:generate:systemd ENV_LOCATION=./bin/trousseau-env
+make prod:generate:docker-compose ENV_LOCATION=./bin/trousseau-env
+make prod:generate:kustomize ENV_LOCATION=./bin/trousseau-env
+make prod:generate:helm ENV_LOCATION=./bin/trousseau-env
 ```
 
 Verify output:
 ```bash
 ls -l generated_manifests/systemd
 ls -l generated_manifests/docker-compose
-ls -l generated_manifests/kubernetes
+ls -l generated_manifests/kustomize
+ls -l generated_manifests/helm
 ```
 
 Deploy the application and configure encryption:
