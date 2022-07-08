@@ -6,10 +6,10 @@ resources:
 - rbac.yaml
 - daemonset.yaml
 - configmap-awskms.yaml
-# Disable if you have the Vault config on your host
-- configmap-vault.yaml
+# Enable if you have the Vault config generator
+# - configmap-vault.yaml
 patchesStrategicMerge:
 - sidecar-awskms.yaml
 - sidecar-vault.yaml
-# Disable if you have the Vault config on your host
-- configmap-vault-generator.yaml
+# Enable if you have the Vault config generator
+# - configmap-vault-generator.yaml

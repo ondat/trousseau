@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trousseau-awskms-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.commonLabels | nindent 4 }}
+data:
+  config.yaml: |
+{{ .Files.Get .Values.awskms.configPath | indent 2 }}

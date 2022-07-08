@@ -22,8 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: install Taskfile
-        run: mkdir bin && cd bin ; curl -Ls https://github.com/go-task/task/releases/download/v3.13.0/task_linux_amd64.tar.gz | tar -xz task
       - uses: "finnp/create-file-action@master"
         env:
           FILE_NAME: "trousseau-env"
@@ -39,16 +37,12 @@ jobs:
             TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/awskms.yaml
             TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
       - name: generate services
-        run: PATH=./bin:$PATH ./bin/task prod:generate:docker-compose ENV_LOCATION=trousseau-env
-      - name: validate compose files
-        run: cd generated_manifests/docker-compose ; docker compose -f docker-compose.yaml -f docker-compose.override.awskms.yaml -f docker-compose.override.vault.yaml config
+        run: make prod:generate:docker-compose ENV_LOCATION=trousseau-env
   kustomize:
     name: kustomize
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: install Taskfile
-        run: mkdir bin && cd bin ; curl -Ls https://github.com/go-task/task/releases/download/v3.13.0/task_linux_amd64.tar.gz | tar -xz task
       - uses: "finnp/create-file-action@master"
         env:
           FILE_NAME: "awskms.yaml"
@@ -70,12 +64,31 @@ jobs:
             TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
             TR_VAULT_ADDRESS=http://127.0.0.1:8200
       - name: generate services
-        run: PATH=./bin:$PATH ./bin/task prod:generate:kustomize ENV_LOCATION=trousseau-env
-      - uses: karancode/kustomize-github-action@master
-        with:
-          kustomize_version: '4.5.5'
-          kustomize_build_dir: 'generated_manifests/kustomize'
-          kustomize_output_file: "manifests.yaml"
-      - uses: makocchi-git/actions-k8s-manifests-validate-kubeval@master
-        with:
-          files: manifests.yaml
+        run: make prod:generate:kustomize ENV_LOCATION=trousseau-env
+  helm:
+    name: helm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: "finnp/create-file-action@master"
+        env:
+          FILE_NAME: "awskms.yaml"
+          FILE_DATA: |
+            profile: default
+      - uses: "finnp/create-file-action@master"
+        env:
+          FILE_NAME: "trousseau-env"
+          FILE_DATA: |
+            TR_VERBOSE_LEVEL=3
+            TR_ENABLED_PROVIDERS="--enabled-providers=awskms --enabled-providers=vault"
+            TR_SOCKET_LOCATION=${PWD}/bin/run
+            TR_PROXY_IMAGE=ondat/trousseau:proxy-develop
+            TR_AWSKMS_IMAGE=ondat/trousseau:awskms-develop
+            TR_VAULT_IMAGE=ondat/trousseau:vault-develop
+            TR_TROUSSEAU_IMAGE=ondat/trousseau:trousseau-develop
+            TR_AWSKMS_CREDENTIALS=${HOME}/.aws/credentials
+            TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/awskms.yaml
+            TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
+            TR_VAULT_ADDRESS=http://127.0.0.1:8200
+      - name: generate services
+        run: make prod:generate:helm ENV_LOCATION=trousseau-env
