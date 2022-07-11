@@ -12,9 +12,9 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.0
-	go.opentelemetry.io/otel v1.7.0
+	go.opentelemetry.io/otel v1.8.0
 	go.opentelemetry.io/otel/exporters/metric/prometheus v0.20.0
-	go.opentelemetry.io/otel/metric v0.21.0
+	go.opentelemetry.io/otel/metric v0.31.0
 	go.uber.org/zap v1.21.0
 	google.golang.org/grpc v1.46.2
 	k8s.io/apiserver v0.24.2
@@ -60,7 +60,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.0.0-RC1 // indirect
 	go.opentelemetry.io/otel/sdk/export/metric v0.21.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v0.21.0 // indirect
-	go.opentelemetry.io/otel/trace v1.7.0 // indirect
+	go.opentelemetry.io/otel/trace v1.8.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
