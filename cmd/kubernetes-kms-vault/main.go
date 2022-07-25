@@ -53,6 +53,8 @@ func main() {
 	logLevel, err := strconv.Atoi(v)
 	if err != nil {
 		klog.Fatalln("Invalid verbosity level", "level", v)
+	} else if logLevel < 0 || logLevel > 5 {
+		klog.Fatalln("Log level must be between 0 and 5", "level", v)
 	}
 
 	klog.SetLogger(logger.NewLogger(klog.Level(logLevel), *logEncoder))
