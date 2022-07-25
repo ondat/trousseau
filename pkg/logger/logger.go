@@ -32,6 +32,8 @@ func InitializeLogging(logEncoder string) error {
 	if err != nil {
 		klog.Error(err, "Invalid verbosity level", "level", v)
 		return err
+	} else if logLevel < 0 || logLevel > 5 {
+		klog.Fatalln("Log level must be between 0 and 5", "level", v)
 	}
 
 	klog.SetLogger(newLogger(klog.Level(logLevel), logEncoder))
