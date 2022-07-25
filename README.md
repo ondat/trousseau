@@ -3,7 +3,10 @@
     <img src="https://github.com/ondat/trousseau/blob/main/assets/logo-horizontal.png" >
 </p>
 <p align="center">
-        <a href="https://lgtm.com/projects/g/ondat/trousseau/alerts/"><img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/ondat/trousseau.svg?logo=lgtm&logoWidth=18"/></a>
+    <a href="https://goreportcard.com/report/github.com/ondat/trousseau">
+        <img src="https://goreportcard.com/badge/github.com/ondat/trousseau" /></a>
+    <a href="https://lgtm.com/projects/g/ondat/trousseau/alerts/">
+        <img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/ondat/trousseau.svg?logo=lgtm&logoWidth=18"/></a>
     <a href="https://github.com/ondat/trousseau/actions/workflows/e2e-on-pr.yml" alt="end-2-end build">
         <img src="https://github.com/ondat/trousseau/actions/workflows/e2e-on-pr.yml/badge.svg" /></a>
     <a href="https://bestpractices.coreinfrastructure.org/projects/5460" alt="CII Best Practices">
