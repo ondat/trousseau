@@ -3,15 +3,16 @@
     <img src="https://github.com/ondat/trousseau/blob/main/assets/logo-horizontal.png" >
 </p>
 <p align="center">
-        <a href="https://lgtm.com/projects/g/ondat/trousseau/alerts/"><img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/ondat/trousseau.svg?logo=lgtm&logoWidth=18"/></a>
-      <a href="https://github.com/Trousseau-io/trousseau/actions/workflows/codeql-analysis.yml" alt="codeql">
-        <img src="https://github.com/Trousseau-io/trousseau/actions/workflows/codeql-analysis.yml/badge.svg" /></a>
+    <a href="https://goreportcard.com/report/github.com/ondat/trousseau">
+        <img src="https://goreportcard.com/badge/github.com/ondat/trousseau" /></a>
+    <a href="https://lgtm.com/projects/g/ondat/trousseau/alerts/">
+        <img alt="Total alerts" src="https://img.shields.io/lgtm/alerts/g/ondat/trousseau.svg?logo=lgtm&logoWidth=18"/></a>
     <a href="https://github.com/ondat/trousseau/actions/workflows/e2e-on-pr.yml" alt="end-2-end build">
         <img src="https://github.com/ondat/trousseau/actions/workflows/e2e-on-pr.yml/badge.svg" /></a>
     <a href="https://bestpractices.coreinfrastructure.org/projects/5460" alt="CII Best Practices">
         <img src="https://bestpractices.coreinfrastructure.org/projects/5460/badge" /></a>
     <a href="https://github.com/ondat/trousseau/pkgs/container/trousseau" alt="pulled images">
-        <img src="https://img.shields.io/badge/pulled%20images-14.7k-brightgreen" /></a>
+        <img src="https://img.shields.io/badge/pulled%20images-15.2k-brightgreen" /></a>
 </p>
 
 -----
