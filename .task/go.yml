@@ -9,6 +9,7 @@ tasks:
       - task: tidy:debug
       - task: tidy:vault
       - task: tidy:awskms
+      - task: tidy:azurekms
       - task: tidy:trousseau
   tidy:lib:
     cmds:
@@ -29,6 +30,10 @@ tasks:
     dir: providers/awskms
     cmds:
       - go mod tidy
+  tidy:azurekms:
+    dir: providers/azurekms
+    cmds:
+      - go mod tidy
   tidy:trousseau:
     dir: trousseau
     cmds:
@@ -41,6 +46,7 @@ tasks:
       - task: fmt:debug
       - task: fmt:vault
       - task: fmt:awskms
+      - task: fmt:azurekms
       - task: fmt:trousseau
   fmt:lib:
     cmds:
@@ -61,6 +67,10 @@ tasks:
     dir: providers/awskms
     cmds:
       - go fmt ./...
+  fmt:azurekms:
+    dir: providers/azurekms
+    cmds:
+      - go fmt ./...
   fmt:trousseau:
     dir: trousseau
     cmds:
@@ -73,6 +83,7 @@ tasks:
       - task: vet:debug
       - task: vet:vault
       - task: vet:awskms
+      - task: vet:azurekms
       - task: vet:trousseau
   vet:lib:
     cmds:
@@ -93,6 +104,10 @@ tasks:
     dir: providers/awskms
     cmds:
       - go vet ./...
+  vet:azurekms:
+    dir: providers/azurekms
+    cmds:
+      - go vet ./...
   vet:trousseau:
     dir: trousseau
     cmds:
@@ -105,6 +120,7 @@ tasks:
       - task: gosec:debug
       - task: gosec:vault
       - task: gosec:awskms
+      - task: gosec:azurekms
       - task: gosec:trousseau
   gosec:lib:
     deps:
@@ -135,6 +151,12 @@ tasks:
       - :fetch:gosec
     cmds:
       - gosec ./...
+  gosec:azurekms:
+    dir: providers/azurekms
+    deps:
+      - :fetch:gosec
+    cmds:
+      - gosec ./...
   gosec:trousseau:
     dir: trousseau
     deps:
@@ -149,6 +171,7 @@ tasks:
       - task: golangci:debug
       - task: golangci:vault
       - task: golangci:awskms
+      - task: golangci:azurekms
       - task: golangci:trousseau
   golangci:lib:
     deps:
@@ -177,6 +200,10 @@ tasks:
     dir: providers/awskms
     cmds:
       - golangci-lint run -c ../../.golangci.yaml
+  golangci:azurekms:
+    dir: providers/azurekms
+    cmds:
+      - golangci-lint run -c ../../.golangci.yaml
   golangci:trousseau:
     dir: trousseau
     deps:
@@ -191,6 +218,7 @@ tasks:
       - task: unit-tests:debug
       - task: unit-tests:vault
       - task: unit-tests:awskms
+      - task: unit-tests:azurekms
       - task: unit-tests:trousseau
   unit-tests:lib:
     cmds:
@@ -209,6 +237,10 @@ tasks:
       - go test -coverprofile cover.out -race -timeout 30s ./...
   unit-tests:awskms:
     dir: providers/awskms
+    cmds:
+      - go test -coverprofile cover.out -race -timeout 30s ./...
+  unit-tests:azurekms:
+    dir: providers/azurekms
     cmds:
       - go test -coverprofile cover.out -race -timeout 30s ./...
   unit-tests:trousseau:
@@ -243,6 +275,13 @@ tasks:
       - tidy:awskms
     cmds:
       - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml --listen-addr unix://../../bin/run/awskms/awskms.socket --zap-encoder=console --v=5
+  run:azurekms:
+    dir: providers/azurekms
+    deps:
+      - :run-dir:init
+      - tidy:azurekms
+    cmds:
+      - go run -ldflags '-X github.com/ondat/trousseau/pkg/utils.SecretLogDivider=1' main.go --config-file-path ../../tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/azurekms.yaml --listen-addr unix://../../bin/run/azurekms/azurekms.socket --zap-encoder=console --v=5
   run:trousseau:
     dir: trousseau
     deps:
@@ -256,6 +295,7 @@ tasks:
       - task: e2e-tests:debug
       - task: e2e-tests:vault
       - task: e2e-tests:awskms
+      - task: e2e-tests:azurekms
   e2e-tests:vault:
     deps:
       - :fetch:kuttl
@@ -281,6 +321,20 @@ tasks:
       - task: :docker:run:proxy
       - task: :docker:run:awskms
       - ENABLED_PROVIDERS="--enabled-providers=awskms" task docker:run:trousseau
+      - task: :cluster:create
+      - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
+      - task: :cluster:delete
+  e2e-tests:azurekms:
+    deps:
+      - :fetch:kuttl
+      - :fetch:kind
+      - :docker:build:proxy
+      - :docker:build:azurekms
+      - :docker:build:trousseau
+    cmds:
+      - task: :docker:run:proxy
+      - task: :docker:run:azurekms
+      - ENABLED_PROVIDERS="--enabled-providers=azurekms" task docker:run:trousseau
       - task: :cluster:create
       - ./bin/kubectl-kuttl test --config tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/kuttl.yaml
       - task: :cluster:delete

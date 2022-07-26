@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	"github.com/ondat/trousseau/pkg/utils"
@@ -30,7 +31,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	if err = utils.RemoveFile(addr); err != nil {
+	if err = os.Remove(addr); err != nil && !os.IsNotExist(err) {
 		log.Printf("Unable to delete socket file: %s: %s\n", addr, err.Error())
 	}
 

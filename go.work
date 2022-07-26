@@ -3,6 +3,7 @@ go 1.18
 use (
 	.
 	./providers/awskms
+	./providers/azurekms
 	./providers/debug
 	./providers/vault
 	./proxy

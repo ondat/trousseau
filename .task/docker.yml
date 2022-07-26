@@ -12,6 +12,7 @@ tasks:
       - task: build:debug
       - task: build:vault
       - task: build:awskms
+      - task: build:azurekms
       - task: build:trousseau
   build:proxy:
     cmds:
@@ -33,6 +34,11 @@ tasks:
       - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/awskms -t $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION .
     status:
       - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
+  build:azurekms:
+    cmds:
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/azurekms -t $DOCKER_REGISTRY/$IMAGE_NAME:azurekms-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:azurekms-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
   build:trousseau:
     cmds:
       - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=trousseau -t $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION .
@@ -45,6 +51,7 @@ tasks:
       - task: push:debug
       - task: push:vault
       - task: push:awskms
+      - task: push:azurekms
       - task: push:trousseau
   push:proxy:
     cmds:
@@ -58,6 +65,9 @@ tasks:
   push:awskms:
     cmds:
       - docker push $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION
+  push:azurekms:
+    cmds:
+      - docker push $DOCKER_REGISTRY/$IMAGE_NAME:azurekms-$IMAGE_VERSION
   push:trousseau:
     cmds:
       - docker push $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION
@@ -68,6 +78,7 @@ tasks:
       - task: run:debug
       - task: run:vault
       - task: run:awskms
+      - task: run:azurekms
       - task: run:trousseau
   run:proxy:
     deps:
@@ -102,6 +113,12 @@ tasks:
       - 'printf %"s\n" "endpoint: https://localhost.localstack.cloud:4566" "profile: trousseau-local-aws" "keyArn: $(docker exec trousseau-local-aws awslocal kms create-key | grep Arn | cut -d''"'' -f4)" > tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml'
       - docker rm -f trousseau-awskms || true
       - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
+  run:azurekms:
+    deps:
+      - :run-dir:init
+    cmds:
+      - docker rm -f trousseau-azurekms || true
+      - docker run -d --name trousseau-azurekms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
   run:trousseau:
     deps:
       - :run-dir:init
