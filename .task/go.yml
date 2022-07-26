@@ -4,11 +4,15 @@ tasks:
   tidy:
     desc: go tidy
     cmds:
+      - task: tidy:lib
       - task: tidy:proxy
       - task: tidy:debug
       - task: tidy:vault
       - task: tidy:awskms
       - task: tidy:trousseau
+  tidy:lib:
+    cmds:
+      - go mod tidy
   tidy:proxy:
     dir: proxy
     cmds:
@@ -32,11 +36,15 @@ tasks:
   fmt:
     desc: go fmt
     cmds:
+      - task: fmt:lib
       - task: fmt:proxy
       - task: fmt:debug
       - task: fmt:vault
       - task: fmt:awskms
       - task: fmt:trousseau
+  fmt:lib:
+    cmds:
+      - go fmt ./...
   fmt:proxy:
     dir: proxy
     cmds:
@@ -60,11 +68,15 @@ tasks:
   vet:
     desc: go vet
     cmds:
+      - task: vet:lib
       - task: vet:proxy
       - task: vet:debug
       - task: vet:vault
       - task: vet:awskms
       - task: vet:trousseau
+  vet:lib:
+    cmds:
+      - go vet ./...
   vet:proxy:
     dir: proxy
     cmds:
@@ -88,11 +100,17 @@ tasks:
   gosec:
     desc: go gosec
     cmds:
+      - task: gosec:lib
       - task: gosec:proxy
       - task: gosec:debug
       - task: gosec:vault
       - task: gosec:awskms
       - task: gosec:trousseau
+  gosec:lib:
+    deps:
+      - :fetch:gosec
+    cmds:
+      - gosec ./...
   gosec:proxy:
     dir: proxy
     deps:
@@ -126,11 +144,17 @@ tasks:
   golangci:
     desc: golangci
     cmds:
+      - task: golangci:lib
       - task: golangci:proxy
       - task: golangci:debug
       - task: golangci:vault
       - task: golangci:awskms
       - task: golangci:trousseau
+  golangci:lib:
+    deps:
+      - :fetch:golangci
+    cmds:
+      - golangci-lint run -c .golangci.yaml
   golangci:proxy:
     dir: proxy
     deps:
@@ -162,11 +186,15 @@ tasks:
   unit-tests:
     desc: go unit test
     cmds:
+      - task: unit-tests:lib
       - task: unit-tests:proxy
       - task: unit-tests:debug
       - task: unit-tests:vault
       - task: unit-tests:awskms
       - task: unit-tests:trousseau
+  unit-tests:lib:
+    cmds:
+      - go test -coverprofile cover.out -race -timeout 30s ./...
   unit-tests:proxy:
     dir: proxy
     cmds:

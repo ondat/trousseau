@@ -16,6 +16,7 @@ var (
 func init() {
 	if SecretLogDivider != "" {
 		var err error
+
 		secretLogDivider, err = strconv.Atoi(SecretLogDivider)
 		if err != nil || secretLogDivider <= 0 {
 			panic("Invalid github.com/ondat/trousseau/pkg/utils.SecretLogDivider=" + SecretLogDivider)
