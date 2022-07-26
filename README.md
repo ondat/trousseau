@@ -1,7 +1,17 @@
-
+<!-- 
 <p align="center">
     <img src="https://github.com/ondat/trousseau/blob/main/assets/logo-horizontal.png" >
-</p>
+</p> -->
+
+<h1 align="center">
+  <br>
+  <a href="https://github.com/ondat/trousseau/blob/main/assets/logo-horizontal.png"><img src="https://github.com/ondat/trousseau/blob/main/assets/logo-horizontal.png" alt="Trousseau" ></a>
+  <br>
+</h1>
+
+<h4 align="center">A multi KMS solution supporting the <a href="https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/" target="_blank">Kubernetes Provider Plugin</a> data encryption for Secrets and ConfigMap in etcd.</h4>
+
+
 <p align="center">
     <a href="https://goreportcard.com/report/github.com/ondat/trousseau">
         <img src="https://goreportcard.com/badge/github.com/ondat/trousseau" /></a>
@@ -15,44 +25,47 @@
         <img src="https://img.shields.io/badge/pulled%20images-15.2k-brightgreen" /></a>
 </p>
 
------
-
-**Please note**: We take security and users' trust seriously. If you believe you have found a security issue in Trousseau, *please responsibly disclose* by following the [security policy](https://github.com/ondat/trousseau/security/policy). 
-
------
-
-This is the home of [Trousseau](https://trousseau.io), an open-source project leveraging the [Kubernetes KMS provider framework](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/) to connect with Key Management Services the Kubernetes native way! 
-
-* Website: https://trousseau.io 
-* Announcement & Forum: [GitHub Discussions](https://github.com/ondat/trousseau/discussions)
-* Documentation: [GitHub Wiki](https://github.com/ondat/trousseau/wiki)
-* Hands-on lab: [Tutorial](https://www.ondat.io/trousseau)
-* Recording of the hands-on lab: [DoK London Meetup](https://www.youtube.com/watch?v=BldQHinAIYg) 
-
-## Why Trousseau
-
-Kubernetes platform users are all facing the very same question: ***how to handle Secrets?***  
-
-While there are significant efforts to improve Kubernetes component layers, [the state of Secret Management is not receiving much interests](https://fosdem.org/2021/schedule/event/kubernetes_secret_management/). Using *etcd* to store API object definition & states, Kubernetes secrets are encoded in base64 and shipped into the key value store database.  Even if the filesystems on which *etcd* runs are encrypted, the secrets are still not.   
-
-Instead of leveraging the native Kubernetes way to manage secrets, commercial and open source solutions solve this design flaw by leveraging different approaches all using different toolsets or practices. This leads to training and maintaining niche skills and tools increasing cost and complexity of Kubernetes. 
-
-Once deployed, Trousseau will enable seamless secret management using the native Kubernetes API and ```kubectl``` CLI usage while leveraging an existing Key Management Service (KMS) provider.   
-
-How? By using using the [Kubernetes KMS provider](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/) framework to provide an envelop encryption scheme to encrypt secrets on the fly.
-
 <p align="center">
-    <img src="https://github.com/ondat/trousseau/blob/main/assets/Ondat%20Diagram-w-all.png" height="600">
+  <a href="#key-features">Key Features</a> •
+  <a href="https://github.com/ondat/trousseau/wiki">Why</a> •
+  <a href="https://github.com/ondat/trousseau/wiki/Trousseau-Deployment">Documentation</a> •
+  <a href="https://github.com/ondat/trousseau/wiki/Press">Press</a> •
+  <a href="https://www.ondat.io/trousseau">Hands-on Lab</a> •
+  <a href="#how-to-test">How to test</a> •
+  <a href="https://github.com/orgs/ondat/projects/3">Roadmap</a> •
+  <a href="https://github.com/ondat/trousseau/blob/main/CONTRIBUTING.md">Contributing</a> •
+  <a href="https://github.com/ondat/trousseau/blob/main/LICENSE">License</a> •
+  <a href="https://github.com/ondat/trousseau/blob/main/SECURITY.md">Security</a>
 </p>
 
-## About the name
-The name ***trousseau*** comes from the French language and is usually associated with keys like in ***trousseau de clés*** meaning ***keyring***.
+<p align="center">
+    <img src="https://github.com/ondat/trousseau/blob/main/assets/Ondat%20Diagram-w-all.png" height="400">
+</p>
 
-## Production reference
-The following blog post provides an overview of a production use case for a Hong Kong based Service Provider leveraging Suse, RKE2, HashiCorp Vault and Trousseau to secure their workload hosted for Government agencies:
-* https://www.ondat.io/news/trousseau-open-source-project-made-available-to-add-security-in-kubernetes 
+## Key Features
 
-### Run Trousseau in production
+* Kubernetes native - no additional CLI tooling, respectful of the concern APIs (like Secrets, ConfigMap, ...)
+* Encryption of sensitive data payload on the fly and store in *etcd* 
+* Multi KMS support - one KMS or two KMS at the same time[1]
+  * HashiCorp Vault (Community and Enterprise editions)
+  * AWS Key Vault
+  * Azure KeyVault 
+* Redesign to full micro-service architecture decloupling the core components for maximum resiliency and distributed handling
+  * proxy socket to address the Kubernetes API request for encryption/decryption
+  * trousseau to handle the proxy requests and KMS interaction
+  * KMS socket to address the connection towards the KMS providers 
+* Prometheus endpoint 
+
+Notes: 
+
+1. Trousseau will use each KMS provider to encrypt the data and combine both payload within the same secret data section. 
+   This design is provide more resiliency in case of a KMS failure by introducing reduancy, and add a fast decryption appraoch with first to response decryption approach along with roundrobin.   
+   At the current stade, there is no option to have multi KMS configured and targeting one specific entry for scenario like multi-tenancy and/or multi-staging environment. This is due to a missing annotation extension within the Kubernetes API that we have address to the Kubernetes project.(see issue [#146](https://github.com/ondat/trousseau/issues/146)) 
+
+## How to test
+
+⚠️ for production deployment, consult the [Documentation](https://github.com/ondat/trousseau/wiki)
+
 Clone the repo and create your environment file:
 ```bash
 TR_VERSION=31b93747fc4fd438a6b30de70ff16d4a45271366
@@ -146,20 +159,3 @@ apiServer:
 ```
 
 Finally restart Kubernetes API server.
-
-
-## Roadmap
-The roadmap items are described within [user story 50](https://github.com/ondat/trousseau/issues/50)  
-Trousseau's roadmap milestone for v2 [here](https://github.com/orgs/ondat/projects/1/views/4](https://github.com/ondat/trousseau/milestone/2).
-
-## Contributing Guidelines
-We love your input! We want to make contributing to this project as easy and transparent as possible. You can find the full guidelines [here](https://github.com/ondat/trousseau/blob/main/CONTRIBUTING.md).
-
-## Community
-Please reach out for any questions or issues via one the following channels:  
-* Raise an [issue or PR](https://github.com/ondat/trousseau/issues)
-* Join us on [Slack](https://storageos.slack.com/archives/C03CPK9EHJR) 
-* Follow us on Twitter [@ondat_io](https://twitter.com/ondat_io)
-
-## License
-Trousseau is under the Apache 2.0 license. See [LICENSE](https://github.com/ondat/trousseau/blob/main/LICENSE) file for details.
