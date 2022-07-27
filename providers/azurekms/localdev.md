@@ -6,7 +6,7 @@ Please follow base documentation at [localdev.md](/../../localdev.md)
 
 ## Login to Azure
 
-Log in and create config file (Please follow official [documentation](https://cloud-provider-azure.sigs.k8s.io/install/configs/)).
+Log in and create config file at [azurekms.json](/../../tests/e2e/kuttl/kube-v1.24/azurekms.json).
 
 ```json
 {
@@ -14,16 +14,11 @@ Log in and create config file (Please follow official [documentation](https://cl
     "tenantId": "...",
     "aadClientId": "...",
     "aadClientSecret": "...",
-    "subscriptionId": "...",
-    "resourceGroup": "...",
-    "location": "...",
-    "cloudProviderBackoff": false,
-    "useManagedIdentityExtension": false,
-    "useInstanceMetadata": true
+    "subscriptionId": "..."
 }
 ```
 
-Edit config file at [awskms.yaml](/../../tests/e2e/kuttl/kube-v1.24/azurekms.yaml):
+Edit config file at [azurekms.yaml](/../../tests/e2e/kuttl/kube-v1.24/azurekms.yaml):
 
 ```yaml
 configFilePath: configFilePath

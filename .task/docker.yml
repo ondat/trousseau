@@ -118,7 +118,7 @@ tasks:
       - :run-dir:init
     cmds:
       - docker rm -f trousseau-azurekms || true
-      - docker run -d --name trousseau-azurekms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
+      - docker run -d --name trousseau-azurekms --rm -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/azurekms.json:$PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/azurekms.json -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/azurekms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:azurekms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
   run:trousseau:
     deps:
       - :run-dir:init

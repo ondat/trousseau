@@ -77,7 +77,7 @@ tasks:
         test -n "${TR_AWSKMS_CONFIG}" && cat ${TR_AWSKMS_CONFIG} | sed 's/^/    /' > generated_manifests/helm/awsconfig.yaml ;
         TR_AWSKMS_CONFIG=awsconfig.yaml;
         test -n "${TR_AZUREKMS_CONFIG}" && cat ${TR_AZUREKMS_CONFIG} | sed 's/^/    /' > generated_manifests/helm/azureconfig.yaml ;
-        TR_AZUREKMS_CONFIG=awsconfig.yaml;
+        TR_AZUREKMS_CONFIG=azureconfig.yaml;
         TR_ENABLED_PROVIDERS=$(echo ${TR_ENABLED_PROVIDERS} | sed "s/ --/\n    - --/") ;
         export $(echo "${!TR_*}") ;
         ./bin/envsubst -no-empty -i deployment/helm/values.yaml -o generated_manifests/helm/values.yaml ;
