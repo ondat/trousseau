@@ -18,6 +18,12 @@ awskms:
   configPath: ${TR_AWSKMS_CONFIG}
   credentialsPath: ${TR_AWSKMS_CREDENTIALS}
 
+azurekms:
+  enabled: true
+  image: ${TR_AZUREKMS_IMAGE}
+  configPath: ${TR_AZUREKMS_CONFIG}
+  credentialsPath: ${TR_AZUREKMS_CREDENTIALS}
+
 vault:
   enabled: true
   withConfigGenerator: false

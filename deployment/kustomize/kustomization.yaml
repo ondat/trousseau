@@ -6,10 +6,12 @@ resources:
 - rbac.yaml
 - daemonset.yaml
 - configmap-awskms.yaml
+- configmap-azurekms.yaml
 # Enable if you have the Vault config generator
 # - configmap-vault.yaml
 patchesStrategicMerge:
 - sidecar-awskms.yaml
+- sidecar-azurekms.yaml
 - sidecar-vault.yaml
 # Enable if you have the Vault config generator
 # - configmap-vault-generator.yaml

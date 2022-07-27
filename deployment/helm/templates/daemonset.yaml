@@ -36,6 +36,14 @@ spec:
             - name: shared-data
               mountPath: /mnt/shared
 {{- end }}
+{{- if .Values.azurekms.enabled }}
+        - name: azurekms-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/azurekms ; chown 10123:10123 /mnt/shared/azurekms' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+{{- end }}
 {{- if .Values.vault.enabled }}
         - name: vault-directory
           image: busybox:stable-glibc
@@ -125,6 +133,30 @@ spec:
           securityContext:
             {{- toYaml .Values.podSecurityContext | nindent 12 }}
 {{- end }}
+{{- if .Values.azurekms.enabled }}
+        - name: azurekms
+          image: {{ .Values.azurekms.image }}
+          args:
+            - --listen-addr=unix:///mnt/shared/azurekms/azurekms.socket
+            - --config-file-path=/etc/azure/config.yaml
+            - -v={{ .Values.verbose_level }}
+          volumeMounts:
+            - name: azurekms-config
+              mountPath: /etc/azure
+              readOnly: true
+            - name: azurekms-credentials
+              mountPath: {{ .Values.azurekms.credentialsPath }}
+              readOnly: true
+            - name: shared-data
+              mountPath: /mnt/shared
+            - name: etc-ssl
+              mountPath: /etc/ssl
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+{{- end }}
 {{- if .Values.vault.enabled }}
         - name: vault
           image: {{ .Values.vault.image }}
@@ -161,6 +193,21 @@ spec:
             path: {{ .Values.awskms.credentialsPath }}
             type: File
           name: awskms-credentials
+{{- end }}
+{{- if .Values.azurekms.enabled }}
+        - configMap:
+            items:
+              - key: config.yaml
+                path: config.yaml
+            name: trousseau-azurekms-config
+          name: azurekms-config
+        - hostPath:
+            path: {{ .Values.azurekms.credentialsPath }}
+            type: File
+          name: azurekms-credentials
+        - name: etc-ssl
+          hostPath:
+            path: /etc/ssl
 {{- end }}
 {{- if .Values.vault.enabled }}
 {{- if .Values.vault.withConfigGenerator }}
