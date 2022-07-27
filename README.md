@@ -68,7 +68,7 @@ Notes:
 
 Clone the repo and create your environment file:
 ```bash
-TR_VERSION=31b93747fc4fd438a6b30de70ff16d4a45271366
+TR_VERSION=d3e4f2569b2eddeea992e47dae29a931182379dd
 TR_VERBOSE_LEVEL=1
 TR_SOCKET_LOCATION=/opt/trousseau-kms
 TR_PROXY_IMAGE=ghcr.io/ondat/trousseau:proxy-${TR_VERSION}
