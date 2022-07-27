@@ -65,7 +65,7 @@ tasks:
         for f in `cd deployment ; find kustomize -type f`; do ./bin/envsubst -no-empty -i deployment/$f -o generated_manifests/$f; done ;
         docker run --rm -v $PWD/generated_manifests/kustomize:/work -w /work nixery.dev/shell/kustomize/kubeval sh -c 'kustomize build | kubeval'
   generate:helm:
-    desc: generate docker compose services
+    desc: generate helm manifests
     deps:
       - gen-dir:init
       - :fetch:envsubst
