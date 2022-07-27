@@ -1,0 +1,5 @@
+---
+keyNames:
+-  vault-kms-demo
+address: http://127.0.0.1:8200
+token: vault-kms-demo

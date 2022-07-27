@@ -8,6 +8,6 @@ resources:
       - identity: {}
 #      - kms:
 #          name: vaultprovider
-#          endpoint: unix:///opt/vault-kms/vaultkms.socket
+#          endpoint: unix:///opt/trousseau-kms/trousseau.socket
 #          cachesize: 1000
 #      - identity: {} 

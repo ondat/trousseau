@@ -1,0 +1,44 @@
+name: Debug e2e on pr
+
+on:
+  pull_request:
+    branches: [ main, v2* ]
+  workflow_dispatch:
+  
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  security-events: write
+  packages: write
+
+concurrency:
+  group: ci-e2e-debug-${{ github.ref }}-1
+  cancel-in-progress: true
+
+jobs:
+  golangci-lint:
+    uses: ./.github/workflows/_gocilint.yml
+    with:
+      project: providers/debug
+  
+  gosec-scanning:
+    uses: ./.github/workflows/_gosecscan.yml
+    needs: golangci-lint
+    
+  image-build:
+    uses: ./.github/workflows/_docker-build.yml
+    with:
+      registry: ghcr.io
+      imageName: ${{ github.repository }}
+      imageTagPrefix: debug
+      project: providers/debug
+    needs: gosec-scanning
+
+  image-vulnerability-scan:
+    uses: ./.github/workflows/_trivy.yml
+    with:
+      registry: ghcr.io
+      imageName: ${{ github.repository }}
+      imageTagPrefix: debug
+    needs: image-build

@@ -16,8 +16,9 @@ spec:
       imagePullPolicy: Always
       args:
         - -v=5
-        - --config-file-path=/opt/vault/config.yaml
-        - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
+        - --enabled-providers=vault
+        - --socket-location=/opt/trousseau-kms
+        - --listen-addr=unix:///opt/trousseau-kms/proxy.socket                            # [REQUIRED] Version of the key to use
         - --zap-encoder=json
         - --v=3
       securityContext:
@@ -26,7 +27,7 @@ spec:
           drop:
           - ALL
         readOnlyRootFilesystem: true
-        runAsUser: 0
+        runAsUser: 10123
       ports:
         - containerPort: 8787
           protocol: TCP

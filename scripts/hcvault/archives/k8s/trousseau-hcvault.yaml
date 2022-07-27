@@ -29,8 +29,9 @@ spec:
               value: "false"          # 
           args:
             - -v=5
-            - --config-file-path=/opt/vault-kms/config.yaml
-            - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
+            - --enabled-providers=vault
+            - --socket-location=/opt/trousseau-kms
+            - --listen-addr=unix:///opt/trousseau-kms/proxy.socket                            # [REQUIRED] Version of the key to use
             - --zap-encoder=json
             - --v=3
           securityContext:
@@ -39,7 +40,7 @@ spec:
               drop:
               - ALL
             readOnlyRootFilesystem: true
-            runAsUser: 0
+            runAsUser: 10123
           ports:
             - containerPort: 8787
               protocol: TCP
@@ -58,11 +59,11 @@ spec:
               memory: 256Mi
           volumeMounts:
             - name: vault-kms
-              mountPath: /opt/vault-kms
+              mountPath: /opt/trousseau-kms
       volumes:
         - name: vault-kms
           hostPath:
-            path: /opt/vault-kms
+            path: /opt/trousseau-kms
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

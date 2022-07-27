@@ -1,0 +1,3 @@
+endpoint: https://localhost.localstack.cloud:4566
+profile: trousseau-local-aws
+keyArn: arn:aws:kms:eu-west-1:000000000000:key/2cd914cd-5350-4b90-abb9-d8cd882cf6f3

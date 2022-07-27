@@ -44,11 +44,12 @@ spec:
             #- name: VAULT_NAMESPACE    # For Enterprise - set the value for the namespace
             #  value: admin
             - name: VAULT_SKIP_VERIFY # For vault deployment with a self-signed certificate
-              value: "true"           
+              value: "true"        
           args:
             - -v=5
-            - --config-file-path=/opt/trousseau/config.yaml
-            - --listen-addr=unix:///opt/vault-kms/vaultkms.socket                            # [REQUIRED] Version of the key to use
+            - --enabled-providers=vault
+            - --socket-location=/opt/trousseau-kms
+            - --listen-addr=unix:///opt/trousseau-kms/proxy.socket                            # [REQUIRED] Version of the key to use
             - --zap-encoder=json
             - --v=3
           securityContext:
@@ -57,7 +58,7 @@ spec:
               drop:
               - ALL
             readOnlyRootFilesystem: true
-            runAsUser: 0
+            runAsUser: 10123
           ports:
             - containerPort: 8787
               protocol: TCP
@@ -76,13 +77,13 @@ spec:
               memory: 256Mi
           volumeMounts:
             - name: vault-kms
-              mountPath: /opt/vault-kms
+              mountPath: /opt/trousseau-kms
             - name: shared-data
               mountPath: /opt/trousseau/
       volumes:
         - name: vault-kms
           hostPath:
-            path: /opt/vault-kms
+            path: /opt/trousseau-kms
         - configMap:
             items:
               - key: vault-agent-config.hcl

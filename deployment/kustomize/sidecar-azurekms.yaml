@@ -1,0 +1,62 @@
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trousseau-kms-provider
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: azurekms-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/azurekms ; chown 10123:10123 /mnt/shared/azurekms' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+      containers:
+        - name: azurekms
+          image: ${TR_AZUREKMS_IMAGE}
+          args:
+            - --listen-addr=unix:///mnt/shared/azurekms/azurekms.socket
+            - --config-file-path=/etc/azure/config.yaml
+            - -v=${TR_VERBOSE_LEVEL}
+          volumeMounts:
+            - name: azurekms-config
+              mountPath: /etc/azure
+              readOnly: true
+            - name: azurekms-credentials
+              mountPath: ${TR_AZUREKMS_CREDENTIALS}
+              readOnly: true
+            - name: shared-data
+              mountPath: /mnt/shared
+            - name: etc-ssl
+              mountPath: /etc/ssl
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsUser: 10123
+            runAsGroup: 10123
+      volumes:
+        - configMap:
+            items:
+              - key: config.yaml
+                path: config.yaml
+            name: trousseau-azurekms-config
+          name: azurekms-config
+        - hostPath:
+            path: ${TR_AZUREKMS_CREDENTIALS}
+            type: File
+          name: azurekms-credentials
+        - name: etc-ssl
+          hostPath:
+            path: /etc/ssl

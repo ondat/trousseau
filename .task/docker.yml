@@ -1,0 +1,127 @@
+version: 3
+vars:
+  NOW:
+    sh: date +'%s'
+  BASE_IMAGE:
+    sh: '([ -z "$BASE_IMAGE" ] && head -1  Dockerfile | cut -d= -f2) || echo $BASE_IMAGE'
+tasks:
+  build:
+    desc: build docker images
+    cmds:
+      - task: build:proxy
+      - task: build:debug
+      - task: build:vault
+      - task: build:awskms
+      - task: build:azurekms
+      - task: build:trousseau
+  build:proxy:
+    cmds:
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=proxy -t $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION .
+    status:
+       - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
+  build:debug:
+    cmds:
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/debug -t $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
+  build:vault:
+    cmds:
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/vault -t $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
+  build:awskms:
+    cmds:
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/awskms -t $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
+  build:azurekms:
+    cmds:
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=providers/azurekms -t $DOCKER_REGISTRY/$IMAGE_NAME:azurekms-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:azurekms-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
+  build:trousseau:
+    cmds:
+      - docker build --label buildtime={{.NOW}} --build-arg BASE_IMAGE={{.BASE_IMAGE}} --build-arg PROJECT=trousseau -t $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION .
+    status:
+      - test "{{.NOW}}" == "$(docker inspect $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION --format='{{"{{"}}.Config.Labels.buildtime{{"}}"}}' 2>/dev/null)"
+  push:
+    desc: push docker image
+    cmds:
+      - task: push:proxy
+      - task: push:debug
+      - task: push:vault
+      - task: push:awskms
+      - task: push:azurekms
+      - task: push:trousseau
+  push:proxy:
+    cmds:
+      - docker push $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION
+  push:debug:
+    cmds:
+      - docker push $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION
+  push:vault:
+    cmds:
+      - docker push $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION
+  push:awskms:
+    cmds:
+      - docker push $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION
+  push:azurekms:
+    cmds:
+      - docker push $DOCKER_REGISTRY/$IMAGE_NAME:azurekms-$IMAGE_VERSION
+  push:trousseau:
+    cmds:
+      - docker push $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION
+  run:
+    desc: run docker image
+    cmds:
+      - task: run:proxy
+      - task: run:debug
+      - task: run:vault
+      - task: run:awskms
+      - task: run:azurekms
+      - task: run:trousseau
+  run:proxy:
+    deps:
+      - :run-dir:init
+    cmds:
+      - docker rm -f trousseau-proxy || true
+      - docker run -d --name trousseau-proxy --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:proxy-$IMAGE_VERSION
+  run:debug:
+    deps:
+      - :run-dir:init
+    cmds:
+      - docker rm -f trousseau-debug || true
+      - docker run -d --name trousseau-debug --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:debug-$IMAGE_VERSION
+  run:vault:
+    deps:
+      - :run-dir:init
+    cmds:
+      - docker rm -f trousseau-local-vault || true
+      - docker run -d --name=trousseau-local-vault --cap-add=IPC_LOCK -e 'VAULT_DEV_ROOT_TOKEN_ID=vault-kms-demo' vault
+      - sleep 5
+      - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault login vault-kms-demo
+      - docker exec -e VAULT_ADDR=http://127.0.0.1:8200 trousseau-local-vault vault secrets enable transit
+      - docker rm -f trousseau-vault || true
+      - docker run -d --name trousseau-vault --rm --network=container:trousseau-local-vault -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/vault.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:vault-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
+  run:awskms:
+    deps:
+      - :run-dir:init
+    cmds:
+      - docker rm -f trousseau-local-aws || true
+      - docker run --name trousseau-local-aws --rm --hostname localhost.localstack.cloud -d -e SERVICES=kms -e HOSTNAME=localhost.localstack.cloud -e HOSTNAME_EXTERNAL=localhost.localstack.cloud -e DEFAULT_REGION=eu-west-1 -e KMS_PROVIDER=kms-local -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack:0.14.4
+      - sleep 5
+      - 'printf %"s\n" "endpoint: https://localhost.localstack.cloud:4566" "profile: trousseau-local-aws" "keyArn: $(docker exec trousseau-local-aws awslocal kms create-key | grep Arn | cut -d''"'' -f4)" > tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml'
+      - docker rm -f trousseau-awskms || true
+      - docker run -d --name trousseau-awskms --rm --network=container:trousseau-local-aws -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/aws-credentials.ini:/.aws/credentials -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/awskms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:awskms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
+  run:azurekms:
+    deps:
+      - :run-dir:init
+    cmds:
+      - docker rm -f trousseau-azurekms || true
+      - docker run -d --name trousseau-azurekms --rm -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/azurekms.json:$PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/azurekms.json -v $PWD/tests/e2e/kuttl/kube-v{{.KIND_CLUSTER_VERSION}}/azurekms.yaml:/etc/config.yaml -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:azurekms-$IMAGE_VERSION --config-file-path=/etc/config.yaml -v=3
+  run:trousseau:
+    deps:
+      - :run-dir:init
+    cmds:
+      - docker rm -f trousseau-core || true
+      - docker run -d --name trousseau-core --rm -v $PWD/bin/run:/opt/trousseau-kms $DOCKER_REGISTRY/$IMAGE_NAME:trousseau-$IMAGE_VERSION {{.ENABLED_PROVIDERS}} -v=3

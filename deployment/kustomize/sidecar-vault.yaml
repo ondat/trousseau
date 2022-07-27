@@ -1,0 +1,47 @@
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trousseau-kms-provider
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: vault-directory
+          image: busybox:stable-glibc
+          command: [ 'sh', '-c', 'mkdir -p /mnt/shared/vault ; chown 10123:10123 /mnt/shared/vault' ]
+          volumeMounts:
+            - name: shared-data
+              mountPath: /mnt/shared
+      containers:
+        - name: vault
+          image: ${TR_VAULT_IMAGE}
+          args:
+            - --listen-addr=unix:///mnt/shared/vault/vault.socket
+            - --config-file-path=${TR_VAULT_CONFIG}
+            - -v=${TR_VERBOSE_LEVEL}
+          volumeMounts:
+            - name: vault-config
+              mountPath: ${TR_VAULT_CONFIG}
+              readOnly: true
+            - name: shared-data
+              mountPath: /mnt/shared
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsUser: 10123
+            runAsGroup: 10123
+      volumes:
+        - hostPath:
+            path: ${TR_VAULT_CONFIG}
+            type: File
+          name: vault-config

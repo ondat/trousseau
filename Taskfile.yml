@@ -1,14 +1,16 @@
 version: 3
 vars:
   KIND_CLUSTER_NAME: kms-vault
-  GOSEC_VERSION: 2.11.0
-  KIND_VERSION: 0.11.1
-  KUBERNETES_VERSION: 1.21.2
-  HELM_VERSION: 3.6.3
-  VAULT_VERSION: 1.8.1
-  KUBECTL_VERSION: 1.21.1
-  SCRIPT: scripts/hcvault/archives/testing
+  KIND_CLUSTER_VERSION: 1.24
+  ENABLED_PROVIDERS:
+    sh: '([ -z "$ENABLED_PROVIDERS" ] && echo --enabled-providers=debug) || echo $ENABLED_PROVIDERS'
 silent: true
+includes:
+  cluster: .task/cluster.yml
+  docker: .task/docker.yml
+  fetch: .task/fetch.yml
+  go: .task/go.yml
+  prod: .task/prod.yml
 tasks:
   default:
     cmds:
@@ -17,140 +19,22 @@ tasks:
     desc: create bin directory
     cmds:
       - mkdir -p ./bin
-      - mkdir -p tests/e2e/generated_manifests
     status:
       - test -d ./bin
-      - test -d tests/e2e/generated_manifests
-  fetch:gosec:
-    deps:
-      - bin-dir:init
-    desc: install gosec
+  run-dir:init:
+    desc: create bin directory
     cmds:
-      - curl -L https://github.com/securego/gosec/releases/download/v{{.GOSEC_VERSION}}/gosec_{{.GOSEC_VERSION}}_{{OS}}_{{ARCH}}.tar.gz | tar xvz --one-top-level=gosectmp
-      - mv gosectmp/gosec ./bin/gosec
-      - chmod 755 bin/gosec
-      - rm -rf gosectmp
+      - mkdir -pm 777 bin/run
+      - mkdir -pm 777 bin/run/debug
+      - mkdir -pm 777 bin/run/vault
+      - mkdir -pm 777 bin/run/awskms
+      - mkdir -pm 777 bin/run/azurekms
     status:
-      - test -f ./bin/gosec
-  fetch:kind:
-    deps:
-      - bin-dir:init
-    desc: install kind
-    cmds:
-      - curl -L https://github.com/kubernetes-sigs/kind/releases/download/v{{.KIND_VERSION}}/kind-{{OS}}-{{ARCH}} --output ./bin/kind && chmod +x ./bin/kind
-    status:
-      - test -f ./bin/kind
-  fetch:helm:
-    deps:
-      - bin-dir:init
-    desc: install helm
-    cmds:
-      - curl -L https://get.helm.sh/helm-v{{.HELM_VERSION}}-{{OS}}-{{ARCH}}.tar.gz | tar xvz -C ./
-      - mv {{OS}}-{{ARCH}}/helm ./bin/helm
-      - chmod 755 bin/helm
-      - rm -rf {{OS}}-{{ARCH}}
-    status:
-      - test -f ./bin/helm
-  fetch:vault:
-    desc: install vault
-    cmds:
-      - curl "https://releases.hashicorp.com/vault/{{.VAULT_VERSION}}/vault_{{.VAULT_VERSION}}_{{OS}}_{{ARCH}}.zip" -o "vault.zip"
-      - unzip vault.zip
-      - mv vault bin/vault
-      - chmod 755 bin/vault
-      - rm vault.zip
-    status:
-      - test -f bin/vault
-  fetch:kubectl:
-    deps:
-      - bin-dir:init
-    desc: install kubectl
-    cmds:
-      - curl -Lo ./bin/kubectl  https://storage.googleapis.com/kubernetes-release/release/v{{.KUBECTL_VERSION}}/bin/{{OS}}/{{ARCH}}/kubectl
-      - chmod +x ./bin/kubectl
-    status:
-      - test -f ./bin/kubectl
-  fetch:husky:
-    deps:
-      - bin-dir:init
-    desc: install husky
-    cmds:
-      - cd bin ; curl -L https://github.com/automation-co/husky/releases/download/v0.2.8/husky_0.2.8_{{.CAP_ARCH}}_x86_64.tar.gz | tar -xz husky
-      - chmod +x ./bin/husky
-      - ./bin/husky install
-    vars:
-      CAP_ARCH:
-        sh: uname
-    status:
-      - test -f ./bin/husky
-  fetch:all:
-    desc: fetch all tools
-    cmds:
-      - task: fetch:kubectl
-      - task: fetch:kind
-  cluster:create:
-    deps:
-      - task: generate:manifests
-    desc: create kind cluster
-    cmds:
-      - ./bin/kind create cluster --retain --image kindest/node:"v{{.KUBERNETES_VERSION}}" --name "{{.KIND_CLUSTER_NAME}}" --wait 2m --config ./{{.SCRIPT}}/kind-cluster.yaml
-  cluster:delete:
-    desc: destroy kind cluster
-    cmds:
-      - ./bin/kind delete cluster --name "{{.KIND_CLUSTER_NAME}}"
-  vault:deploy:
-    desc: install vault on cluster
-    cmds:
-      - ./bin/helm repo add banzaicloud-stable https://kubernetes-charts.banzaicloud.com
-      - ./bin/helm upgrade --install vault-operator banzaicloud-stable/vault-operator --wait
-      - ./bin/kubectl apply -f {{.SCRIPT}}/vault.yaml
-  vault:port-forward:
-    desc: port forwarding for vault
-    cmds:
-      - ./bin/kubectl port-forward svc/vault 8200:8200
-  prometheus:deploy:
-    deps:
-      - task: fetch:helm
-      - task: fetch:kubectl
-    desc: install prometheus and grafana on cluster
-    cmds:
-      - ./bin/helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-      - ./bin/helm upgrade --install prometheus prometheus-community/kube-prometheus-stack --wait
-      - ./bin/kubectl apply -f {{.SCRIPT}}/prometheus.yaml --wait
-      - ./bin/kubectl apply -f {{.SCRIPT}}/grafana-dashboard.yaml --wait
-  prometheus:port-forward:
-    deps:
-      - task: fetch:kubectl
-    desc: port forwarding for prometheus
-    cmds:
-      - ./bin/kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090
-  grafana:port-forward:
-    deps:
-      - task: fetch:kubectl
-    desc: open grafana (admin/prom-operator)
-    cmds:
-      - ./bin/kubectl port-forward svc/prometheus-grafana 8300:80
-  generate:manifests:
-    desc: generate manifests
-    deps:
-      - bin-dir:init
-    cmds:
-      - envsubst < {{.SCRIPT}}/kms.yaml > tests/e2e/generated_manifests/kms.yaml
-      - chmod 644 tests/e2e/generated_manifests/*
-  docker:build:
-    desc: build docker image
-    cmds:
-      - docker build -t $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_VERSION .
-  docker:push:
-    desc: push docker image
-    cmds:
-      - docker push $DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_VERSION
-  go:unit-tests:
-    cmds:
-      - go test -race -timeout 30s ./...
-  go:integration-tests:
-    cmds:
-      - KUBECTL_CONTEXT=kind-{{.KIND_CLUSTER_NAME}} go test --tags=integration ./...
+      - test -d ./bin/run
+      - test -d ./bin/run/debug
+      - test -d ./bin/run/vault
+      - test -d ./bin/run/awskms
+      - test -d ./bin/run/azurekms
   example:load:
     desc: load demo data
     cmds:

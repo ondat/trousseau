@@ -3,7 +3,7 @@
 ## Reporting Potential Security Issues
 
 If you have encountered a potential security vulnerability in this project,
-please **report it to us at git@ondat.io and not via an GitHub issue**.  
+please **report it to us at security@trousseau.io and not via an GitHub issue**.  
 
 We will work with you to verify the vulnerability, build a patch, validate  
 the fix, and finally issue a public report. 

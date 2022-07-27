@@ -1,0 +1,58 @@
+# Default values for trousseau.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: kube-system
+
+commonLabels:
+  tier: control-plane
+  app: trousseau-kms-provider
+
+verbose_level: ${TR_VERBOSE_LEVEL}
+
+socketLocation: ${TR_SOCKET_LOCATION}
+
+awskms:
+  enabled: true
+  image: ${TR_AWSKMS_IMAGE}
+  configPath: ${TR_AWSKMS_CONFIG}
+  credentialsPath: ${TR_AWSKMS_CREDENTIALS}
+
+azurekms:
+  enabled: true
+  image: ${TR_AZUREKMS_IMAGE}
+  configPath: ${TR_AZUREKMS_CONFIG}
+  credentialsPath: ${TR_AZUREKMS_CREDENTIALS}
+
+vault:
+  enabled: true
+  withConfigGenerator: false
+  image: ${TR_VAULT_IMAGE}
+  address: ${TR_VAULT_ADDRESS}
+  configPath: ${TR_VAULT_CONFIG}
+
+proxy:
+  image: ${TR_PROXY_IMAGE}
+
+trousseau:
+  image: ${TR_TROUSSEAU_IMAGE}
+  enabledProviders:
+    - ${TR_ENABLED_PROVIDERS}
+
+imagePullSecrets: []
+
+podSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  runAsUser: 10123
+  runAsGroup: 10123
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi

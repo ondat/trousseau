@@ -1,0 +1,4 @@
+configFilePath: configFilePath
+keyVaultName: keyVaultName
+keyName: keyName
+keyVersion: keyVersion

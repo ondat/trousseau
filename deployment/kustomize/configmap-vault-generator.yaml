@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trousseau-kms-provider
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: vault-agent
+          image: vault
+          args:
+            - agent
+            - -config=/etc/vault/vault-agent-config.hcl
+            - -log-level=debug
+          env:
+            - name: VAULT_ADDR
+              value: ${TR_VAULT_ADDRESS}
+          volumeMounts:
+            - name: vault-agent-config
+              mountPath: /etc/vault
+              readOnly: true
+            - name: vault-config
+              mountPath: ${TR_VAULT_CONFIG}
+      volumes:
+        - configMap:
+            items:
+              - key: vault-agent-config.hcl
+                path: vault-agent-config.hcl
+            name: trousseau-vault-agent-config
+          name: vault-agent-config
+        - emptyDir: {}
+          hostPath:
+          name: vault-config
+          
