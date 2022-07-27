@@ -1,0 +1,11 @@
+services:
+  azurekms:
+    image: ${TR_AZUREKMS_IMAGE}
+    command: --listen-addr=unix:///sockets/azurekms/azurekms.socket --config-file-path=/etc/config.yaml -v=${TR_VERBOSE_LEVEL}
+    volumes:
+      - sockets:/sockets:rw
+      - ${TR_AZUREKMS_CREDENTIALS}:${TR_AZUREKMS_CREDENTIALS}:r
+      - ${TR_AZUREKMS_CONFIG}:/etc/config.yaml:r
+    restart: always
+    depends_on:
+      - init

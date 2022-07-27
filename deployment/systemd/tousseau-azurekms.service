@@ -1,0 +1,17 @@
+[Unit]
+Description=Trousseau Azure KMS service
+After=docker.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=trousseau-env
+TimeoutStartSec=0
+Restart=always
+PreExecStart=/bin/mkdir -p ${TR_SOCKET_LOCATION}/azurekms
+PreExecStart=/bin/chown 10123:10123 ${TR_SOCKET_LOCATION}/azurekms
+ExecStart=/usr/bin/docker run -d --name %n --rm -v ${TR_AZUREKMS_CREDENTIALS}:${TR_AZUREKMS_CREDENTIALS} -v ${TR_AZUREKMS_CONFIG}:/etc/config.yaml -v ${TR_SOCKET_LOCATION}:/opt/trousseau-kms ${TR_AZUREKMS_IMAGE} --config-file-path=/etc/config.yaml -v=${TR_VERBOSE_LEVEL}
+ExecStop=/usr/bin/docker stop %n
+ExecStopPost=/usr/bin/docker rm %n
+
+[Install]
+WantedBy=multi-user.target

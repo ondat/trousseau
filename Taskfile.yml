@@ -28,11 +28,13 @@ tasks:
       - mkdir -pm 777 bin/run/debug
       - mkdir -pm 777 bin/run/vault
       - mkdir -pm 777 bin/run/awskms
+      - mkdir -pm 777 bin/run/azurekms
     status:
       - test -d ./bin/run
       - test -d ./bin/run/debug
       - test -d ./bin/run/vault
       - test -d ./bin/run/awskms
+      - test -d ./bin/run/azurekms
   example:load:
     desc: load demo data
     cmds:

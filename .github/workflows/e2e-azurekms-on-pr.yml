@@ -1,0 +1,65 @@
+name: Azure KMS e2e on pr
+
+on:
+  pull_request:
+    branches: [ main, v2* ]
+  workflow_dispatch:
+  
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+  security-events: write
+  packages: write
+
+concurrency:
+  group: ci-e2e-azurekms-${{ github.ref }}-1
+  cancel-in-progress: true
+
+jobs:
+  golangci-lint:
+    uses: ./.github/workflows/_gocilint.yml
+    with:
+      project: providers/azurekms
+  
+  gosec-scanning:
+    uses: ./.github/workflows/_gosecscan.yml
+    needs: golangci-lint
+    
+  image-build:
+    uses: ./.github/workflows/_docker-build.yml
+    with:
+      registry: ghcr.io
+      imageName: ${{ github.repository }}
+      imageTagPrefix: azurekms
+      project: providers/azurekms
+    needs: gosec-scanning
+
+  # e2e-1_22:
+  #   uses: ./.github/workflows/_e2e-test.yml
+  #   with:
+  #     provider: azurekms
+  #     kubever: "1.22"
+  #   needs: image-build
+
+  # e2e-1_23:
+  #   uses: ./.github/workflows/_e2e-test.yml
+  #   with:
+  #     provider: azurekms
+  #     kubever: "1.23"
+  #   needs: image-build
+
+  # e2e-1_24:
+  #   uses: ./.github/workflows/_e2e-test.yml
+  #   with:
+  #     provider: azurekms
+  #     kubever: "1.24"
+  #   needs: image-build
+
+  image-vulnerability-scan:
+    uses: ./.github/workflows/_trivy.yml
+    with:
+      registry: ghcr.io
+      imageName: ${{ github.repository }}
+      imageTagPrefix: azurekms
+    needs: image-build

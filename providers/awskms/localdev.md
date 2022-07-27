@@ -8,7 +8,7 @@ Please follow base documentation at [localdev.md](/../../localdev.md)
 
 Log in and create profile file at `~/.aws/credentials`.
 
-Edit config file at [awskms.yaml](/../../tests/e2e/kuttl/kube-v1.23/awskms.yaml):
+Edit config file at [awskms.yaml](/../../tests/e2e/kuttl/kube-v1.24/awskms.yaml):
 
 ```yaml
 profile: profile
@@ -43,8 +43,8 @@ Output:
 {
     "KeyMetadata": {
         "AWSAccountId": "000000000000",
-        "KeyId": "c720e1b5-a113-44ed-9f7b-1cf0c1f61ee8",
-        "Arn": "arn:aws:kms:eu-west-1:000000000000:key/c720e1b5-a113-44ed-9f7b-1cf0c1f61ee8",
+        "KeyId": "...",
+        "Arn": "arn:aws:kms:eu-west-1:000000000000:key/...",
         "CreationDate": 1656405914,
         "Enabled": true,
         "KeyUsage": "ENCRYPT_DECRYPT",
@@ -60,7 +60,7 @@ Output:
 }
 ```
 
-Edit config file based on output at [awskms.yaml](/../../tests/e2e/kuttl/kube-v1.23/awskms.yaml):
+Edit config file based on output at [awskms.yaml](/../../tests/e2e/kuttl/kube-v1.24/awskms.yaml):
 
 ```yaml
 endpoint: https://localhost.localstack.cloud:4566

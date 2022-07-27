@@ -1,0 +1,7 @@
+{
+    "cloud":"AzurePublicCloud",
+    "tenantId": "...",
+    "aadClientId": "...",
+    "aadClientSecret": "...",
+    "subscriptionId": "..."
+}

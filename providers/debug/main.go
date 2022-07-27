@@ -45,7 +45,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = utils.RemoveFile(addr); err != nil {
+	if err = os.Remove(addr); err != nil && !os.IsNotExist(err) {
 		klog.ErrorS(err, "unable to delete socket file", "file", addr)
 	}
 

@@ -1,7 +1,7 @@
 services:
   init:
     image: busybox:stable-glibc
-    command: sh -c 'mkdir -p /sockets/awskms /sockets/vault /sockets/trousseau ; chown -R 10123:10123 /sockets/*'
+    command: sh -c 'mkdir -p /sockets/awskms /sockets/azurekms /sockets/vault /sockets/trousseau ; chown -R 10123:10123 /sockets/*'
     volumes:
       - sockets:/sockets:rw
   proxy:

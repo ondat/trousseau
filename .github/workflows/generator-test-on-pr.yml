@@ -31,10 +31,13 @@ jobs:
             TR_SOCKET_LOCATION=${PWD}/bin/run
             TR_PROXY_IMAGE=ondat/trousseau:proxy-develop
             TR_AWSKMS_IMAGE=ondat/trousseau:awskms-develop
+            TR_AZUREKMS_IMAGE=ondat/trousseau:azurekms-develop
             TR_VAULT_IMAGE=ondat/trousseau:vault-develop
             TR_TROUSSEAU_IMAGE=ondat/trousseau:trousseau-develop
             TR_AWSKMS_CREDENTIALS=${HOME}/.aws/credentials
             TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/awskms.yaml
+            TR_AZUREKMS_CREDENTIALS=${HOME}/.azure/config.json
+            TR_AZUREKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/azurekms.yaml
             TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
       - name: generate services
         run: make prod:generate:docker-compose ENV_LOCATION=trousseau-env
@@ -57,10 +60,13 @@ jobs:
             TR_SOCKET_LOCATION=${PWD}/bin/run
             TR_PROXY_IMAGE=ondat/trousseau:proxy-develop
             TR_AWSKMS_IMAGE=ondat/trousseau:awskms-develop
+            TR_AZUREKMS_IMAGE=ondat/trousseau:azurekms-develop
             TR_VAULT_IMAGE=ondat/trousseau:vault-develop
             TR_TROUSSEAU_IMAGE=ondat/trousseau:trousseau-develop
             TR_AWSKMS_CREDENTIALS=${HOME}/.aws/credentials
             TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/awskms.yaml
+            TR_AZUREKMS_CREDENTIALS=${HOME}/.azure/config.json
+            TR_AZUREKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/azurekms.yaml
             TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
             TR_VAULT_ADDRESS=http://127.0.0.1:8200
       - name: generate services
@@ -84,10 +90,13 @@ jobs:
             TR_SOCKET_LOCATION=${PWD}/bin/run
             TR_PROXY_IMAGE=ondat/trousseau:proxy-develop
             TR_AWSKMS_IMAGE=ondat/trousseau:awskms-develop
+            TR_AZUREKMS_IMAGE=ondat/trousseau:azurekms-develop
             TR_VAULT_IMAGE=ondat/trousseau:vault-develop
             TR_TROUSSEAU_IMAGE=ondat/trousseau:trousseau-develop
             TR_AWSKMS_CREDENTIALS=${HOME}/.aws/credentials
             TR_AWSKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/awskms.yaml
+            TR_AZUREKMS_CREDENTIALS=${HOME}/.azure/config.json
+            TR_AZUREKMS_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/azurekms.yaml
             TR_VAULT_CONFIG=${PWD}/tests/e2e/kuttl/kube-v1.24/vault.yaml
             TR_VAULT_ADDRESS=http://127.0.0.1:8200
       - name: generate services

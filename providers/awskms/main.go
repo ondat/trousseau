@@ -16,7 +16,7 @@ import (
 
 var (
 	listenAddr     = flag.String("listen-addr", "unix:///opt/trousseau-kms/awskms/awskms.socket", "gRPC listen address")
-	configFilePath = flag.String("config-file-path", "/opt/trousseau-kms/awskms/config.yaml", "Path for Vault Provider config file")
+	configFilePath = flag.String("config-file-path", "/opt/trousseau-kms/awskms/config.yaml", "Path for AWS KMS Provider config file")
 	logEncoder     = flag.String("zap-encoder", "console", "set log encoder [console, json]")
 )
 
@@ -62,7 +62,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = utils.RemoveFile(addr); err != nil {
+	if err = os.Remove(addr); err != nil && !os.IsNotExist(err) {
 		klog.ErrorS(err, "unable to delete socket file", "file", addr)
 	}
 

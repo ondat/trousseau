@@ -73,11 +73,14 @@ TR_VERBOSE_LEVEL=1
 TR_SOCKET_LOCATION=/opt/trousseau-kms
 TR_PROXY_IMAGE=ghcr.io/ondat/trousseau:proxy-${TR_VERSION}
 TR_TROUSSEAU_IMAGE=ghcr.io/ondat/trousseau:trousseau-${TR_VERSION}
-# Please configure your KMS plugins
-TR_ENABLED_PROVIDERS="--enabled-providers=awskms --enabled-providers=vault"
+# Please configure your KMS plugins, maximum 2
+TR_ENABLED_PROVIDERS="--enabled-providers=awskms --enabled-providers=azurekms --enabled-providers=vault"
 TR_AWSKMS_IMAGE=ghcr.io/ondat/trousseau:awskms-${TR_VERSION}
 TR_AWSKMS_CONFIG=awskms.yaml # For Kubernetes, file must exists only for generation
 TR_AWSKMS_CREDENTIALS=.aws/credentials
+TR_AZUREKMS_IMAGE=ghcr.io/ondat/trousseau:azurekms-${TR_VERSION}
+TR_AZUREKMS_CONFIG=azurekms.yaml # For Kubernetes, file must exists only for generation
+TR_AZUREKMS_CREDENTIALS=config.json
 TR_VAULT_IMAGE=ghcr.io/ondat/trousseau:vault-${TR_VERSION}
 TR_VAULT_ADDRESS=https://127.0.0.1:8200
 TR_VAULT_CONFIG=vault.yaml
@@ -101,6 +104,13 @@ keyArn: keyArn
 roleArn: roleArn
 encryptionContext:
   foo: bar
+```
+```yaml
+# azurekms.yaml
+configFilePath: configFilePath
+keyVaultName: keyVaultName
+keyName: keyName
+keyVersion: keyVersion
 ```
 ```yaml
 # vault.yaml

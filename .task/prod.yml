@@ -50,7 +50,7 @@ tasks:
       - source {{.ENV_LOCATION}} ;
         export $(echo "${!TR_*}") ;
         for f in `cd deployment ; find docker-compose -type f`; do ./bin/envsubst -no-empty -i deployment/$f -o generated_manifests/$f; done ;
-        (cd generated_manifests/docker-compose ; docker compose -f docker-compose.yaml -f docker-compose.override.awskms.yaml -f docker-compose.override.vault.yaml config 1>/dev/null)
+        (cd generated_manifests/docker-compose ; docker compose -f docker-compose.yaml -f docker-compose.override.awskms.yaml -f docker-compose.override.azurekms.yaml -f docker-compose.override.vault.yaml config 1>/dev/null)
   generate:kustomize:
     desc: generate kustomize manifests
     deps:
@@ -61,6 +61,7 @@ tasks:
       - source {{.ENV_LOCATION}} ;
         TR_ENABLED_PROVIDERS=$(echo ${TR_ENABLED_PROVIDERS} | sed "s/ --/\n            - --/") ;
         test -n "${TR_AWSKMS_CONFIG}" && TR_AWSKMS_CONFIG=$(cat ${TR_AWSKMS_CONFIG} 2>/dev/null | sed 's/^/    /') ;
+        test -n "${TR_AZUREKMS_CONFIG}" && TR_AZUREKMS_CONFIG=$(cat ${TR_AZUREKMS_CONFIG} 2>/dev/null | sed 's/^/    /') ;
         export $(echo "${!TR_*}") ;
         for f in `cd deployment ; find kustomize -type f`; do ./bin/envsubst -no-empty -i deployment/$f -o generated_manifests/$f; done ;
         docker run --rm -v $PWD/generated_manifests/kustomize:/work -w /work nixery.dev/shell/kustomize/kubeval sh -c 'kustomize build | kubeval'
@@ -75,6 +76,8 @@ tasks:
       - source {{.ENV_LOCATION}} ;
         test -n "${TR_AWSKMS_CONFIG}" && cat ${TR_AWSKMS_CONFIG} | sed 's/^/    /' > generated_manifests/helm/awsconfig.yaml ;
         TR_AWSKMS_CONFIG=awsconfig.yaml;
+        test -n "${TR_AZUREKMS_CONFIG}" && cat ${TR_AZUREKMS_CONFIG} | sed 's/^/    /' > generated_manifests/helm/azureconfig.yaml ;
+        TR_AZUREKMS_CONFIG=azureconfig.yaml;
         TR_ENABLED_PROVIDERS=$(echo ${TR_ENABLED_PROVIDERS} | sed "s/ --/\n    - --/") ;
         export $(echo "${!TR_*}") ;
         ./bin/envsubst -no-empty -i deployment/helm/values.yaml -o generated_manifests/helm/values.yaml ;
