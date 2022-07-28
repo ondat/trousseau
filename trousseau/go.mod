@@ -11,7 +11,7 @@ replace (
 require (
 	github.com/ondat/trousseau v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.8.0
-	google.golang.org/grpc v1.47.0
+	google.golang.org/grpc v1.48.0
 	k8s.io/apiserver v0.24.3
 	k8s.io/klog/v2 v2.70.0
 )
