@@ -137,7 +137,7 @@ ls -l generated_manifests/helm
 ```
 
 Deploy the application and configure encryption:
-```
+```yaml
 kind: EncryptionConfiguration
 apiVersion: apiserver.config.k8s.io/v1
 resources:
@@ -152,7 +152,7 @@ resources:
 ```
 
 Reconfigure Kubernetes API server:
-```
+```yaml
 kind: ClusterConfiguration
 apiServer:
   extraArgs:
