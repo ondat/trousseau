@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/vault/api v1.7.2
 	github.com/ondat/trousseau v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.48.0
-	k8s.io/apiserver v0.24.2
+	k8s.io/apiserver v0.24.4
 	k8s.io/klog/v2 v2.70.0
 )
 
