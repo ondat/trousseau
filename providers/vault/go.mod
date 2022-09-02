@@ -9,7 +9,7 @@ require (
 	github.com/ondat/trousseau v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.48.0
 	k8s.io/apiserver v0.24.2
-	k8s.io/klog/v2 v2.70.0
+	k8s.io/klog/v2 v2.80.0
 )
 
 require (
