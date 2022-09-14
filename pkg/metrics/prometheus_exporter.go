@@ -3,6 +3,7 @@ package metrics
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.opentelemetry.io/otel/exporters/metric/prometheus"
 	"k8s.io/klog/v2"
@@ -24,9 +25,21 @@ func servePrometheusExporter(metricsAddress string) error {
 	}
 
 	klog.InfoS("Prometheus metrics server starting", "address", metricsAddress)
-	http.HandleFunc(fmt.Sprintf("/%s", metricsEndpoint), exporter.ServeHTTP)
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsAddress), nil); err != nil {
+	serveMux := http.NewServeMux()
+	serveMux.HandleFunc(fmt.Sprintf("/%s", metricsEndpoint), exporter.ServeHTTP)
+
+	const timeout = time.Second * 5
+
+	srv := &http.Server{
+		ReadTimeout:       timeout,
+		ReadHeaderTimeout: timeout,
+		WriteTimeout:      timeout,
+		Addr:              fmt.Sprintf(":%s", metricsAddress),
+		Handler:           serveMux,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
 		return fmt.Errorf("failed to register prometheus endpoint: %w", err)
 	}
 
