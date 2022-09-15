@@ -36,7 +36,17 @@ func (h *Service) Serve() error {
 	serveMux := http.NewServeMux()
 	serveMux.HandleFunc(h.HealthCheckURL.EscapedPath(), h.ServeHTTP)
 
-	if err := http.ListenAndServe(h.HealthCheckURL.Host, serveMux); err != nil && err != http.ErrServerClosed {
+	const timeout = time.Second * 5
+
+	srv := &http.Server{
+		ReadTimeout:       timeout,
+		ReadHeaderTimeout: timeout,
+		WriteTimeout:      timeout,
+		Addr:              h.HealthCheckURL.Host,
+		Handler:           serveMux,
+	}
+
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		klog.Error(err, "Failed to start health check")
 		return fmt.Errorf("failed to start health check server: %w", err)
 	}
