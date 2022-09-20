@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+if [[ "$SKIP_GIT_PUSH_HOOK" ]]; then exit 0; fi
+
 set -e
 
 if git status --short | grep -qv "??"; then
