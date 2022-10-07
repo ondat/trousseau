@@ -6,7 +6,7 @@ replace github.com/ondat/trousseau => ../
 
 require (
 	github.com/ondat/trousseau v0.0.0-00010101000000-000000000000
-	google.golang.org/grpc v1.47.0
+	google.golang.org/grpc v1.50.0
 	k8s.io/apiserver v0.24.2
 )
 
