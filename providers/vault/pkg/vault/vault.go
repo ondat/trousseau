@@ -2,13 +2,12 @@ package vault
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
 	"reflect"
 	"sync"
-
-	"errors"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/ondat/trousseau/pkg/logger"

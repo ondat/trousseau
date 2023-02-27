@@ -2,12 +2,11 @@ package health
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
-
-	"errors"
 
 	"github.com/ondat/trousseau/pkg/logger"
 	"github.com/ondat/trousseau/pkg/providers"

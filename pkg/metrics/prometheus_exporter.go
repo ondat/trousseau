@@ -18,7 +18,8 @@ func servePrometheusExporter(metricsAddress string) error {
 	exporter, err := prometheus.InstallNewPipeline(prometheus.Config{
 		DefaultHistogramBoundaries: []float64{
 			0.1, 0.2, 0.3, 0.4, 0.5, 1, 1.5, 2, 2.5, 3.0, 5.0, 10.0, 15.0, 30.0,
-		}},
+		},
+	},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to register prometheus exporter: %w", err)
