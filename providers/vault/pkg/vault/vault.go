@@ -236,6 +236,7 @@ func (c *vaultWrapper) request(requestPath string, data interface{}) (*vaultapi.
 	} else if resp == nil {
 		return nil, fmt.Errorf("no response received for POST request on %s: %w", requestPath, err)
 	}
+
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			klog.ErrorS(err, "Failed to close body")
