@@ -29,9 +29,7 @@ const (
 	GrpcOperationTypeValue = "grpc"
 )
 
-var (
-	kmsRequest metric.Float64ValueRecorder
-)
+var kmsRequest metric.Float64ValueRecorder
 
 type reporter struct {
 	meter metric.Meter
