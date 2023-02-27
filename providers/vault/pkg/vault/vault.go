@@ -236,7 +236,11 @@ func (c *vaultWrapper) request(requestPath string, data interface{}) (*vaultapi.
 	} else if resp == nil {
 		return nil, fmt.Errorf("no response received for POST request on %s: %w", requestPath, err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			klog.ErrorS(err, "Failed to close body")
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected response code: %v received for POST request to %v", resp.StatusCode, requestPath)
