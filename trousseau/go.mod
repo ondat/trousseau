@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	google.golang.org/grpc v1.47.0
 	k8s.io/apiserver v0.24.3
-	k8s.io/klog/v2 v2.70.0
+	k8s.io/klog/v2 v2.100.1
 )
 
 require (
